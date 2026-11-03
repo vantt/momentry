@@ -43,7 +43,9 @@ Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `curre
 
 Antigravity không có sự kiện kết thúc phiên hay trước compact, chỉ có `SessionStart` và `Stop` (chạy sau mỗi lượt và chặn agent). Theo quyết định 2026-11-03, momentry chỉ dùng `SessionStart`: một phiên agy được gom khi bạn mở phiên agy kế tiếp trong repo đó, hoặc khi chạy `momentry scan --agy`. Transcript của agy không có thư mục làm việc, nên momentry ghi chỉ mục `<cache>/agy-sessions.jsonl` lúc phiên mở; phiên mở trước khi cài momentry không được gom.
 
-Đã kiểm với chương trình thật trên Linux (2026-11-03): pi 1.4.0 và omp 18.12.6 nạp extension và gọi hook (`session_start` → `scan`; với omp cả `session_shutdown` → `harvest` đọc transcript). Antigravity 1.4.4 đòi đăng nhập trước khi mở phiên nên chưa thấy hook chạy trong môi trường thử; định dạng `hooks.json` đối chiếu với tài liệu chính thức và một nhóm hook có sẵn trên máy.
+Profile Antigravity chạy agy với `HOME` riêng (`~/.agy-homes/<tài khoản>`), nên lệnh hook ở đó mang thêm `--user-home "<home thật>"`: momentry dùng cấu hình, nguồn chặn, cache và đăng nhập `claude` của home thật.
+
+Đã kiểm với chương trình thật trên Linux (2026-11-03): pi 1.4.0 và omp 18.12.6 nạp extension và gọi hook (`session_start` → `scan`; với omp cả `session_shutdown` → `harvest` đọc transcript); Antigravity 1.4.4 với một tài khoản đã đăng nhập gọi hook `SessionStart`, chỉ mục ghi đúng phiên và thư mục repo, `--user-home` đưa momentry về home thật; phiên vừa mở không bị gom ngay (nó được gom ở lần mở phiên sau).
 
 ## PATH
 
@@ -129,7 +131,7 @@ Mỗi host chạy lệnh hook bằng một shell khác nhau trên Windows, nên 
 
 Lệnh `/bip` do agent tự chạy trong shell của nó (PowerShell là mặc định), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
 
-Đã kiểm trên Windows thật (runner CI `windows-2025`, workflow `windows-hook-probe`, 2026-11-03): Claude Code gọi hook lúc mở và kết thúc phiên, `harvest` đọc được transcript; Codex v0.166 gọi hook `SessionStart`. Chưa kiểm trên Windows: pi, omp (đã kiểm trên Linux) và Antigravity (cần đăng nhập, xem [issue #1](https://github.com/vantt/momentry/issues/1)). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
+Đã kiểm trên Windows thật (runner CI `windows-2025`, workflow `windows-hook-probe`, 2026-11-03): Claude Code gọi hook lúc mở và kết thúc phiên, `harvest` đọc được transcript; Codex v0.166 gọi hook `SessionStart`. Chưa kiểm trên Windows: pi, omp và Antigravity (đã kiểm trên Linux). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
 
 ## Gỡ
 

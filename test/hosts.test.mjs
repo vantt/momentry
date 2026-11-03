@@ -179,6 +179,8 @@ test('Antigravity: a "momentry" group next to other groups in config/hooks.json;
   assert.deepEqual(Object.keys(j), ['herdr', 'momentry']);
   assert.deepEqual(j.momentry, { SessionStart: [{ type: 'command', command: `${PREFIX} hook session-start --agy`, timeout: 10 }] });
   assert.ok(fs.existsSync(path.join(h, '.agy-homes', 'acc', '.gemini', 'config', 'hooks.json')), 'every account');
+  const acc = JSON.parse(fs.readFileSync(path.join(h, '.agy-homes', 'acc', '.gemini', 'config', 'hooks.json'), 'utf8'));
+  assert.equal(acc.momentry.SessionStart[0].command, `${PREFIX} hook session-start --agy --user-home "${h}"`, 'account dirs run agy under another HOME');
   const skill = fs.readFileSync(path.join(h, '.gemini', 'config', 'skills', 'bip', 'SKILL.md'), 'utf8');
   assert.match(skill, /^---\nname: bip\n[\s\S]*disable-model-invocation: true\n---\n/);
   assert.doesNotMatch(skill, /\$ARGUMENTS/);

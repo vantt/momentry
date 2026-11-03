@@ -84,7 +84,7 @@ test('agy: camelCase payload, workspace as cwd, session recorded in the index, s
   const s = sandbox();
   const payload = { conversationId: '0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f7777', transcriptPath: '/g/brain/x/.system_generated/logs/transcript.jsonl', workspacePaths: [s.repo], hookEventName: 'SessionStart' };
   handleHook('session-start', JSON.stringify(payload), { agy: true }, { env: s.env, spawn: s.spawn, binPath: '/b', cwd: '/hooks-json-dir' });
-  assert.deepEqual(s.calls[0].args, ['/b', 'scan', '--repo', s.repo, '--agy', '--auto', '--except', 'agy:2e3f7777']);
+  assert.deepEqual(s.calls[0].args, ['/b', 'scan', '--repo', s.repo, '--agy', '--auto'], 'the just-opened agy session is left to the quiet rule');
   const idx = fs.readFileSync(path.join(s.env.MOMENTRY_CACHE, 'agy-sessions.jsonl'), 'utf8');
   assert.match(idx, /"conversationId":"0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f7777"/);
 });
@@ -96,6 +96,18 @@ test('CLI hook --agy always prints {} (Antigravity needs a JSON object), others 
   assert.equal(r.stdout.trim(), '{}');
   const q = spawnSync(process.execPath, [BIN, 'hook', 'session-start', '--agy'], { cwd: s.repo, env: { ...s.env, STORY_HARVEST: '1' }, input: '{}', encoding: 'utf8' });
   assert.equal(q.stdout.trim(), '{}');
+});
+
+test('CLI hook --user-home: momentry uses the real home (cache, config) when the host ran under another HOME', () => {
+  const s = sandbox();
+  const real = path.join(s.base, 'real-home');
+  const env = { ...s.env, HOME: path.join(s.base, 'agy-account'), USERPROFILE: path.join(s.base, 'agy-account') };
+  delete env.MOMENTRY_CACHE;
+  const payload = JSON.stringify({ conversationId: '0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f7777', transcriptPath: '/g/t.jsonl', workspacePaths: [s.repo] });
+  const r = spawnSync(process.execPath, [BIN, 'hook', 'session-start', '--agy', '--user-home', real], { cwd: s.repo, env: { ...env, STORY_HARVEST: '' }, input: payload, encoding: 'utf8' });
+  assert.equal(r.stdout.trim(), '{}');
+  assert.ok(fs.existsSync(path.join(real, '.cache', 'momentry', 'agy-sessions.jsonl')), 'index under the real home');
+  assert.ok(!fs.existsSync(path.join(s.base, 'agy-account', '.cache')), 'nothing under the account HOME');
 });
 
 test('a throwing spawn never escapes', () => {

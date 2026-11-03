@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Antigravity: hook ở profile `~/.agy-homes/*` truyền `--user-home` để momentry dùng home thật (cấu hình, nguồn chặn, cache, đăng nhập `claude`); phiên vừa mở không bị gom ngay lúc `SessionStart`.
 - Codex trên Windows chạy hook bằng PowerShell, nên lệnh bắt đầu bằng đường dẫn trong dấu nháy không chạy; momentry ghi đường dẫn shim không nháy cho Codex.
 - Id phiên Codex lấy 8 hex cuối của uuid (UUIDv7 làm hai phiên liên tiếp trùng 8 hex đầu); sổ tự chuyển khoá cũ theo đường dẫn transcript, không gom lại phiên đã gom.
 - Hook Codex dùng khoá sự kiện PascalCase (`PreCompact`, `SessionEnd`, `SessionStart`) như Codex yêu cầu; khoá snake_case cũ bị Codex bỏ qua nên hook Codex chưa từng chạy. `momentry connect codex --yes` (hoặc `doctor --fix`) thay mục cũ.
