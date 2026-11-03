@@ -110,7 +110,9 @@ Cách nhanh nhất, và là cách nên dùng trên Windows (PowerShell 5.1 làm 
 
 Dạng `"C:/…/momentry.cmd"` chạy được trong cả hai. Lệnh `/bip` thì do agent tự chạy trong shell của nó (PowerShell là mặc định của Claude Code trên Windows), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
 
-Đã kiểm trên Windows thật (runner CI `windows-2025`, PowerShell 5.1): cài, `init` ghi hook, `doctor`, `update`, `uninstall`. Chưa kiểm: một phiên Claude Code hay Codex thật gọi hook trên Windows, vì các báo cáo trên là của cộng đồng và hành vi đổi theo phiên bản. Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
+Đã kiểm trên Windows thật (runner CI `windows-2025`, PowerShell 5.1): cài, `init` ghi hook, `doctor`, `update`, `uninstall`. Với Claude Code thật (workflow `windows-hook-probe`, 2026-11-03), `SessionStart` và `SessionEnd` gọi được hook: `hook.log` có `hook.spawned`, và `harvest` chạy nền đọc được transcript Windows.
+
+Chưa kiểm: hook của Codex trên Windows. Codex chỉ chạy hook mới sau khi bạn duyệt tin cậy (`hooks.state` trong `~/.codex/config.toml`), nên phiên không tương tác trên CI không gọi hook. Theo dõi ở [issue #1](https://github.com/vantt/momentry/issues/1). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
 
 ## Gỡ
 
