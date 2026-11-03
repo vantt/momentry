@@ -123,8 +123,19 @@ test('codex: hooks.json events and --codex flag', () => {
   fs.mkdirSync(path.join(h, '.codex'));
   hosts.apply('codex', { prefix: PREFIX, env });
   const j = JSON.parse(fs.readFileSync(path.join(h, '.codex', 'hooks.json'), 'utf8'));
-  assert.deepEqual(Object.keys(j.hooks), ['pre_compact', 'session_start']);
-  assert.equal(j.hooks.session_start[0].hooks[0].command, `${PREFIX} hook session-start --codex`);
+  assert.deepEqual(Object.keys(j.hooks), ['PreCompact', 'SessionEnd', 'SessionStart']);
+  assert.equal(j.hooks.SessionStart[0].hooks[0].command, `${PREFIX} hook session-start --codex`);
+});
+
+test('codex: old snake_case entries (ignored by Codex) are replaced by PascalCase ones', () => {
+  const { h, env } = home();
+  fs.mkdirSync(path.join(h, '.codex'));
+  const f = path.join(h, '.codex', 'hooks.json');
+  fs.writeFileSync(f, JSON.stringify({ hooks: { pre_compact: [{ hooks: [{ type: 'command', command: '"/n" "/x/bin/momentry.mjs" hook pre-compact --codex' }] }] } }));
+  assert.notEqual(hosts.inspectHooks('codex', PREFIX, env).status, 'ok');
+  hosts.apply('codex', { prefix: PREFIX, env });
+  assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(f, 'utf8')).hooks), ['PreCompact', 'SessionEnd', 'SessionStart']);
+  assert.equal(hosts.inspectHooks('codex', PREFIX, env).status, 'ok');
   assert.ok(fs.existsSync(path.join(h, '.codex', 'prompts', 'bip.md')));
 });
 

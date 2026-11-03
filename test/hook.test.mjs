@@ -85,7 +85,7 @@ test('printHookConfig uses absolute node and bin paths; includes /bip template',
   const json = JSON.parse(claude.slice(claude.indexOf('{'), claude.indexOf('\n}\n') + 2));
   assert.equal(json.hooks.SessionEnd[0].hooks[0].type, 'command');
   const codex = printHookConfig('codex', { execPath: '/n', binPath: '/b.mjs' });
-  assert.match(codex, /pre_compact/);
+  assert.match(codex, /"PreCompact"[\s\S]*"SessionEnd"[\s\S]*"SessionStart"/);
   assert.match(codex, /hook pre-compact --codex/);
   assert.match(codex, /scan --codex/);
   assert.match(codex, /hooks\.state/);
@@ -96,7 +96,7 @@ test('CLI hooks --print prints process.execPath; hook on an observed repo with b
   let r = spawnSync(process.execPath, [BIN, 'hooks', '--print', '--claude', '--codex'], { cwd: s.repo, env: s.env, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   assert.ok(r.stdout.includes(JSON.stringify(`"${process.execPath}" "${BIN}" hook session-end`)));
-  assert.match(r.stdout, /pre_compact/);
+  assert.match(r.stdout, /PreCompact/);
   r = spawnSync(process.execPath, [BIN, 'hook', 'session-end'], { cwd: s.repo, env: s.env, input: 'xx', encoding: 'utf8' });
   assert.equal(r.status, 0);
   assert.equal(r.stdout, '');

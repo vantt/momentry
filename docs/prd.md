@@ -49,7 +49,7 @@ Không để lọt dữ liệu riêng vào repo.
 3. Gộp cụm, chấm cụm (hook, tension, strength, stakes), bước người ngoài.
 4. Bộ kiểm riêng tư chạy trên mọi chuyện trước khi ghi.
 5. Ghi hộp chuyện, sổ đã gom, xếp hạng khi liệt kê.
-6. Hook PreCompact, SessionEnd, SessionStart (Claude) và pre_compact (Codex), chạy nền; quét bù Codex bằng `session_start` nếu sự kiện này dùng được (chưa kiểm payload, mục 6.4), dự phòng `momentry scan`. `momentry init` tự cài hook và `/bip` khi user đồng ý (`--yes` hoặc trả lời có), có sao lưu và gỡ ngược được (mục 6.4).
+6. Hook PreCompact, SessionEnd, SessionStart cho cả Claude Code và Codex, chạy nền; dự phòng `momentry scan`. `momentry init` tự cài hook và `/bip` khi user đồng ý (`--yes` hoặc trả lời có), có sao lưu và gỡ ngược được (mục 6.4).
 7. Lệnh `/bip` cho user chủ động đánh dấu.
 8. Test đơn vị với dữ liệu giả, chế độ `--dry-run` và `--fake-llm`.
 
@@ -351,10 +351,11 @@ Luật:
 | Claude Code | `PreCompact` | `momentry hook pre-compact` | Gom nền phiên hiện tại (`transcript_path` từ stdin) |
 | Claude Code | `SessionEnd` | `momentry hook session-end` | Như trên |
 | Claude Code | `SessionStart` | `momentry hook session-start` | Quét bù nền: mọi phiên của repo có `mtime`/`size` khác sổ |
-| Codex | `pre_compact` | `momentry hook pre-compact --codex` | Gom nền phiên hiện tại |
-| Codex | `session_start` (**chưa xác nhận dùng được**) | `momentry hook session-start --codex` | Quét bù nền `~/.codex/sessions` theo `cwd` |
+| Codex | `PreCompact` | `momentry hook pre-compact --codex` | Gom nền phiên hiện tại |
+| Codex | `SessionEnd` | `momentry hook session-end --codex` | Như trên |
+| Codex | `SessionStart` | `momentry hook session-start --codex` | Quét bù nền `~/.codex/sessions` theo `cwd` |
 
-Codex: user chỉ chốt `pre_compact` cộng quét bù `~/.codex/sessions` (BG 6.5 chỉ xác nhận `pre_compact`). Tên `session_start` có xuất hiện trong mục `hooks.state` của `~/.codex/config.toml` trên máy (một repo khác đã duyệt tin cậy hook này), nhưng payload và thời điểm gọi chưa ai kiểm. Vì vậy quét bù Codex có hai đường: `session_start` nếu DM.7 xác nhận dùng được, và luôn có đường dự phòng `momentry scan --codex` do user chạy. Codex chưa thấy sự kiện tương đương SessionEnd.
+Codex (sửa 2026-11-03 theo mã nguồn `codex-rs/protocol/src/hooks.rs`): khoá sự kiện trong `hooks.json` là PascalCase như Claude Code (`PreCompact`, `SessionEnd`, `SessionStart`); khoá snake_case (`pre_compact`, `session_start`) bị Codex bỏ qua im lặng, nên bản cũ của PRD không bao giờ được gọi. Tên snake_case chỉ xuất hiện trong khoá `hooks.state` của `config.toml` (nhãn duyệt tin cậy). Codex chỉ chạy hook mới sau khi user duyệt tin cậy; tự động hoá có thể dùng `--dangerously-bypass-hook-trust`. Đường dự phòng `momentry scan --codex` vẫn còn.
 
 **Luật của lệnh `hook`:**
 

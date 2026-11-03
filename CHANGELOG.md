@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Hook Codex dùng khoá sự kiện PascalCase (`PreCompact`, `SessionEnd`, `SessionStart`) như Codex yêu cầu; khoá snake_case cũ bị Codex bỏ qua nên hook Codex chưa từng chạy. `momentry connect codex --yes` (hoặc `doctor --fix`) thay mục cũ.
+- Windows: lệnh hook dùng `"C:/…/momentry.cmd"` (Claude Code chạy hook qua Git Bash); `/bip` gọi `momentry` theo tên.
+
 ## [0.1.0] - 2026-11-03
 
 Bản phát hành đầu tiên có cài đặt một lệnh.
