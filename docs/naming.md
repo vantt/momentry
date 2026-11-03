@@ -1,10 +1,10 @@
-# Đặt tên: Momentale và Momentry
+# Đặt tên: Momentell, Momentale, Momentry
 
-**Ngày:** 2026-11-03 · **Trạng thái:** đang cân, chưa chốt. Repo và lệnh hiện mang tên `momentry`.
+**Ngày:** 2026-11-03 · **Trạng thái:** đang cân, chưa chốt. Ứng viên chính: **Momentell** (mục 5). Repo và lệnh hiện mang tên `momentry`.
 
 **Ý muốn của tên:** gói ba nghĩa document, moment, momentum. Câu khẩu hiệu làm việc: *"Turn moments into momentum."*
 
-User thích chữ *tale* (Momentale) nhưng chưa ưng cách đọc (mục 4).
+**Diễn biến:** Momentale thắng Momentry ở vòng so theo tiêu chí marketing (mục 2). User thích chữ *tale* nhưng chưa ưng cách đọc (mục 4). Trong các hướng sửa cách đọc, Momentell nổi lên, rồi thắng Momentale ở vòng so cuối (mục 5).
 
 ## 1. Đã loại
 
@@ -51,6 +51,9 @@ User thích chữ *tale* (Momentale) nhưng chưa ưng cách đọc (mục 4).
 |---|---|---|---|---|---|---|---|---|
 | momentale | rao bán | trống | có người | trống | trống | trống | trống | trống |
 | momentry | có người | trống | có người | trống | có người | trống | có người | trống |
+| momentell | trang đỗ Namecheap (có thể đang bán) | trống | trống | trống | trống | trống | trống | trống |
+
+Momentell: .co, .so, .net, .org, .me, .xyz, getmomentell.com, trymomentell.com, usemomentell.com cũng không phân giải. Tìm trên web không có kết quả nào khớp đúng chữ.
 
 User muốn giữ **momentry.vn** làm một lựa chọn.
 
@@ -68,7 +71,31 @@ Vấn đề: không ai biết nhấn âm nào, người Việt không biết đ�
 
 GitHub org và npm của cả bốn tên mới đều còn trống.
 
-## 5. Việc còn lại trước khi chốt
+## 5. Momentale và Momentell
+
+| Tiêu chí | Momentale | Momentell | Hơn |
+|---|---|---|---|
+| Đọc lần đầu | không rõ trọng âm: *mo-men-TALE* hay *mo-men-TA-le* | *mo-men-TELL*, đuôi *-ell* kéo trọng âm về cuối | **Momentell** |
+| Người Việt đọc | "mô-men-ta-le" hay "mô-men-tên"? | "mô-men-ten", tự nhiên | **Momentell** |
+| Chữ ẩn bên trong | *ale* (bia); mo**mental**e chứa *mental* | không có | **Momentell** |
+| Nghĩa | *tale*: danh từ, câu chuyện là thành phẩm, gợi hình hơn | *tell*: động từ, mình kể; chủ động, hợp người tự build in public | tuỳ gu |
+| Nghĩa phụ | không có | poker: *a tell* là dấu hiệu nhỏ để lộ điều lớn, đúng việc sản phẩm làm (bắt khoảnh khắc để lộ chuyện đáng kể trong transcript) | **Momentell** |
+| Câu khẩu hiệu | *"Every moment has a tale."* | *"Let your moments tell."*, *"Moments that tell."* | hoà |
+| Tên gọi đồ bên trong | "3 tales hôm nay" | "3 tells hôm nay", có chơi chữ poker | hoà |
+| Nghe rồi viết lại | dễ viết sai thành *momentail* | dễ viết sai thành *momentel* (một chữ l) | hoà |
+| Cảm giác thương hiệu | ấm, như sách truyện; có thể thấy hơi trẻ con hay giống truyện hư cấu | gọn, hiện đại, kiểu tên công ty công nghệ | Momentell, với khách solo, freelancer |
+| Trùng tên trên web | một dự án hackathon (Devpost) | không có | **Momentell** |
+| Tên miền | .com rao bán trên HugeDomains (chợ này thường giá cao); .app có người | .com là trang đỗ Namecheap; .app, .ai, .io, .vn trống | **Momentell** |
+
+**Kết luận: Momentell.** Đọc lên là đúng ngay (đúng chỗ user chưa ưng ở Momentale), không có chữ ẩn gây nhầm, nghĩa phụ "tell" trong poker khớp cơ chế sản phẩm, tên miền và mức trùng tên sạch hơn. Thứ phải nhường là hình ảnh "câu chuyện" của *tale*; câu khẩu hiệu bù lại, ví dụ *"Momentell: let your work moments tell the story."*
+
+Nếu chốt Momentell, việc nên làm sớm:
+1. Đăng ký momentell.app và momentell.vn.
+2. Giữ org GitHub và tên package npm `momentell`.
+3. Hỏi giá momentell.com qua Namecheap Market. Cân nhắc giữ thêm momentel.com (cách viết sai phổ biến), chưa tra.
+4. Đổi tên repo, lệnh `bin/momentry.mjs`, thư mục `~/.cache/momentry/` (chi phí đổi tên, mục 2).
+
+## 6. Việc còn lại trước khi chốt
 
 1. Thử với 5 đến 10 người trong nhóm khách đích, mỗi tên khoảng 5 phút:
    - Đọc tên cho nghe, nhờ viết lại.
