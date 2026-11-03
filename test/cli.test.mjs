@@ -33,18 +33,29 @@ const copyTo = (src, dst) => {
   return dst;
 };
 
-test('init creates .momentry.json once; outside git exits 1', () => {
+test('init: creates repo file and box, needs privacy sources to be ready, idempotent; outside git exits 1', () => {
   const { base, repo, env } = sandbox();
-  let r = run(['init'], { cwd: repo, env });
-  assert.equal(r.code, 0, r.err);
+  const e = { ...env, PATH: `${path.join(FIX, 'fake-claude')}${path.delimiter}${env.PATH}` };
+  let r = run(['init', '--no-connect'], { cwd: repo, env: e });
+  assert.equal(r.code, 1, r.err);
   assert.equal(fs.readFileSync(path.join(repo, '.momentry.json'), 'utf8'), '{}\n');
-  fs.writeFileSync(path.join(repo, '.momentry.json'), '{"box":"x"}');
-  r = run(['init'], { cwd: repo, env });
+  assert.ok(fs.existsSync(path.join(repo, 'docs/storytelling-material')));
+  assert.match(r.out, /sửa: momentry config privacy-add/);
+  const names = path.join(base, 'names.txt');
+  fs.writeFileSync(names, 'Trần Thị Bích Ngọc\n');
+  fs.writeFileSync(env.MOMENTRY_CONFIG, JSON.stringify({ privacy: { sources: [{ type: 'lines', path: names }] } }));
+  r = run(['init', '--no-connect', '--json'], { cwd: repo, env: e });
+  assert.equal(r.code, 0, r.out);
+  const j = JSON.parse(r.out);
+  assert.equal(j.ok, true);
+  assert.deepEqual(j.next, ['momentry scan --max-sessions 1']);
+  fs.writeFileSync(path.join(repo, '.momentry.json'), '{"box":"docs/storytelling-material"}');
+  r = run(['init', '--no-connect'], { cwd: repo, env: e });
   assert.equal(r.code, 0);
-  assert.match(r.out, /đã có/);
-  assert.equal(fs.readFileSync(path.join(repo, '.momentry.json'), 'utf8'), '{"box":"x"}');
+  assert.match(r.out, /không có gì phải làm[\s\S]*✓ Sẵn sàng/);
+  assert.equal(fs.readFileSync(path.join(repo, '.momentry.json'), 'utf8'), '{"box":"docs/storytelling-material"}');
   fs.mkdirSync(path.join(base, 'plain'));
-  assert.equal(run(['init'], { cwd: path.join(base, 'plain'), env }).code, 1);
+  assert.equal(run(['init', '--no-connect'], { cwd: path.join(base, 'plain'), env: e }).code, 1);
 });
 
 test('check on fixture box: shape clean, privacy unchecked -> 3', () => {
@@ -65,12 +76,12 @@ test('check on a copy of the 8 real sample stories is shape-clean', { skip: !fs.
   assert.doesNotMatch(r.err, /\.md: /);
 });
 
-test('check reports broken link and bad id with exit 2', () => {
+test('check reports broken link and bad id with exit 1', () => {
   const { base, env } = sandbox();
   const box = copyTo(path.join(FIX, 'box-sample'), path.join(base, 'box'));
   fs.writeFileSync(path.join(box, '2026-01-12-gay.md'), '---\nid: 2026-01-12-khac\ndate: 2026-01-12\nstatus: raw\nlinks: [2026-01-01-mat-tich]\n---\n');
   const r = run(['check', '--box', box], { cwd: base, env });
-  assert.equal(r.code, 2);
+  assert.equal(r.code, 1);
   assert.match(r.err, /2026-01-12-gay\.md: links: link gãy: 2026-01-01-mat-tich/);
   assert.match(r.err, /2026-01-12-gay\.md: id: /);
 });
@@ -89,17 +100,25 @@ test('list: table, filters, json', () => {
   assert.equal(lines.length, 9);
   assert.match(lines[0], /^id\s+date\s+status\s+hook\s+tension\s+stakes\s+strength\s+hits$/);
   r = run(['list', '--box', box, '--status', 'picked', '--json'], { cwd: base, env });
-  assert.deepEqual(JSON.parse(r.out).map((x) => x.id), ['2026-01-10-bang-tra-lam-cham-hon']);
+  assert.deepEqual(JSON.parse(r.out).data.map((x) => x.id), ['2026-01-10-bang-tra-lam-cham-hon']);
   r = run(['list', '--box', box, '--thread', 'nguoi-va-may', '--json'], { cwd: base, env });
-  assert.equal(JSON.parse(r.out).length, 3);
+  assert.equal(JSON.parse(r.out).data.length, 3);
 });
 
-test('usage errors exit 1', () => {
+test('no arguments prints task-ordered help; usage errors exit 2 with a hint', () => {
   const { base, env } = sandbox();
-  assert.equal(run([], { cwd: base, env }).code, 1);
-  assert.equal(run(['nope'], { cwd: base, env }).code, 1);
-  assert.equal(run(['list', '--bogus'], { cwd: base, env }).code, 1);
-  assert.equal(run(['harvest', '--runs', 'x', '--session', 's'], { cwd: base, env }).code, 1);
+  const h = run([], { cwd: base, env });
+  assert.equal(h.code, 0);
+  assert.match(h.out, /1\. momentry init[\s\S]*Agents/);
+  const u = run(['lisst'], { cwd: base, env });
+  assert.equal(u.code, 2);
+  assert.match(u.err, /ý bạn là "momentry list"/);
+  assert.equal(run(['list', '--bogus'], { cwd: base, env }).code, 2);
+  assert.equal(run(['harvest', '--runs', 'x', '--session', 's'], { cwd: base, env }).code, 2);
+  const j = run(['nope', '--json'], { cwd: base, env });
+  assert.equal(j.code, 2);
+  assert.deepEqual(Object.keys(JSON.parse(j.out)), ['schema', 'ok', 'data', 'error', 'next']);
+  assert.equal(JSON.parse(j.out).ok, false);
 });
 
 test('harvest needs an observed repo', () => {

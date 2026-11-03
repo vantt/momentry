@@ -1,4 +1,4 @@
-<!-- Mẫu lệnh /bip (PRD 6.4). Cùng một thân dùng cho Claude (.claude/commands/bip.md) và Codex (~/.codex/prompts/bip.md); cả hai thay $ARGUMENTS bằng chữ user gõ sau /bip. Chỗ điền: {bin} lệnh gọi công cụ bằng đường dẫn tuyệt đối, ví dụ "/usr/bin/node" "/…/bin/momentry.mjs" -->
+<!-- Mẫu lệnh /bip (PRD 6.4). Cùng một thân dùng cho Claude (.claude/commands/bip.md) và Codex (~/.codex/prompts/bip.md); cả hai thay $ARGUMENTS bằng chữ user gõ sau /bip. Chỗ điền: {bin} lệnh gọi công cụ: shim đã cài, ví dụ "/home/u/.local/bin/momentry", hoặc "/usr/bin/node" "/…/bin/momentry.mjs" khi chạy từ mã nguồn. `momentry connect` ghi file này kèm dòng đánh dấu momentry:bip ở cuối -->
 ---
 description: Ghi lại khoảnh khắc vừa rồi vào hộp chuyện (momentry)
 argument-hint: <ghi chú ngắn>

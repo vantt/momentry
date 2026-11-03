@@ -153,7 +153,7 @@ const run = (args, { cwd, env }) => {
 };
 const story = (hook, body) => stringify({ date: '2026-11-02', status: 'raw', hook, signals: ['bất ngờ'] }, `# ${hook}\n\n**Chuyện gì xảy ra:** ${body}\n`);
 
-test('cli check: 0 when clean, 2 with masked violation, 3 without source', () => {
+test('cli check: 0 when clean, 1 with masked violation, 3 without source', () => {
   const { repo, box, env } = sandbox();
   fs.writeFileSync(path.join(box, '2026-11-02-mot-dau-cach-thua.md'), story('Một dấu cách thừa', 'Build hỏng vì một dấu cách.'));
   fs.writeFileSync(env.MOMENTRY_CONFIG, JSON.stringify({ privacy: { sources: [VAULT, NAMES] } }));
@@ -162,7 +162,7 @@ test('cli check: 0 when clean, 2 with masked violation, 3 without source', () =>
 
   fs.writeFileSync(path.join(box, '2026-11-02-gap-dang-quoc-vinh.md'), story('Hẹn gặp', 'Nói chuyện với DDawngj Quoocs Vinhx.'));
   r = run(['check'], { cwd: repo, env });
-  assert.equal(r.code, 2);
+  assert.equal(r.code, 1);
   assert.match(r.err, /2026-11-02-gap-dang-quoc-vinh\.md: slug: riêng tư: Đ… \(14\)/);
   assert.match(r.err, /body: riêng tư: Đ… \(14\)/);
   assert.doesNotMatch(r.err + r.out, /Vĩnh|Vinhx/);
@@ -185,7 +185,7 @@ test('cli check: env sources and box .privacy-allow', () => {
   const { repo, box, env } = sandbox();
   fs.writeFileSync(path.join(box, '2026-11-02-bai-hoc.md'), story('Bài học cũ về cache', 'Ghi lại bài học cũ.'));
   const e = { ...env, MOMENTRY_PRIVACY_SOURCES: JSON.stringify([VAULT]) };
-  assert.equal(run(['check'], { cwd: repo, env: e }).code, 2);
+  assert.equal(run(['check'], { cwd: repo, env: e }).code, 1);
   fs.writeFileSync(path.join(box, '.privacy-allow'), '# từ chung\nbài học cũ\n');
   assert.equal(run(['check'], { cwd: repo, env: e }).code, 0);
 });

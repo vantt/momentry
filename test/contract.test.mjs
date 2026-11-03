@@ -45,5 +45,5 @@ test('shared constants', async () => {
   assert.deepEqual(box.TENSIONS, ['nho_ma_to', 'giup_ma_hai', 'tuong_ma_hoa_ra', 'hop_ma_tan', 'cam_ma_van_lot', 'it_ma_nhieu', 'khac', 'none']);
   assert.deepEqual(box.STATUSES, ['raw', 'picked', 'drafted', 'published', 'dropped']);
   const cfg = await import('../lib/config.mjs');
-  assert.deepEqual({ ...cfg.EXIT }, { OK: 0, USAGE: 1, CHECK: 2, UNCHECKED: 3, LLM: 4, LOCKED: 5 });
+  assert.deepEqual({ ...cfg.EXIT }, { OK: 0, FAIL: 1, CHECK: 1, USAGE: 2, UNCHECKED: 3, LLM: 4, LOCKED: 5, UPDATE: 10 });
 });

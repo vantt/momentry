@@ -81,9 +81,9 @@ test('privacy from user config and env', () => {
 
 test('bad values and broken JSON exit 1', () => {
   const { repo, env } = setup({ repoCfg: { harvest: { runs: 0 } } });
-  assert.throws(() => loadConfig({ cwd: repo, env }), (e) => e.exitCode === EXIT.USAGE);
+  assert.throws(() => loadConfig({ cwd: repo, env }), (e) => e.exitCode === EXIT.FAIL);
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{oops');
-  assert.throws(() => loadConfig({ cwd: repo, env }), (e) => e.exitCode === EXIT.USAGE);
+  assert.throws(() => loadConfig({ cwd: repo, env }), (e) => e.exitCode === EXIT.FAIL);
 });
 
 test('outside a git repo', () => {

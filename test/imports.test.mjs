@@ -5,8 +5,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const files = fs.readdirSync(ROOT, { recursive: true })
-  .filter((f) => f.endsWith('.mjs') && !f.split(path.sep).some((p) => p === 'fixtures' || p === 'docs'))
+// Only the shipped and tested code: bin/, lib/, scripts/, test/ (untracked tool dirs like .claude/ are not ours).
+const files = ['bin', 'lib', 'scripts', 'test']
+  .filter((d) => fs.existsSync(path.join(ROOT, d)))
+  .flatMap((d) => fs.readdirSync(path.join(ROOT, d), { recursive: true }).map((f) => path.join(d, f)))
+  .filter((f) => f.endsWith('.mjs') && !f.split(path.sep).includes('fixtures'))
   .map((f) => path.join(ROOT, f));
 
 const SPEC_RE = [
@@ -35,7 +38,7 @@ test('no package.json, no node_modules', () => {
 });
 
 test('every module loads', async () => {
-  for (const f of files.filter((f) => !f.includes(`${path.sep}test${path.sep}`))) {
+  for (const f of files.filter((f) => !f.includes(`${path.sep}test${path.sep}`) && !f.includes(`${path.sep}scripts${path.sep}`))) {
     if (f.endsWith(path.join('bin', 'momentry.mjs'))) continue;
     await import(f);
   }

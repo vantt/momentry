@@ -129,7 +129,7 @@ test('cli quarantine lists and releases', () => {
   assert.equal(run(['quarantine', '--release', leaky.id]).status, 3);
   fs.writeFileSync(env.MOMENTRY_CONFIG, JSON.stringify({ privacy: { sources: [VAULT] } }));
   r = run(['quarantine', '--release', leaky.id]);
-  assert.equal(r.status, 2);
+  assert.equal(r.status, 1);
   assert.match(r.stderr, /body: T… \(18\)/);
   assert.doesNotMatch(r.stderr, /Ngọc/);
 });

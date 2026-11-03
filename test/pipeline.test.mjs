@@ -78,7 +78,7 @@ test('llm-ok: writes the right stories, ledger; second run writes nothing', () =
   assert.equal(l.lastLine, 8); assert.equal(l.status, 'done'); assert.equal(l.harvests[0].written, 3);
   assert.equal(l.harvests[0].hotspots, 4); assert.equal(l.mainGoals.length, 1);
   assert.equal(s.run(['check']).code, 0);
-  const ranked = JSON.parse(s.run(['list', '--rank', '--json']).out);
+  const ranked = JSON.parse(s.run(['list', '--rank', '--json']).out).data;
   assert.equal(ranked.length, 3);
   assert.notEqual(ranked[0].tension, 'none');
 
@@ -260,7 +260,7 @@ test('add: human story through the privacy gate', () => {
   assert.deepEqual(data.sessions, [SID]); assert.equal(data.privacy, 'checked');
   assert.match(body, /\*\*Chuyện gì xảy ra:\*\* Máy tắt sau 3 tách/);
   r = s.run(['add', '--note', 'Gửi bản nháp cho Trần Thị Bích Ngọc']);
-  assert.equal(r.code, 2);
+  assert.equal(r.code, 1);
   assert.match(r.out, /vi phạm riêng tư \(.*T… \(18\)/);
   assert.doesNotMatch(r.out, /Bích Ngọc/);
   assert.equal(s.stories().length, 1);

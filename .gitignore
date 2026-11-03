@@ -2,5 +2,8 @@
 /docs/_private/
 # đầu ra thô của harness thí nghiệm
 /docs/experiments/*/harness/out/
+# tài sản phát hành do scripts/package-release.mjs sinh ra
+/dist/
+/out/
 node_modules/
 .DS_Store
