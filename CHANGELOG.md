@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-03
+
 ### Added
 
 - Host mới: **pi**, **omp (oh-my-pi)**, **Antigravity**. `momentry scan --pi|--omp|--agy` đọc transcript của chúng; `init`/`connect` cài extension `momentry.ts` cho pi/omp, hook `SessionStart` cho Antigravity và `/bip` cho cả ba.
