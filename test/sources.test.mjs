@@ -90,7 +90,7 @@ test('claude: listTranscripts finds subdir sessions by prefix, drops prefix coll
 });
 
 test('codex: sessionId, sessionMeta, countLines', () => {
-  assert.equal(codex.sessionId(CODEX), 'codex:0f9e8d7c');
+  assert.equal(codex.sessionId(CODEX), 'codex:eeeeffff');
   assert.deepEqual(codex.sessionMeta(CODEX), { id: '0f9e8d7c-aaaa-7bbb-8ccc-ddddeeeeffff', cwd: '/fake/repo/sub', ts: '2026-01-10T09:00:00.000Z' });
   assert.equal(codex.countLines(CODEX), 23);
 });
@@ -159,7 +159,7 @@ test('codex: older shapes (local_shell_call, shell apply_patch, success:false)',
   assert.equal(es[1].isError, true);
   assert.deepEqual(es[2].paths, ['hooks/x.sh']);
   assert.deepEqual(es[3].paths, ['CLAUDE.md']);
-  assert.equal(codex.sessionId(f), 'codex:11111111');
+  assert.equal(codex.sessionId(f), 'codex:55555555');
 });
 
 test('codex: listTranscripts walks YYYY/MM/DD and keeps cwd inside repo', () => {
@@ -177,7 +177,7 @@ test('codex: listTranscripts walks YYYY/MM/DD and keeps cwd inside repo', () => 
   put('11', 'cccccccc-0000-7000-8000-000000000003', repo);
   fs.writeFileSync(path.join(sessions, '2026', '01', '11', 'notes.jsonl'), '');
   const got = codex.listTranscripts(repo, { sessionsDir: sessions });
-  assert.deepEqual(got.map(f => f.sid).sort(), ['codex:aaaaaaaa', 'codex:cccccccc']);
+  assert.deepEqual(got.map(f => f.sid).sort(), ['codex:00000001', 'codex:00000003'], 'uuid tail: UUIDv7 heads repeat');
   assert.ok(got.every(f => f.source === 'codex' && f.cwd));
   assert.deepEqual(codex.listTranscripts(repo, { sessionsDir: path.join(d, 'none') }), []);
 });

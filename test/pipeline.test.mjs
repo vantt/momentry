@@ -227,7 +227,7 @@ test('--dry-run on a Codex rollout picks the codex source', () => {
   const rollout = path.join(HERE, 'fixtures', 'transcripts', 'rollout-2026-01-10T09-00-00-0f9e8d7c-aaaa-7bbb-8ccc-ddddeeeeffff.jsonl');
   const r = s.run(['harvest', '--transcript', rollout, '--dry-run']);
   assert.equal(r.code, 0, r.err);
-  assert.match(r.out, /dry-run codex:0f9e8d7c/);
+  assert.match(r.out, /dry-run codex:eeeeffff/);
 });
 
 test('--blind writes nothing (no box, no ledger)', () => {

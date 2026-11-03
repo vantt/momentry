@@ -79,3 +79,13 @@ test('lock: wx; live lock sets pending; dead pid replaced; stale mtime replaced'
   assert.equal(d.ok, true, 'live pid but older than staleSec');
   L.unlock(d.handle);
 });
+
+test('load rekeys Codex sessions from the uuid head to its tail by their transcript path', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-ledger-rekey-'));
+  const old = { source: 'codex', transcriptPath: '/s/2026/11/03/rollout-2026-11-03T10-00-00-01a1a126-4b3a-77b3-a22f-52292aacdcae.jsonl', lastLine: 40, status: 'done' };
+  const claude = { source: 'claude', transcriptPath: '/p/0a1b2c3d-1111-2222-3333-444455556666.jsonl', lastLine: 5 };
+  fs.writeFileSync(path.join(dir, 'ledger.json'), JSON.stringify({ version: 1, sessions: { 'codex:01a1a126': old, 'claude:0a1b2c3d': claude } }));
+  const l = L.load(dir);
+  assert.deepEqual(Object.keys(l.sessions).sort(), ['claude:0a1b2c3d', 'codex:2aacdcae']);
+  assert.equal(l.sessions['codex:2aacdcae'].lastLine, 40, 'progress kept: not harvested again');
+});

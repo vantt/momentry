@@ -47,10 +47,14 @@ jobs:
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
           Get-Content claude.out -ErrorAction SilentlyContinue | Select-Object -First 20
           Start-Sleep -Seconds 5
-      - name: open a Codex session (no credentials; hook trust bypassed as CI cannot approve it)
+      - name: open a Codex session (local dead provider, no network; hook trust bypassed as CI cannot approve it)
         shell: powershell
         working-directory: probe-repo
         run: |
+          $codexHome = Join-Path $env:USERPROFILE '.codex'
+          New-Item -ItemType Directory -Path $codexHome -Force | Out-Null
+          Set-Content -LiteralPath (Join-Path $codexHome 'config.toml') -Encoding ASCII -Value @(
+            'model_provider = "local"', 'model = "gpt-5"', '[model_providers.local]', 'name = "local"', 'base_url = "http://127.0.0.1:9/v1"', 'wire_api = "responses"')
           $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --dangerously-bypass-hook-trust "hello" > codex.out 2>&1' -PassThru -NoNewWindow
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
           Get-Content codex.out -ErrorAction SilentlyContinue | Select-Object -First 20

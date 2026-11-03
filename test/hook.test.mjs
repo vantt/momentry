@@ -65,8 +65,8 @@ test('session-start spawns scan for the runtime; codex without transcript path f
   const s = sandbox();
   handleHook('session-start', JSON.stringify({ cwd: s.repo, session_id: 'abcdef12-x' }), {}, { env: s.env, spawn: s.spawn, binPath: '/b' });
   assert.deepEqual(s.calls[0].args, ['/b', 'scan', '--repo', s.repo, '--claude', '--auto', '--except', 'claude:abcdef12']);
-  handleHook('pre-compact', JSON.stringify({ cwd: s.repo, session_id: 'fedcba98-y' }), { codex: true }, { env: s.env, spawn: s.spawn, binPath: '/b' });
-  assert.deepEqual(s.calls[1].args, ['/b', 'harvest', '--session', 'codex:fedcba98', '--repo', s.repo]);
+  handleHook('pre-compact', JSON.stringify({ cwd: s.repo, session_id: '01a1a126-4b3a-77b3-a22f-52292aacdcae' }), { codex: true }, { env: s.env, spawn: s.spawn, binPath: '/b' });
+  assert.deepEqual(s.calls[1].args, ['/b', 'harvest', '--session', 'codex:2aacdcae', '--repo', s.repo], 'Codex ids are UUIDv7: tail, not head');
   handleHook('pre-compact', '', { codex: true }, { env: s.env, spawn: s.spawn, binPath: '/b', cwd: s.repo });
   assert.deepEqual(s.calls[2].args, ['/b', 'scan', '--repo', s.repo, '--codex', '--auto']);
 });
