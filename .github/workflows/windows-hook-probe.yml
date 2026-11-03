@@ -61,6 +61,10 @@ jobs:
           $diag = 'cmd /d /c "(echo PATH=%PATH%& echo LOCALAPPDATA=%LOCALAPPDATA%& echo USERPROFILE=%USERPROFILE%& where node& echo where=%ERRORLEVEL%& (echo x>"%LOCALAPPDATA%\momentry\cache\probe-write.txt" && echo cachewrite=ok || echo cachewrite=fail)) > "%CD%\codex-hook-diag.txt" 2>&1"'
           $j.hooks.SessionStart += [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $diag }) }
           [IO.File]::WriteAllText($hj, ($j | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))  # no BOM: Codex rejects it
+          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --json --dangerously-bypass-hook-trust "hello" > codex-json.out 2>&1' -PassThru -NoNewWindow
+          if (-not $p.WaitForExit(90000)) { $p.Kill() }
+          Write-Host '=== hook events from codex exec --json'
+          Get-Content codex-json.out -ErrorAction SilentlyContinue | Select-String -Pattern 'hook' | ForEach-Object { $_.Line.Substring(0, [Math]::Min(900, $_.Line.Length)) }
           foreach ($sb in 'read-only', 'danger-full-access') {
             Write-Host "=== codex exec --sandbox $sb"
             $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c',"codex exec --sandbox $sb --dangerously-bypass-hook-trust `"hello`" > codex-$sb.out 2>&1" -PassThru -NoNewWindow
