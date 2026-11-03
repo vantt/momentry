@@ -55,43 +55,10 @@ jobs:
           New-Item -ItemType Directory -Path $codexHome -Force | Out-Null
           Set-Content -LiteralPath (Join-Path $codexHome 'config.toml') -Encoding ASCII -Value @(
             'model_provider = "local"', 'model = "gpt-5"', '[model_providers.local]', 'name = "local"', 'base_url = "http://127.0.0.1:9/v1"', 'wire_api = "responses"')
-          # diagnostic hook next to momentry's: what environment does Codex give a hook on Windows?
-          $hj = Join-Path $codexHome 'hooks.json'
-          $j = Get-Content -Raw $hj | ConvertFrom-Json
-          $diag = 'cmd /d /c "(echo PATH=%PATH%& echo LOCALAPPDATA=%LOCALAPPDATA%& echo USERPROFILE=%USERPROFILE%& where node& echo where=%ERRORLEVEL%& (echo x>"%LOCALAPPDATA%\momentry\cache\probe-write.txt" && echo cachewrite=ok || echo cachewrite=fail)) > "%CD%\codex-hook-diag.txt" 2>&1"'
-          $j.hooks.SessionStart += [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $diag }) }
-          [IO.File]::WriteAllText($hj, ($j | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))  # no BOM: Codex rejects it
-          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --json --dangerously-bypass-hook-trust "hello" > codex-json.out 2>&1' -PassThru -NoNewWindow
+          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --dangerously-bypass-hook-trust "hello" > codex.out 2>&1' -PassThru -NoNewWindow
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
-          Write-Host '=== codex logs mentioning hooks'
-          Get-ChildItem -Recurse -File (Join-Path $env:USERPROFILE '.codex') -Include *.log,*.jsonl -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'sessions' } | ForEach-Object {
-            Select-String -LiteralPath $_.FullName -Pattern 'hook' -ErrorAction SilentlyContinue | Select-Object -Last 15 | ForEach-Object { $_.Line.Substring(0, [Math]::Min(700, $_.Line.Length)) }
-          }
-          Write-Host '=== hook events from codex exec --json'
-          Get-Content codex-json.out -ErrorAction SilentlyContinue | Select-String -Pattern 'hook' | ForEach-Object { $_.Line.Substring(0, [Math]::Min(900, $_.Line.Length)) }
-          foreach ($sb in 'read-only', 'danger-full-access') {
-            Write-Host "=== codex exec --sandbox $sb"
-            $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c',"codex exec --sandbox $sb --dangerously-bypass-hook-trust `"hello`" > codex-$sb.out 2>&1" -PassThru -NoNewWindow
-            if (-not $p.WaitForExit(90000)) { $p.Kill() }
-            Get-Content "codex-$sb.out" -ErrorAction SilentlyContinue | Select-String 'hook:|failed to parse'
-            Start-Sleep -Seconds 5
-            Write-Host "--- diag after ${sb}:"; Get-Content codex-hook-diag.txt -ErrorAction SilentlyContinue; Remove-Item codex-hook-diag.txt -ErrorAction SilentlyContinue
-            $log = Join-Path $env:LOCALAPPDATA 'momentry\cache\hook.log'
-            Write-Host "--- codex lines in hook.log after ${sb}:"; if (Test-Path $log) { Select-String -LiteralPath $log -Pattern '"runtime":"codex"' | ForEach-Object { $_.Line } }
-          }
-      - name: diagnose the Codex hook (rollout hook results, same command through cmd /C)
-        shell: powershell
-        working-directory: probe-repo
-        continue-on-error: true
-        run: |
-          $roll = Get-ChildItem -Recurse -Filter 'rollout-*.jsonl' (Join-Path $env:USERPROFILE '.codex\sessions') -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($roll) { Select-String -LiteralPath $roll.FullName -Pattern 'hook' | ForEach-Object { $_.Line.Substring(0, [Math]::Min(600, $_.Line.Length)) } }
-          $cmdline = (Get-Content -Raw (Join-Path $env:USERPROFILE '.codex\hooks.json') | ConvertFrom-Json).hooks.SessionStart[0].hooks[0].command
-          Write-Host "command: $cmdline"
-          '{"session_id":"x","cwd":"' + ((Get-Location).Path -replace '\\','\\') + '"}' | cmd.exe /C "`"$cmdline`""
-          Write-Host "cmd /C exit: $LASTEXITCODE"
-          Write-Host '--- environment Codex gave the diagnostic hook:'
-          Get-Content (Join-Path $env:TEMP 'codex-hook-diag.txt') -ErrorAction SilentlyContinue
+          Get-Content codex.out -ErrorAction SilentlyContinue | Select-String 'hook:|failed to parse'
+          Start-Sleep -Seconds 5
       - name: report hook.log
         shell: powershell
         run: |

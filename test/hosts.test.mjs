@@ -187,6 +187,18 @@ test('Antigravity: a "momentry" group next to other groups in config/hooks.json;
   assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(hj, 'utf8'))), ['herdr']);
 });
 
+test('Codex on Windows: shim unquoted (Codex runs hooks in PowerShell), by name when the path has spaces', () => {
+  const { h, env } = home();
+  fs.mkdirSync(path.join(h, '.codex'));
+  hosts.apply('codex', { prefix: '"C:/Users/a/AppData/Local/momentry/bin/momentry.cmd"', env });
+  const f = path.join(h, '.codex', 'hooks.json');
+  assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).hooks.SessionStart[0].hooks[0].command, 'C:/Users/a/AppData/Local/momentry/bin/momentry.cmd hook session-start --codex');
+  assert.equal(hosts.inspect('codex', '"C:/Users/a/AppData/Local/momentry/bin/momentry.cmd"', env).status, 'ok');
+  hosts.apply('codex', { prefix: '"C:/Users/An Tran/AppData/Local/momentry/bin/momentry.cmd"', env });
+  assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).hooks.SessionStart.length, 1, 'old entry replaced, not duplicated');
+  assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).hooks.SessionStart[0].hooks[0].command, 'momentry hook session-start --codex');
+});
+
 test('ownership regex: only momentry hook commands', () => {
   for (const c of ['"/x/momentry" hook session-end', '"C:\\x\\momentry.cmd" hook pre-compact', '"/n" "/x/bin/momentry.mjs" hook session-start --codex']) assert.ok(hosts.OWN_HOOK.test(c), c);
   for (const c of ['momentry scan', 'my-hook session-end', 'notmomentry hook x']) assert.ok(!hosts.OWN_HOOK.test(c), c);
