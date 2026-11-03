@@ -118,16 +118,18 @@ Cách nhanh nhất, và là cách nên dùng trên Windows (PowerShell 5.1 làm 
 
 ## Hook trên Windows
 
-`momentry init` ghi hook dạng `"C:/Users/<bạn>/AppData/Local/momentry/bin/momentry.cmd" hook session-end`: đường dẫn tuyệt đối, dấu `/`. Lý do:
+Mỗi host chạy lệnh hook bằng một shell khác nhau trên Windows, nên `momentry init` ghi lệnh theo host:
 
-- Claude Code trên Windows chạy lệnh hook qua Git Bash, kể cả khi đặt shell khác, và Git Bash đọc sai đường dẫn có `\` ([anthropics/claude-code#21878](https://github.com/anthropics/claude-code/issues/21878), [báo cáo hook luôn chạy qua `/usr/bin/bash`](https://claudeissues.com/issue/32930-bug-hooks-always-executed-via-usr-bin-bash-on-windows-ignoring-shell-setting)).
-- Codex chạy chuỗi lệnh hook bằng trình thông dịch gốc của Windows (cmd); hook kiểu POSIX hỏng ở đó, còn lệnh gọi `.cmd` thì chạy được ([ghi chú phát hành planning-with-files v3.4.1](https://newreleases.io/project/github/OthmanAdi/planning-with-files/release/v3.4.1)).
+| Host | Shell chạy hook | Lệnh momentry ghi |
+|---|---|---|
+| Claude Code | Git Bash ([anthropics/claude-code#21878](https://github.com/anthropics/claude-code/issues/21878)) | `"C:/Users/<bạn>/AppData/Local/momentry/bin/momentry.cmd" hook session-end` |
+| Codex | shell của phiên, mặc định PowerShell (`build_hooks_config` trong mã nguồn Codex) | `C:/Users/<bạn>/AppData/Local/momentry/bin/momentry.cmd hook session-end --codex` (không nháy; có khoảng trắng thì `momentry` theo tên) |
+| pi, omp | extension gọi thẳng `cmd.exe` | (trong `momentry.ts`) |
+| Antigravity | `cmd /c` | `"C:/…/momentry.cmd" hook session-start --agy` |
 
-Dạng `"C:/…/momentry.cmd"` chạy được trong cả hai. Lệnh `/bip` thì do agent tự chạy trong shell của nó (PowerShell là mặc định của Claude Code trên Windows), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
+Lệnh `/bip` do agent tự chạy trong shell của nó (PowerShell là mặc định), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
 
-Đã kiểm trên Windows thật (runner CI `windows-2025`, PowerShell 5.1): cài, `init` ghi hook, `doctor`, `update`, `uninstall`. Với Claude Code thật (workflow `windows-hook-probe`, 2026-11-03), `SessionStart` và `SessionEnd` gọi được hook: `hook.log` có `hook.spawned`, và `harvest` chạy nền đọc được transcript Windows.
-
-Chưa kiểm: hook của Codex trên Windows. Codex chỉ chạy hook mới sau khi bạn duyệt tin cậy (`hooks.state` trong `~/.codex/config.toml`), nên phiên không tương tác trên CI không gọi hook. Theo dõi ở [issue #1](https://github.com/vantt/momentry/issues/1). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
+Đã kiểm trên Windows thật (runner CI `windows-2025`, workflow `windows-hook-probe`, 2026-11-03): Claude Code gọi hook lúc mở và kết thúc phiên, `harvest` đọc được transcript; Codex v0.166 gọi hook `SessionStart`. Chưa kiểm trên Windows: pi, omp (đã kiểm trên Linux) và Antigravity (cần đăng nhập, xem [issue #1](https://github.com/vantt/momentry/issues/1)). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
 
 ## Gỡ
 
