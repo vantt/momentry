@@ -61,10 +61,16 @@ jobs:
           $diag = 'cmd /d /c "(echo PATH=%PATH%& echo LOCALAPPDATA=%LOCALAPPDATA%& echo USERPROFILE=%USERPROFILE%& where node& echo where=%ERRORLEVEL%& (echo x>"%LOCALAPPDATA%\momentry\cache\probe-write.txt" && echo cachewrite=ok || echo cachewrite=fail)) > "%TEMP%\codex-hook-diag.txt" 2>&1"'
           $j.hooks.SessionStart += [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $diag }) }
           [IO.File]::WriteAllText($hj, ($j | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))  # no BOM: Codex rejects it
-          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --dangerously-bypass-hook-trust "hello" > codex.out 2>&1' -PassThru -NoNewWindow
-          if (-not $p.WaitForExit(90000)) { $p.Kill() }
-          Get-Content codex.out -ErrorAction SilentlyContinue | Select-Object -First 20
-          Start-Sleep -Seconds 5
+          foreach ($sb in 'read-only', 'danger-full-access') {
+            Write-Host "=== codex exec --sandbox $sb"
+            $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c',"codex exec --sandbox $sb --dangerously-bypass-hook-trust `"hello`" > codex-$sb.out 2>&1" -PassThru -NoNewWindow
+            if (-not $p.WaitForExit(90000)) { $p.Kill() }
+            Get-Content "codex-$sb.out" -ErrorAction SilentlyContinue | Select-String 'hook:|failed to parse'
+            Start-Sleep -Seconds 5
+            Write-Host "--- diag after $sb:"; Get-Content codex-hook-diag.txt -ErrorAction SilentlyContinue; Remove-Item codex-hook-diag.txt -ErrorAction SilentlyContinue
+            $log = Join-Path $env:LOCALAPPDATA 'momentry\cache\hook.log'
+            Write-Host "--- codex lines in hook.log after $sb:"; if (Test-Path $log) { Select-String -LiteralPath $log -Pattern '"runtime":"codex"' | ForEach-Object { $_.Line } }
+          }
       - name: diagnose the Codex hook (rollout hook results, same command through cmd /C)
         shell: powershell
         working-directory: probe-repo
