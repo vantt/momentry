@@ -1,0 +1,10 @@
+{"type":"session","version":3,"id":"0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b","timestamp":"2026-01-10T09:00:00.000Z","cwd":"__REPO__"}
+{"type":"model_change","id":"m1","parentId":null,"timestamp":"2026-01-10T09:00:00.100Z","provider":"anthropic","modelId":"fake"}
+{"type":"message","id":"a1","parentId":"m1","timestamp":"2026-01-10T09:00:01.000Z","message":{"role":"system","content":"bịa","timestamp":1}}
+{"type":"message","id":"a2","parentId":"a1","timestamp":"2026-01-10T09:00:02.000Z","message":{"role":"user","content":[{"type":"text","text":"Đo lại máy pha cà phê"}],"timestamp":2}}
+{"type":"message","id":"a3","parentId":"a2","timestamp":"2026-01-10T09:00:03.000Z","message":{"role":"assistant","content":[{"type":"thinking","thinking":"x"},{"type":"text","text":"Chạy đo trước."},{"type":"toolCall","id":"t1","name":"bash","arguments":{"command":"make bench","timeout":60}}],"timestamp":3}}
+{"type":"message","id":"a4","parentId":"a3","timestamp":"2026-01-10T09:00:04.000Z","message":{"role":"toolResult","toolCallId":"t1","toolName":"bash","content":[{"type":"text","text":"p95 800ms\n\nCommand exited with code 2"}],"isError":true,"timestamp":4}}
+{"type":"message","id":"a5","parentId":"a4","timestamp":"2026-01-10T09:00:05.000Z","message":{"role":"assistant","content":[{"type":"toolCall","id":"t2","name":"edit","arguments":{"path":"src/cache.js","edits":[{"oldText":"Map","newText":"LRU"}]}}],"timestamp":5}}
+{"type":"message","id":"a6","parentId":"a5","timestamp":"2026-01-10T09:00:06.000Z","message":{"role":"toolResult","toolCallId":"t2","toolName":"edit","content":[{"type":"text","text":"ok"}],"isError":false,"timestamp":6}}
+{"type":"message","id":"a7","parentId":"a6","timestamp":"2026-01-10T09:00:07.000Z","message":{"role":"bashExecution","command":"make bench","output":"p95 90ms","exitCode":0,"timestamp":7}}
+{"type":"custom_message","customType":"x","content":"bỏ qua","display":false,"id":"a8","parentId":"a7","timestamp":"2026-01-10T09:00:08.000Z"}

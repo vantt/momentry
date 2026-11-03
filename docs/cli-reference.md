@@ -103,7 +103,7 @@ Mã thoát: 0 ổn; 1 có việc cần làm (xem "tiếp"); 2 sai cú pháp.
 
 ### `momentry scan`
 
-Gom mọi phiên Claude/Codex của repo chưa gom hết (bỏ qua phiên đang mở).
+Gom mọi phiên Claude Code, Codex, pi, omp, Antigravity của repo chưa gom hết, ở mọi profile (bỏ qua phiên đang mở).
 
 **Thay đổi:** <box>/*.md (chuyện mới hoặc gộp), <cache>/ledger.json, <cache>/runs/.
 
@@ -114,6 +114,9 @@ Gom mọi phiên Claude/Codex của repo chưa gom hết (bỏ qua phiên đang 
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
 | `--claude` | chỉ phiên Claude Code |
 | `--codex` | chỉ phiên Codex |
+| `--pi` | chỉ phiên pi |
+| `--omp` | chỉ phiên omp (oh-my-pi) |
+| `--agy` | chỉ phiên Antigravity |
 | `--quiet-minutes N` | bỏ qua phiên có ghi trong N phút gần đây (mặc định: 30) |
 | `--max-sessions N` | gom tối đa N phiên (0 = không giới hạn) |
 | `--except ID` | bỏ qua phiên này |
