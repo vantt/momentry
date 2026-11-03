@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `momentry quarantine --release all`: kiểm lại mọi chuyện đang bị giữ, thả chuyện sạch vào hộp, chuyện còn vi phạm vẫn bị giữ (thoát 1 nếu còn chuyện bị giữ).
+
 ### Fixed
 
 - Hook Codex dùng khoá sự kiện PascalCase (`PreCompact`, `SessionEnd`, `SessionStart`) như Codex yêu cầu; khoá snake_case cũ bị Codex bỏ qua nên hook Codex chưa từng chạy. `momentry connect codex --yes` (hoặc `doctor --fix`) thay mục cũ.

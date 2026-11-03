@@ -232,19 +232,22 @@ Mã thoát: 0 xong; 1 lỗi; 2 sai cú pháp; 3 chưa có nguồn chặn; 4 mode
 
 ### `momentry quarantine`
 
-Liệt kê chuyện bị giữ ngoài repo; --release thả một chuyện nếu qua kiểm riêng tư.
+Liệt kê chuyện bị giữ ngoài repo; --release ID|all thả chuyện qua được kiểm riêng tư vào hộp.
+
+**Thay đổi:** --release: ghi chuyện vào hộp và xoá bản giữ trong <cache>/quarantine; chuyện còn vi phạm vẫn bị giữ.
 
 | Cờ | Ý nghĩa |
 |---|---|
-| `--release ID` | id chuyện cần thả |
+| `--release ID|all` | id chuyện cần thả, hoặc all để thử thả mọi chuyện đang giữ |
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
 
 ```sh
 momentry quarantine
 momentry quarantine --release 2026-01-10-gop-nhanh-lai-cham
+momentry quarantine --release all --json
 ```
 
-Mã thoát: 0 xong; 1 vẫn vi phạm; 2 sai cú pháp; 3 chưa có nguồn chặn.
+Mã thoát: 0 xong (với all: mọi chuyện đã thả, hoặc không có gì đang giữ); 1 còn chuyện vi phạm hoặc lỗi (vẫn bị giữ); 2 sai cú pháp; 3 chưa có nguồn chặn.
 
 ### `momentry reduce`
 

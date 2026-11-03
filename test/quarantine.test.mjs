@@ -135,3 +135,29 @@ test('cli quarantine lists and releases', () => {
   assert.match(r.stderr, /body: T… \(18\)/);
   assert.doesNotMatch(r.stderr, /Ngọc/);
 });
+
+test('cli quarantine --release all: clean stories go into the box, leaking ones stay held', () => {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-qall-'));
+  const repo = path.join(base, 'repo');
+  fs.mkdirSync(path.join(repo, '.' + 'git'), { recursive: true });
+  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'u.json') };
+  const run = (args) => spawnSync(process.execPath, [BIN, ...args], { cwd: repo, env, encoding: 'utf8' });
+  const clean = {
+    id: '2026-11-02-mot-dau-cach-thua',
+    data: { date: '2026-11-02', status: 'raw', hook: 'Một dấu cách thừa', captured_by: 'harvest' },
+    body: '# Một dấu cách thừa\n\n**Chuyện gì xảy ra:** Một dấu cách thừa làm hỏng build.\n',
+  };
+  put('repo', leaky, 'violation', { cacheDir: env.MOMENTRY_CACHE });
+  put('repo', clean, 'unchecked', { cacheDir: env.MOMENTRY_CACHE });
+  assert.equal(list('repo', { cacheDir: env.MOMENTRY_CACHE }).length, 2);
+  assert.equal(run(['quarantine', '--release', 'all']).status, 3, 'no blocklist yet');
+  fs.writeFileSync(env.MOMENTRY_CONFIG, JSON.stringify({ privacy: { sources: [VAULT] } }));
+  const r = run(['quarantine', '--release', 'all', '--json']);
+  assert.equal(r.status, 1, r.stderr);
+  const j = JSON.parse(r.stdout);
+  assert.deepEqual(j.data.released.map((x) => x.id), [clean.id]);
+  assert.deepEqual(j.data.held.map((x) => x.id), [leaky.id]);
+  assert.doesNotMatch(r.stdout + r.stderr, /Ngọc/);
+  assert.equal(list('repo', { cacheDir: env.MOMENTRY_CACHE }).length, 1, 'the leaking one is still held');
+  assert.equal(readBox(path.join(repo, 'docs', 'storytelling-material')).length, 1);
+});
