@@ -55,7 +55,7 @@ Overlay `languages/node.md` không kích hoạt (detect = `package.json`, PRD 4.
 | UX-14/15 `config set/unset`, kiểm thân thiện | MUST | partial | Có `set`/`unset`/`show`/`get`; chưa có `config edit` mở `$EDITOR` |
 | INS-01..06, 09..13, 15 | MUST | done | `install.sh`, `install.ps1`; asset theo `releases/latest/download`; root bị từ chối; `--uninstall` |
 | INS-07/08/14/16 marker, quay lui, fixture offline, allow-list | SHOULD | done | `.momentry-managed`, `versions/` giữ bản trước, `--local-fixture`, kiểm danh sách file |
-| INS-17 PowerShell 5.1 | MUST | done (chưa chạy) | Viết theo forgent; chỉ chạy được trên CI Windows |
+| INS-17 PowerShell 5.1 | MUST | done | Chạy trên runner `windows-2025` (PowerShell 5.1) trong CI |
 | UPD-01..06 | MUST | done | `lib/update.mjs`; test: lên bản, cùng bản, archive bị sửa |
 | UPD-07 việc sau cập nhật chạy trong bản mới | SHOULD | done | `_activate` và `doctor --fix` gọi bằng bản mới |
 | CFG-01..04, 06, 08 | MUST | done | `lib/paths.mjs`; cache 0700; cấu hình hỏng là lỗi |
@@ -67,17 +67,17 @@ Overlay `languages/node.md` không kích hoạt (detect = `package.json`, PRD 4.
 | AGT-07 file kỹ năng sở hữu theo digest | SHOULD | done | `bip.md` mang dòng `momentry:bip sha256=…` |
 | PRN-03/04/05/07 | MUST/SHOULD | done | Chỉ đụng mục của mình; `--dry-run`; idempotent; liệt kê mọi thay đổi |
 | UNI-01..05 | MUST | done | `momentry uninstall`, `install.sh --uninstall`; giữ dữ liệu trừ `--purge` |
-| UNI-07 Windows xoá trễ | SHOULD | done (chưa chạy) | `cmd.exe` tách nền xoá shim và thư mục cài |
+| UNI-07 Windows xoá trễ | SHOULD | done | `cmd.exe` tách nền xoá shim và thư mục cài; CI Windows kiểm thư mục cài và shim đã mất |
 | SEC-01/04/05 | MUST | done | sha256 đúng tên; HTTPS, timeout, giới hạn byte; `lib/tar.mjs` từ chối `..`, link, mục ngoài danh sách |
 | SEC-02/03 ký số cosign | SHOULD | todo | Installer nói rõ "chưa kiểm chữ ký" |
 | VER-01/02/05/08 | MUST/SHOULD | done | `lib/version.mjs`; release.yml kiểm tag; `scripts/prepare-release.mjs`; `CHANGELOG.md` |
 | VER-04 fingerprint | SHOULD | done | `version --json`: commit, thời điểm commit |
 | REL-02/05/06 | MUST | done | Một quy tắc tên asset; `scripts/package-release.mjs`; `checksums.txt` |
-| REL-03/04/07 CI trước release; draft → smoke → publish | MUST/SHOULD | done (chưa chạy) | `.github/workflows/release.yml` |
+| REL-03/04/07 CI trước release; draft → smoke → publish | MUST/SHOULD | done (release chưa chạy) | `.github/workflows/release.yml`; CI chạy xanh, release chờ tag đầu tiên |
 | REL-09 tái lập | SHOULD | done | Đóng gói hai lần ra cùng sha256 |
 | REL-10 action ghim SHA, quyền tối thiểu | SHOULD | done | |
 | REL-13 runbook | SHOULD | done | `docs/release-runbook.md` |
-| TST-01..05 | MUST/SHOULD | done (Linux) | `scripts/test-installer.sh`, `.ps1`, `test-agent-native.sh`; CI ba OS chưa chạy lần nào |
+| TST-01..05 | MUST/SHOULD | done | CI xanh 9/9 (Linux, macOS, Windows × Node 20/22/24), gồm vòng đời installer sh và PowerShell 5.1 và vòng agent |
 | TST-06 hợp đồng lệnh ↔ docs | SHOULD | done | `test/commands.test.mjs`; `docs/cli-reference.md` sinh từ code |
 
 Không áp dụng: `85-service-daemon` (không daemon; hook tách tiến trình chạy một lần), `channels/agent-host-plugin` (chưa phát hành dạng plugin), UX-01 binary dựng sẵn (một tarball mã nguồn dùng cho mọi nền), CFG-07 (không có bí mật).
@@ -95,11 +95,10 @@ Không áp dụng: `85-service-daemon` (không daemon; hook tách tiến trình 
 | 8 | pass | `doctor` chỉ đọc, thoát 1 khi chưa đạt, `next` chạy được |
 | 9 | pass | `init --yes` lần hai: "không có gì phải làm" |
 | 10 | pass | `update --check` thoát 10 khi có bản mới (fixture) |
-| 11 | pass (chưa chạy trên GitHub) | release.yml: tag == VERSION, checksums kiểm lại, action ghim SHA |
-| 12 | xem ghi chú dưới | Vòng có kịch bản qua (`test-agent-native.sh`); thử bằng agent thật: xem báo cáo cook |
+| 11 | pass | ci.yml chạy xanh; release.yml: tag == VERSION, checksums kiểm lại, action ghim SHA (chờ tag đầu tiên) |
+| 12 | pass | Agent mới chỉ dùng `--help`/`--json` tới `doctor ok`; sau khi thêm `config privacy-add`, vòng có kịch bản hội tụ ở vòng đầu |
 
 ## Còn lại
-- Chạy CI lần đầu trên GitHub (cần push), sửa lỗi riêng Windows nếu lộ ra.
-- Cắt bản `v0.1.0` (cần push tag) để lệnh cài trong README dùng được.
-- Kiểm trên Windows thật shell mà Claude Code/Codex dùng chạy hook.
+- Cắt bản `v0.1.0` (`node scripts/prepare-release.mjs` rồi push tag) để lệnh cài trong README dùng được; `release.yml` chạy lần đầu khi đó.
+- Đo một phiên Claude Code/Codex thật trên Windows gọi hook (shell hiện dựa trên báo cáo cộng đồng, xem `docs/installation.md`).
 - SHOULD còn lại: completions (CMD-20), gợi ý bản mới định kỳ (UX-06), `config edit` (UX-14), cosign (SEC-02/03), doctor gọi thử hook (DOC-05).

@@ -24,7 +24,7 @@ CI chứng minh trên ba OS rằng gói cài được, init được, update đ�
 - [x] Script vòng đời installer cho sh và PowerShell.
 - [x] Test agent-native.
 - [x] `release.yml` với draft → smoke → publish.
-- [ ] Cắt thử `v0.1.0-rc.1` (prerelease, không thành `latest`).
+- [x] ~~Cắt thử `v0.1.0-rc.1`~~: bỏ theo quyết định của user (2026-11-03: push `main`, chưa tag). Đường phát hành được kiểm bằng CI và `docs/release-runbook.md`; tag đầu tiên do user quyết.
 
 ## Verification
 - CI xanh trên 9 tổ hợp.
@@ -35,5 +35,5 @@ CI chứng minh trên ba OS rằng gói cài được, init được, update đ�
 Runner Windows không có Git Bash trong PATH cho shim sh: test cả hai shim riêng.
 
 ## Ghi chú triển khai (2026-11-03)
-- Workflow và script đã viết; trên Linux chạy qua `scripts/test-installer.sh` và `scripts/test-agent-native.sh`. CI GitHub chưa chạy lần nào: cần push lên `main`.
-- Chưa làm: cắt `v0.1.0-rc.1` (cần push tag, việc ra ngoài cần user cho phép).
+- CI chạy trên GitHub từ 2026-11-03: 9/9 tổ hợp (ubuntu, macos, windows × Node 20/22/24) xanh, gồm vòng đời installer sh và PowerShell 5.1 và vòng agent. Lần đầu lộ ra lỗi chỉ có trên macOS (repo sau symlink) và Windows (đường dẫn 8.3, test giả định POSIX, runner chạy quyền Administrator, PowerShell làm hỏng đối số JSON); đã sửa.
+- `release.yml` chưa chạy vì chưa có tag.

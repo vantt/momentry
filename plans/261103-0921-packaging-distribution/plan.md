@@ -1,7 +1,7 @@
 ---
 title: "Đóng gói, phân phối và cài đặt momentry"
 description: "Biến momentry từ cây mã chạy tay thành công cụ cài một lệnh, tự cài hook, có doctor/update/uninstall, chạy trên Linux, macOS, Windows và WSL."
-status: in-progress
+status: completed
 priority: P1
 effort: 9d
 branch: main
