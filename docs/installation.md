@@ -1,6 +1,6 @@
 # Cài đặt momentry
 
-Cách cài nhanh ở [README](../README.md#bắt-đầu-nhanh). Trang này nói rõ cài vào đâu, chỉnh thế nào và từng nền tảng khác nhau ra sao. Mọi đường dẫn thật trên máy bạn: `momentry paths`.
+Cách cài nhanh ở [README](../README.vi.md#bắt-đầu-nhanh). Trang này nói rõ cài vào đâu, chỉnh thế nào và từng nền tảng khác nhau ra sao. Mọi đường dẫn thật trên máy bạn: `momentry paths`.
 
 ## Nền tảng
 

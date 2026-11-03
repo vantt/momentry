@@ -50,7 +50,7 @@ test('aliases and suggestions', () => {
 
 test('README and docs/cli-reference.md mention only commands that exist', () => {
   const known = new Set([...Object.keys(COMMANDS), ...Object.values(COMMANDS).flatMap((c) => c.aliases ?? [])]);
-  for (const f of ['README.md', 'docs/cli-reference.md', 'docs/installation.md']) {
+  for (const f of ['README.md', 'README.vi.md', 'docs/cli-reference.md', 'docs/installation.md']) {
     const p = path.join(ROOT, f);
     if (!fs.existsSync(p)) continue;
     const text = fs.readFileSync(p, 'utf8');

@@ -1,5 +1,7 @@
 # momentry
 
+[English](README.md) · **Tiếng Việt**
+
 **Không còn phải ngồi nhớ lại tuần này có chuyện gì đáng kể: momentry tự nhặt chúng từ các phiên Claude Code và Codex của bạn.**
 
 Bạn cứ làm việc với coding agent như thường. Sau mỗi phiên, momentry đọc transcript và tìm những khoảnh khắc đáng kể: con số đổi, nguyên nhân bất ngờ, quyết định bị đảo, cách làm người ngoài muốn học. Mỗi chuyện được ghi thành một file markdown trong repo và xếp hạng theo câu hook, sự giằng xé và mức ảnh hưởng. Dành cho người build in public, viết blog kỹ thuật hay làm báo cáo tuần mà không muốn mất chất liệu.
