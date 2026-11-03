@@ -13,9 +13,9 @@ dependencies: [3]
 - Modify: `docs/installation.md` (bảng host, profile), `docs/prd.md` (host mới, quyết định agy), `CHANGELOG.md`, `docs/cli-reference.md` (sinh lại), `docs/packaging-checklist.md` (AGT-02).
 
 ## Tasks & Steps
-- [ ] test đủ; `scripts/test-installer.sh` kiểm init cài cho pi/omp/agy giả
-- [ ] tài liệu
-- [ ] push, CI 9/9 xanh
+- [x] test đủ; `scripts/test-installer.sh` kiểm init cài cho pi/omp/agy giả
+- [x] tài liệu
+- [x] push, CI 9/9 xanh
 
 ## Verification
 - CI xanh trên commit cuối.

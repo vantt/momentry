@@ -17,11 +17,16 @@ dependencies: [2]
 - Create: `prompts/pi-extension.ts` (mẫu), `prompts/agy-bip.md`.
 
 ## Tasks & Steps
-- [ ] hosts.mjs đa profile, đa kiểu cài
-- [ ] extension pi/omp: gọi node tuyệt đối + `bin/momentry.mjs` (omp chạy Bun; Windows không spawn `.cmd`)
-- [ ] agy hooks.json + skill
-- [ ] doctor/uninstall
-- [ ] Thử thật: `omp`/`pi` nạp extension không lỗi (chế độ không gọi model nếu có), agy hooks.json hợp lệ
+- [x] hosts.mjs đa profile, đa kiểu cài
+- [x] extension pi/omp: gọi node tuyệt đối + `bin/momentry.mjs` (omp chạy Bun; Windows không spawn `.cmd`)
+- [x] agy hooks.json + skill
+- [x] doctor/uninstall
+- [x] Thử thật: `omp`/`pi` nạp extension không lỗi (chế độ không gọi model nếu có), agy hooks.json hợp lệ
 
 ## Verification
 - `node --test test/hosts.test.mjs`; `sh scripts/test-installer.sh`
+
+## Ghi chú triển khai (2026-11-03)
+- Thử thật trên Linux, HOME tạm: pi 1.4.0 nạp `extensions/momentry.ts`, `session_start` → `hook.spawned runtime=pi cmd=scan`; omp 18.12.6: `session_start` → scan, `session_shutdown` → harvest đọc transcript. Lúc thử omp, omp bỏ qua `OPENAI_BASE_URL` và gửi một yêu cầu tới OpenAI với khoá giả (bị 401); không khoá thật nào bị gửi.
+- Antigravity 1.4.4 đòi đăng nhập trước khi mở phiên nên hook chưa chạy được trong sandbox; định dạng `hooks.json` khớp nhóm `herdr` có sẵn trên máy và tài liệu chính thức. Chưa kiểm: một phiên agy thật đã đăng nhập.
+- `/bip` của omp đặt ở `<agentDir>/commands/bip.md` mỗi profile (thay vì `~/.agents/commands`), để đi cùng cơ chế tìm profile.

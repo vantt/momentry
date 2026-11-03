@@ -19,10 +19,10 @@ dependencies: []
 - Create: fixture `test/fixtures/transcripts/pi-session.jsonl`, `omp-session.jsonl`, `agy/transcript_full.jsonl` (bịa, đúng schema).
 
 ## Tasks & Steps
-- [ ] pi/omp reader + test
-- [ ] agy reader + chỉ mục + test
-- [ ] pipeline/scan/sourceOf + test
-- [ ] Thử trên dữ liệu thật trong máy: đếm Entry theo loại, không in nội dung
+- [x] pi/omp reader + test
+- [x] agy reader + chỉ mục + test
+- [x] pipeline/scan/sourceOf + test
+- [x] Thử trên dữ liệu thật trong máy: đếm Entry theo loại, không in nội dung
 
 ## Verification
 - `node --test test/sources.test.mjs`

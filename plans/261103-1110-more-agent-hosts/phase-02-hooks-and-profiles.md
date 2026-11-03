@@ -18,9 +18,9 @@ dependencies: [1]
 - Create: `lib/profiles.mjs` — `hostRoots(name, env)`: claude `[CLAUDE_CONFIG_DIR||~/.claude]`; codex `[CODEX_HOME||~/.codex, ~/.codex-*]`; pi `[PI_CODING_AGENT_DIR||~/.pi/agent, ~/.pi/accounts/*]`; omp `[~/.omp/agent, ~/.omp/profiles/*/agent]`; agy `[~/.gemini, ~/.agy-homes/*/.gemini]`; chỉ giữ thư mục tồn tại.
 
 ## Tasks & Steps
-- [ ] profiles.mjs + test (HOME tạm)
-- [ ] hook runtime pi/omp/agy + test
-- [ ] scan đọc transcript ở mọi profile
+- [x] profiles.mjs + test (HOME tạm)
+- [x] hook runtime pi/omp/agy + test
+- [x] scan đọc transcript ở mọi profile
 
 ## Verification
 - `node --test test/hook.test.mjs test/paths.test.mjs`
