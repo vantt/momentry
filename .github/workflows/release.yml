@@ -83,6 +83,7 @@ jobs:
         run: |
           $env:MOMENTRY_RELEASE_BASE = (Resolve-Path rel).Path
           $env:MOMENTRY_NO_MODIFY_PATH = '1'
+          $env:MOMENTRY_ALLOW_ROOT = '1'   # Windows runners run as Administrator
           powershell -NoProfile -ExecutionPolicy Bypass -File rel/install.ps1
           $bin = Join-Path $env:LOCALAPPDATA 'momentry\bin\momentry.cmd'
           if ((& $bin --version) -ne "momentry $($env:GITHUB_REF_NAME.Substring(1))") { exit 1 }

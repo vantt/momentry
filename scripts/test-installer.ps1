@@ -19,6 +19,7 @@ try {
     $env:LOCALAPPDATA = Join-Path $userHome 'AppData\Local'
     $env:MOMENTRY_NO_MODIFY_PATH = '1'
     $env:MOMENTRY_YES = '1'
+    $env:MOMENTRY_ALLOW_ROOT = '1'   # GitHub's Windows runners run as Administrator
 
     # a `claude` that answers --version, as claude.cmd (Windows cannot run the shebang fixture directly)
     $fake = Join-Path $work 'fakebin'
