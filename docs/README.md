@@ -16,6 +16,7 @@ Nhặt chất liệu kể chuyện (build in public) từ transcript của Claud
 | [prd.md](prd.md) | PRD v2: mục đích, nguyên tắc, pipeline, phần cơ học, cấu trúc code, kiểm thử, việc, đo, câu hỏi mở, các ý đã bỏ | Có |
 | [experiments/2026-11-03-harvest/](experiments/2026-11-03-harvest/README.md) | Thí nghiệm harvest đợt 1–5: tự lọc, điểm nóng, người ngoài, nhãn user, hook và tension, stakes | Có (bằng chứng) |
 | [experiments/2026-11-03-harvest/harness/](experiments/2026-11-03-harvest/harness/) | Code và prompt đã chạy được: `reduce.mjs`, `prompts.mjs`, `prompts-rank.md`, `run.sh`, `judge.sh`. Kết quả thô nằm ngoài repo | Có (điểm xuất phát cho code) |
+| [naming.md](naming.md) | Đặt tên: tên đã loại, so sánh Momentale và Momentry theo tiêu chí marketing, tên miền, hướng sửa cách đọc | Có (đang cân, chưa chốt) |
 | [sample/](sample/README.md) | Bản chép hộp chứa và 8 chuyện ghi tay từ repo `obsidian-pkm-automation`, nguyên trạng ngày bàn giao. Dùng làm đáp án và dữ liệu thử khuôn | Có (khuôn bản B) |
 | [history/design-v1-body-brain.md](history/design-v1-body-brain.md) | Thiết kế v1 Body/Brain: hook Stop, detector regex, profile chấm, persona panel | Không. Nhiều phần bị thí nghiệm bác (PRD mục 12) |
 | [history/prd-handoff-obsidian-pkm.md](history/prd-handoff-obsidian-pkm.md) | PRD bàn giao từ repo `obsidian-pkm-automation`: phần cơ học, riêng tư, bảng việc cũ | Không. Phần còn dùng đã chuyển vào PRD v2 |
