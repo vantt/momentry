@@ -7,6 +7,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { handleHook, printHookConfig } from '../lib/hook.mjs';
+import { paths } from '../lib/paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BIN = path.resolve(HERE, '../bin/momentry.mjs');
@@ -106,7 +107,7 @@ test('CLI hook --user-home: momentry uses the real home (cache, config) when the
   const payload = JSON.stringify({ conversationId: '0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f7777', transcriptPath: '/g/t.jsonl', workspacePaths: [s.repo] });
   const r = spawnSync(process.execPath, [BIN, 'hook', 'session-start', '--agy', '--user-home', real], { cwd: s.repo, env: { ...env, STORY_HARVEST: '' }, input: payload, encoding: 'utf8' });
   assert.equal(r.stdout.trim(), '{}');
-  assert.ok(fs.existsSync(path.join(real, '.cache', 'momentry', 'agy-sessions.jsonl')), 'index under the real home');
+  assert.ok(fs.existsSync(path.join(paths({ HOME: real, USERPROFILE: real }).cache, 'agy-sessions.jsonl')), 'index under the real home');
   assert.ok(!fs.existsSync(path.join(s.base, 'agy-account', '.cache')), 'nothing under the account HOME');
 });
 
