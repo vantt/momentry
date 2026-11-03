@@ -1,0 +1,103 @@
+# Release on a version tag: full CI, tag == lib/version.mjs, package, draft release, smoke-install the draft
+# on every OS through a local copy of its assets, then publish. A failing smoke test leaves only a draft.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  draft:
+    needs: ci
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - id: v
+        name: tag must equal lib/version.mjs
+        run: |
+          want="v$(node -p "require('fs').readFileSync('lib/version.mjs','utf8').match(/VERSION = '([^']+)'/)[1]")"
+          [ "$GITHUB_REF_NAME" = "$want" ] || { echo "tag $GITHUB_REF_NAME != $want (lib/version.mjs)"; exit 1; }
+          echo "tag=$want" >> "$GITHUB_OUTPUT"
+      - name: package
+        run: node scripts/package-release.mjs --out out
+      - name: verify assets
+        run: |
+          cd out && sha256sum -c checksums.txt
+          [ "$(wc -l < checksums.txt)" = 3 ] || { echo "expected 3 assets"; exit 1; }
+      - name: create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""; case "$GITHUB_REF_NAME" in *-*) pre="--prerelease" ;; esac
+          node scripts/changelog-section.mjs "$GITHUB_REF_NAME" > notes.md
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft $pre --title "momentry $GITHUB_REF_NAME" --notes-file notes.md out/*
+
+  smoke:
+    needs: draft
+    name: smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write   # draft releases are only visible to tokens with push access; this job only downloads
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: download the draft assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${{ needs.draft.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --dir rel
+      - name: install from the draft (sh)
+        if: runner.os != 'Windows'
+        run: |
+          sh rel/install.sh --local-fixture rel --yes
+          bash -l -c "$HOME/.local/bin/momentry --version" | grep -qx "momentry ${GITHUB_REF_NAME#v}"
+          "$HOME/.local/bin/momentry" doctor --json > doctor.json || true
+          node -e "const j=JSON.parse(require('fs').readFileSync('doctor.json','utf8')); if (j.schema !== 1) process.exit(1)"
+          "$HOME/.local/bin/momentry" uninstall --yes
+          [ ! -e "$HOME/.local/bin/momentry" ]
+      - name: install from the draft (PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $env:MOMENTRY_RELEASE_BASE = (Resolve-Path rel).Path
+          $env:MOMENTRY_NO_MODIFY_PATH = '1'
+          powershell -NoProfile -ExecutionPolicy Bypass -File rel/install.ps1
+          $bin = Join-Path $env:LOCALAPPDATA 'momentry\bin\momentry.cmd'
+          if ((& $bin --version) -ne "momentry $($env:GITHUB_REF_NAME.Substring(1))") { exit 1 }
+          & $bin uninstall --yes
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+  publish:
+    needs: [draft, smoke]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest="--latest"; case "${{ needs.draft.outputs.tag }}" in *-*) latest="--latest=false" ;; esac
+          gh release edit "${{ needs.draft.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --draft=false $latest

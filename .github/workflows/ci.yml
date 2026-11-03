@@ -1,0 +1,45 @@
+# Tests, packaging and the install/update/uninstall lifecycle on Linux, macOS and Windows.
+# Also called by release.yml before anything is published.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        node: ['20', '22', '24']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: unit and integration tests
+        shell: bash
+        run: node --test test/*.test.mjs
+      - name: package (dry run)
+        run: node scripts/package-release.mjs --dry-run
+      - name: installer lifecycle (sh)
+        if: runner.os != 'Windows'
+        run: sh scripts/test-installer.sh
+      - name: agent-native loop
+        if: runner.os != 'Windows'
+        run: sh scripts/test-agent-native.sh
+      - name: installer lifecycle (PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-installer.ps1
