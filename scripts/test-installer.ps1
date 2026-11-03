@@ -48,11 +48,9 @@ try {
     New-Item -ItemType Directory -Path $repo | Out-Null
     Push-Location $repo
     & git init -q
-    $names = Join-Path $userHome 'names.txt'
-    Set-Content -LiteralPath $names -Value 'Tran Thi Bich Ngoc' -Encoding UTF8
-    $src = ConvertTo-Json -Compress @(@{ type = 'lines'; path = $names })
-    & $bin config set privacy.sources $src | Out-Null
-    if ($LASTEXITCODE -ne 0) { Fail 'config set' }
+    # privacy-add takes plain names: PowerShell 5.1 strips the inner quotes of a JSON argument to a native command
+    & $bin config privacy-add 'Tran Thi Bich Ngoc' | Out-Null
+    if ($LASTEXITCODE -ne 0) { Fail 'config privacy-add' }
     $init = (& $bin init --yes --json) -join "`n" | ConvertFrom-Json
     if (-not $init.ok) { Fail ('init: ' + ($init | ConvertTo-Json -Depth 6)) }
     $settings = Get-Content -Raw (Join-Path $userHome '.claude\settings.json')

@@ -99,7 +99,7 @@ Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên tr
 | `privacy.allowUnchecked` | false | Chỉ nhận từ cấu hình người dùng hoặc env |
 | `lock.staleSec` | 3600 | |
 
-Cách nhanh nhất: `momentry config privacy-add "Tên" …` thêm tên vào `<thư mục cấu hình>/names.txt` (quyền 0600) và khai báo file đó. Nguồn chặn (`privacy.sources`) nhận ba loại: `{"type":"lines","path":"…"}` (mỗi dòng một tên), `{"type":"vault-titles","path":"<vault>"}` (tên file trong vault Obsidian), `{"type":"json-fields","path":"…","fields":["…"]}`.
+Cách nhanh nhất, và là cách nên dùng trên Windows (PowerShell 5.1 làm hỏng đối số JSON truyền cho chương trình ngoài): `momentry config privacy-add "Tên" …` thêm tên vào `<thư mục cấu hình>/names.txt` (quyền 0600) và khai báo file đó. Nguồn chặn (`privacy.sources`) nhận ba loại: `{"type":"lines","path":"…"}` (mỗi dòng một tên), `{"type":"vault-titles","path":"<vault>"}` (tên file trong vault Obsidian), `{"type":"json-fields","path":"…","fields":["…"]}`.
 
 ## Hook trên Windows
 
