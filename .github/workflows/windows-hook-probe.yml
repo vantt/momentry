@@ -1,0 +1,67 @@
+# Manual probe for issue #1: on a real Windows runner, does Claude Code (and Codex) invoke momentry's hook?
+# No credentials are used: the CLI sessions fail to authenticate, but SessionStart-type hooks fire before that.
+name: windows-hook-probe
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  probe:
+    runs-on: windows-2025
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: install Claude Code and Codex CLIs
+        shell: powershell
+        run: |
+          npm install -g @anthropic-ai/claude-code @openai/codex
+          claude --version
+          codex --version
+      - name: install momentry from this commit and init a repo
+        shell: powershell
+        run: |
+          node scripts/package-release.mjs --out rel
+          $env:MOMENTRY_RELEASE_BASE = (Resolve-Path rel).Path
+          $env:MOMENTRY_ALLOW_ROOT = '1'
+          powershell -NoProfile -ExecutionPolicy Bypass -File rel/install.ps1
+          $bin = Join-Path $env:LOCALAPPDATA 'momentry\bin\momentry.cmd'
+          New-Item -ItemType Directory -Path probe-repo | Out-Null
+          Set-Location probe-repo
+          git init -q
+          & $bin config privacy-add 'Probe Name'
+          & $bin init --yes
+          Get-Content (Join-Path $env:USERPROFILE '.claude\settings.json')
+      - name: open a Claude Code session (no credentials)
+        shell: powershell
+        working-directory: probe-repo
+        run: |
+          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','claude -p "hello" > claude.out 2>&1' -PassThru -NoNewWindow
+          if (-not $p.WaitForExit(90000)) { $p.Kill() }
+          Get-Content claude.out -ErrorAction SilentlyContinue | Select-Object -First 20
+          Start-Sleep -Seconds 5
+      - name: open a Codex session (no credentials)
+        shell: powershell
+        working-directory: probe-repo
+        continue-on-error: true
+        run: |
+          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec "hello" > codex.out 2>&1' -PassThru -NoNewWindow
+          if (-not $p.WaitForExit(90000)) { $p.Kill() }
+          Get-Content codex.out -ErrorAction SilentlyContinue | Select-Object -First 20
+          Start-Sleep -Seconds 5
+      - name: report hook.log
+        shell: powershell
+        run: |
+          $log = Join-Path $env:LOCALAPPDATA 'momentry\cache\hook.log'
+          if (Test-Path $log) { Get-Content $log } else { Write-Host 'NO hook.log' }
+          if (-not (Test-Path $log) -or -not (Select-String -LiteralPath $log -Pattern 'hook\.spawned|"hook"' -Quiet)) {
+            Write-Host '::error::momentry hook was not invoked by Claude Code on Windows'
+            exit 1
+          }
