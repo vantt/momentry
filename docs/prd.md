@@ -49,7 +49,7 @@ Không để lọt dữ liệu riêng vào repo.
 3. Gộp cụm, chấm cụm (hook, tension, strength, stakes), bước người ngoài.
 4. Bộ kiểm riêng tư chạy trên mọi chuyện trước khi ghi.
 5. Ghi hộp chuyện, sổ đã gom, xếp hạng khi liệt kê.
-6. Hook PreCompact, SessionEnd, SessionStart (Claude) và pre_compact (Codex), chạy nền; quét bù Codex bằng `session_start` nếu sự kiện này dùng được (chưa kiểm payload, mục 6.4), dự phòng `momentry scan`. Công cụ chỉ in đoạn cấu hình hook; user tự cài.
+6. Hook PreCompact, SessionEnd, SessionStart (Claude) và pre_compact (Codex), chạy nền; quét bù Codex bằng `session_start` nếu sự kiện này dùng được (chưa kiểm payload, mục 6.4), dự phòng `momentry scan`. `momentry init` tự cài hook và `/bip` khi user đồng ý (`--yes` hoặc trả lời có), có sao lưu và gỡ ngược được (mục 6.4).
 7. Lệnh `/bip` cho user chủ động đánh dấu.
 8. Test đơn vị với dữ liệu giả, chế độ `--dry-run` và `--fake-llm`.
 
@@ -63,7 +63,6 @@ Không để lọt dữ liệu riêng vào repo.
 | Đăng bài, lịch đăng, kênh phân phối | Thuộc Content Intelligence Service. |
 | Thu phản ứng khán giả sau khi đăng | Chưa có bài đăng nào. |
 | Tự commit chuyện vào git | User commit. Công cụ chỉ ghi file. |
-| Tự sửa `~/.claude/settings.json`, `~/.codex/*` | Cài hook là việc user duyệt. |
 
 ## 4. Nguyên tắc (đã chốt)
 
@@ -365,19 +364,19 @@ Codex: user chỉ chốt `pre_compact` cộng quét bù `~/.codex/sessions` (BG 
 4. Tách tiến trình nền bằng `spawn(process.execPath, [binPath, 'harvest' | 'scan', ...], {detached: true, stdio: 'ignore', env: {...process.env, STORY_HARVEST: '1'}})` rồi `unref()`. Dùng `process.execPath` (đường dẫn node đang chạy) để không phụ thuộc PATH của môi trường hook. Thoát 0.
 5. Không in gì ra stdout. Mục tiêu dưới 100 ms.
 
-`hooks --print` in lệnh hook bằng **đường dẫn tuyệt đối** tới node (`process.execPath` lúc in) và tới `bin/momentry.mjs`, ví dụ `"/usr/bin/node" "/home/u/projects/momentry/bin/momentry.mjs" hook pre-compact`.
+Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví dụ `"/home/u/.local/bin/momentry" hook pre-compact` (Windows: `"…\momentry\bin\momentry.cmd" hook pre-compact`). Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `<install>/current`, nên nâng Node hay `momentry update` không làm hook hỏng. Khi chạy thẳng từ mã nguồn (git checkout), lệnh hook là `"<node>" "<repo>/bin/momentry.mjs" hook …`; `momentry doctor` báo hook trỏ tới file không còn và `doctor --fix` sửa lại.
 
 **Quét bù không đụng phiên đang mở:** bỏ qua file transcript có `mtime` trong `scan.quietMinutes` phút gần nhất (mặc định 30), trừ phiên vừa gọi hook. Nhiều phiên cùng chạy trên một máy là chuyện thường.
 
-**Cài hook:** `momentry hooks --print --claude` (hoặc `--codex`) in đoạn JSON để user tự dán vào `~/.claude/settings.json` hay `~/.codex/hooks.json`, kèm hướng dẫn bật, tắt và duyệt tin cậy hook Codex (`hooks.state` trong `~/.codex/config.toml`). Công cụ không tự sửa các file đó.
+**Cài hook** (quyết định của user 2026-11-03, thay cho "chỉ in"): `momentry init` (và `momentry connect [claude|codex]`) cài hook vào `~/.claude/settings.json` / `~/.codex/hooks.json` và `/bip` vào `~/.claude/commands/bip.md` / `~/.codex/prompts/bip.md` cho host có trên máy. Điều kiện: có `--yes`, hoặc user trả lời có trên TTY; không TTY mà thiếu `--yes` thì bỏ qua và chỉ lệnh `momentry connect --yes`. Luật sửa file của host: từ chối file JSON hỏng; sao lưu `<file>.momentry-bak-<ts>` trước khi ghi; ghi atomic, giữ quyền file và thụt lề; huỷ nếu file bị đổi giữa lúc đọc và lúc ghi; chỉ đụng mục có lệnh `momentry … hook <event>`; `bip.md` mang dòng đánh dấu `momentry:bip sha256=…` ở cuối, user sửa file thì momentry không ghi đè và không xoá. `--dry-run` in đúng từng thay đổi. `momentry connect --remove` và `momentry uninstall` gỡ ngược. `momentry hooks --print` vẫn in đoạn cấu hình cho ai muốn tự dán. Bước duyệt tin cậy hook Codex (`hooks.state` trong `~/.codex/config.toml`) vẫn do Codex hỏi user.
 
-**`/bip`:** một lệnh slash cho Claude (`.claude/commands/bip.md` hoặc skill) và prompt tương ứng cho Codex, do `hooks --print` in mẫu. Lệnh này bảo agent gọi `momentry add --by human --note "<ghi chú>"`, tạo ngay một chuyện `captured_by: human`, `hit_by: [bip]`. `add` cũng qua bộ kiểm riêng tư (mục 6.7). Trên Claude, dòng `/bip` trong transcript còn thành điểm nóng loại `bip` ở lần gom sau (mục 5.3). Trên Codex chỉ có đường `add`.
+**`/bip`:** một lệnh slash cho Claude (`~/.claude/commands/bip.md`) và prompt tương ứng cho Codex (`~/.codex/prompts/bip.md`), do `init`/`connect` cài. Lệnh này bảo agent gọi `momentry add --by human --note "<ghi chú>"`, tạo ngay một chuyện `captured_by: human`, `hit_by: [bip]`. `add` cũng qua bộ kiểm riêng tư (mục 6.7). Trên Claude, dòng `/bip` trong transcript còn thành điểm nóng loại `bip` ở lần gom sau (mục 5.3). Trên Codex chỉ có đường `add`.
 
 ### 6.5 Cấu hình
 
-**Repo được quan sát** **(mặc định, user có thể đổi):** chỉ repo có file `.momentry.json` ở git root (có thể là `{}`), hoặc nằm trong biến `MOMENTRY_REPOS` (danh sách đường dẫn, phân cách `:`). Lý do: hook cài ở mức user sẽ chạy trong mọi repo, không nên tự ghi thư mục mới vào repo không liên quan. `momentry init` tạo file này.
+**Repo được quan sát** **(mặc định, user có thể đổi):** chỉ repo có file `.momentry.json` ở git root (có thể là `{}`), hoặc nằm trong biến `MOMENTRY_REPOS` (danh sách đường dẫn, phân cách `:`; `;` trên Windows). Lý do: hook cài ở mức user sẽ chạy trong mọi repo, không nên tự ghi thư mục mới vào repo không liên quan. `momentry init` tạo file này.
 
-**Thứ tự ưu tiên:** cờ dòng lệnh > biến môi trường > `<repo>/.momentry.json` > `~/.config/momentry/config.json` > mặc định.
+**Thứ tự ưu tiên:** cờ dòng lệnh > biến môi trường > `<repo>/.momentry.json` > cấu hình người dùng (`~/.config/momentry/config.json`; Windows `%APPDATA%\momentry\config.json`; xem `momentry paths`) > mặc định. `momentry config show` in giá trị hiệu lực kèm lớp đặt nó; `momentry config set/unset` sửa có kiểm.
 
 | Khoá | Mặc định | Ghi chú |
 |---|---|---|
@@ -399,9 +398,9 @@ Codex: user chỉ chốt `pre_compact` cộng quét bù `~/.codex/sessions` (BG 
 
 Biến môi trường khác: `MOMENTRY_CONFIG` (đường dẫn cấu hình người dùng), `MOMENTRY_CACHE`, `MOMENTRY_FAKE_LLM` (như `--fake-llm`), `STORY_HARVEST`.
 
-Mã nguồn công cụ **(mặc định, user có thể đổi):** repo CIS, thư mục ``. Hook gọi bằng đường dẫn tuyệt đối tới node và tới `bin/momentry.mjs` (mục 6.4).
+Cài đặt: `install.sh` (Linux, macOS, WSL) hoặc `install.ps1` (Windows) đặt mã nguồn vào `~/.local/share/momentry/versions/<v>` (Windows `%LOCALAPPDATA%\momentry\app`) và shim `momentry` vào `~/.local/bin`; chi tiết ở [installation.md](installation.md). Hook gọi shim bằng đường dẫn tuyệt đối (mục 6.4). Nền tảng hỗ trợ: Linux, macOS, Windows native, WSL.
 
-**Node:** cần Node ≥ 20 (`Array.prototype.findLast`, `readdirSync({recursive})`). `bin/momentry.mjs` kiểm `process.versions.node` lúc chạy, thấp hơn thì in lỗi và thoát 1 (riêng lệnh `hook` vẫn thoát 0 và ghi `hook.log`). Không có `package.json`; mọi `import` module có sẵn phải dùng tiền tố `node:`.
+**Node:** cần Node ≥ 20 (`Array.prototype.findLast`, `readdirSync({recursive})`). `bin/momentry.mjs` kiểm `process.versions.node` lúc chạy, thấp hơn thì in lỗi và thoát 1 (riêng lệnh `hook` vẫn thoát 0, không làm gì). Không có `package.json`; mọi `import` module có sẵn phải dùng tiền tố `node:`.
 
 ### 6.6 Định dạng hộp
 
@@ -515,7 +514,17 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
 
 ```text
 
-  bin/momentry.mjs        CLI: parse cờ, gọi lệnh, đặt mã thoát
+  bin/momentry.mjs        vỏ CLI: kiểm Node rồi gọi lib/cli.mjs
+  lib/cli.mjs                parse theo bảng lệnh, gọi lệnh, in văn bản hoặc phong bì --json, đặt mã thoát
+  lib/commands.mjs           bảng lệnh duy nhất: cờ, mặc định, ví dụ, mã thoát; sinh --help, help --json, docs/cli-reference.md
+  lib/cli-output.mjs         lỗi dạng lỗi / vì / sửa; phong bì {schema, ok, data, error, next}
+  lib/doctor.mjs, checks.mjs engine kiểm và sửa dùng chung cho doctor, init, status
+  lib/hosts.mjs, safe-edit.mjs cài/gỡ hook và /bip cho Claude Code, Codex; sửa JSON của host an toàn
+  lib/paths.mjs, proc.mjs    đường dẫn theo OS; tìm và chạy lệnh ngoài (claude.cmd trên Windows)
+  lib/install.mjs, update.mjs, uninstall.mjs, tar.mjs  bố cục bản cài, shim, tự cập nhật, gỡ, đọc/ghi tarball
+  lib/version.mjs, config-cmd.mjs  nguồn phiên bản duy nhất; lệnh config
+  scripts/                   package-release.mjs, prepare-release.mjs, gen-cli-reference.mjs, test-installer.*, test-agent-native.sh
+  install.sh, install.ps1    installer một lệnh
   lib/config.mjs             loadConfig({cwd, env, flags}) -> Config; isObserved(repoRoot)
   lib/repo.mjs               gitRoot(cwd), repoName(root)
   lib/sources/claude.mjs     listTranscripts(repoRoot) -> File[] (quét tiền tố, xác nhận cwd); readEntries(path, {fromLine, toLine}) -> Entry[]
@@ -550,7 +559,7 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
   prompts/bip.md             mẫu lệnh /bip cho Claude và Codex
   test/*.test.mjs            gồm imports.test.mjs: quét mọi .mjs, cấm import không có tiền tố node: hoặc đường dẫn tương đối
   test/fixtures/             transcript giả, vault giả, kết quả LLM giả
-  README.md                  cài, cấu hình, lệnh, bảng tên file --fake-llm
+  README.md                  giới thiệu, cài, bắt đầu nhanh, cập nhật, gỡ
 ```
 
 Prompt là văn bản tiếng Việt trong `prompts/`, không nằm trong code. Chỗ điền dạng `{transcript}`, `{hotspots}`, `{stories}`. Sửa prompt không cần sửa code.
@@ -574,7 +583,17 @@ momentry <lệnh> [cờ]
 | `check` | Kiểm khuôn frontmatter, `id` (nếu có) khớp tên file, link không gãy, riêng tư | `--box DIR`, `--staged` |
 | `reduce` | In văn bản rút gọn và điểm nóng (gỡ lỗi, thí nghiệm) | `--transcript FILE`, `--to-line N`, `--out DIR` |
 | `ledger` | Xem hoặc quên một phiên trong sổ | `--show`, `--forget ID` |
-| `init` | Tạo `.momentry.json` ở git root hiện tại | |
+| `init` | Tạo `.momentry.json` và hộp, cài hook và `/bip` (khi được đồng ý), chạy doctor | `--repo DIR`, `--no-connect`, `--yes`, `--dry-run`, `--json` |
+| `doctor` | Kiểm Node, git, claude, cấu hình, nguồn chặn, repo, hộp, cache, bản cài, hook; `--fix` sửa | `--fix`, `--json` |
+| `status` | Tóm tắt nhanh và một lệnh nên chạy tiếp | `--json` |
+| `connect` | Cài hoặc gỡ hook và `/bip` cho Claude Code, Codex | `[claude\|codex]`, `--remove`, `--yes`, `--dry-run` |
+| `config` | `path`, `show`, `get`, `set`, `unset`, `default` | |
+| `paths` | In mọi đường dẫn | `--json` |
+| `version` | Phiên bản và commit | `--json` |
+| `update` | Tự cập nhật, kiểm checksum, quay lui khi lỗi | `--check`, `--version vX.Y.Z`, `--force`, `--yes` |
+| `uninstall` | Gỡ hook, `/bip`, shim, bản cài; giữ dữ liệu | `--purge`, `--yes`, `--dry-run` |
+
+Cờ chung cho mọi lệnh: `--json`, `-y/--yes`, `--dry-run`, `-q/--quiet`, `-v/--verbose`, `--no-color`, `-c/--config FILE`, `-h/--help`. Tham chiếu đầy đủ sinh từ `lib/commands.mjs`: [cli-reference.md](cli-reference.md).
 
 Cờ đặc biệt:
 
@@ -600,11 +619,14 @@ Cờ đặc biệt:
 | Mã | Nghĩa |
 |---:|---|
 | 0 | Xong (với `hook`: luôn 0) |
-| 1 | Sai cờ, sai cấu hình, repo không được quan sát |
-| 2 | `check` thấy vi phạm riêng tư hoặc lỗi khuôn |
+| 1 | Lỗi: `check` thấy vi phạm riêng tư hoặc lỗi khuôn, cấu hình hỏng, repo không được quan sát, doctor còn check quan trọng chưa đạt |
+| 2 | Sai cú pháp lệnh hoặc cờ; thiếu `--yes` khi không có TTY |
 | 3 | Kiểm riêng tư bị bỏ qua (không có nguồn chặn) |
 | 4 | Model lỗi hoặc đầu ra sai sau khi đã gọi lại; thiếu file `--fake-llm` |
 | 5 | Phiên đang bị khoá bởi tiến trình khác (đã đặt `pending`) |
+| 10 | `update --check`: có bản mới |
+
+Bảng mã thoát đổi ngày 2026-11-03 theo chuẩn chung (trước đó 1 là sai cú pháp, 2 là `check` thấy lỗi); xem CHANGELOG 0.1.0.
 
 ---
 
@@ -626,6 +648,8 @@ Cờ đặc biệt:
 | `frontmatter`, `box` | Ngữ pháp mục 6.6: đọc ghi lại file máy sinh đúng từng byte; 8 chuyện kiểu mẫu (chép khuôn, nội dung bịa, không có `id`) đọc được và `check` sạch; `sides` có dấu phẩy trong ngoặc kép; `hook` có `:` và `#`; gộp chỉ nối danh sách; không đụng trường máy khi `status ≠ raw` |
 | `ledger` | Chạy lại lần hai không ghi gì; khoá `wx` và `pending`; khoá của pid đã chết bị gỡ; khoá của pid còn sống nhưng chưa quá `staleSec` không bị gỡ; `failed` giữ `lastLine`; `partial` tăng `lastLine` và ghi `needsRescore`; file bị rút ngắn thì gom lại từ dòng 1; `mainGoals[]` nối thêm, không ghi đè |
 | `hook` | `STORY_HARVEST=1` thoát ngay; stdin hỏng vẫn thoát 0, không in stdout; repo không quan sát thì không tách nền; tiến trình nền gọi bằng `process.execPath`; `hooks --print` có đường dẫn tuyệt đối tới node |
+| `hosts`, `commands`, `paths`, `tar-config` | Cài/gỡ hook giữ hook của user, sao lưu, giữ quyền và thụt lề, không trùng lặp, nâng hook dạng cũ, từ chối JSON hỏng và file đổi giữa chừng; `bip.md` sửa tay không bị ghi đè; mọi lệnh trong bảng có handler, help đủ, docs khớp; đường dẫn từng OS; tarball từ chối `..`, link, mục ngoài danh sách; `config set` kiểm trước khi ghi |
+| Phân phối (`scripts/test-installer.sh`, `.ps1`, `test-agent-native.sh`, chạy trong CI trên Linux, macOS, Windows) | Cài từ asset cục bộ, cài lại không đổi gì, `init --yes --json` ok, hook gọi qua shim, `doctor` ok, `update --check` thoát 10, cập nhật giữ cấu hình, archive bị sửa bị từ chối, `uninstall` gỡ sạch và giữ dữ liệu; vòng agent chỉ dùng `--json` hội tụ |
 | `rank` | Thứ tự đúng khoá xếp; chuyện thiếu trường xếp cuối |
 | `imports` | Không file `.mjs` nào import gói ngoài (chỉ `node:` hoặc đường dẫn tương đối); không có `package.json` |
 | Pipeline đầu cuối | `harvest --transcript fixtures/claude-mini.jsonl --fake-llm fixtures/llm-ok/` vào hộp tạm: số file, frontmatter, sổ; chạy lại không ghi thêm. Thêm bộ `llm-missing-hotspots/`, `llm-bad-json/`, `llm-is-error/`, `llm-privacy-leak/`, `llm-two-windows/` (PreCompact rồi SessionEnd: cửa sổ hai gộp vào file cũ) |
@@ -728,7 +752,8 @@ ID mới thay bảng ở BG 7. Thí nghiệm nhắc "DM.2/DM.3" và "DM.6/DM.7" 
 | Chấm 5 trục (Móc, Đau chung, Cung truyện, Bằng chứng, Mang về được) làm cách xếp hạng | BG 6.6 | Thay bằng tension, stakes, strength đã đo trên một phiên (stakes: lạc quan, chờ DM.10); DM.12 có thể dùng lại khi biên tập | TN 6c, 6d |
 | Haiku cho trục stakes | TN 6d | AUC 0,83–0,85, cho nhiều chuyện bên lề stakes cao | TN 6d mục 5 |
 | Một file `story.mjs` ở `scripts/story/`, cache `~/.cache/storytelling/` | BG 6.2, DB 4 | Đổi sang `` nhiều module, cache `~/.cache/momentry/` (mặc định, user có thể đổi) | Quyết định vị trí v2 |
-| Cấu hình hook đặt trong `.claude/settings.json` và `.codex/hooks.json` của repo | BG 6.5 | Cài hook là việc user duyệt; công cụ chỉ in đoạn cấu hình | Quyết định v2 |
+| Cấu hình hook đặt trong `.claude/settings.json` và `.codex/hooks.json` của repo | BG 6.5 | Hook cài ở mức user (một lần cho mọi repo), chỉ chạy trong repo được quan sát | Quyết định v2 |
+| Công cụ chỉ in cấu hình hook, user tự dán vào `~/.claude/settings.json`, `~/.codex/hooks.json` | PRD v2 mục 3.2, 6.4 | User đảo ngày 2026-11-03: dán tay dễ sai, dễ quên và hook ghi cứng đường dẫn Node chết im lặng khi nâng Node. Thay bằng `init`/`connect` tự cài khi được đồng ý, có sao lưu, `--dry-run`, chỉ đụng mục của mình và gỡ ngược được | Audit đóng gói 2026-11-03 (plans/reports/packaging-audit-261103-1557-cs-packaging-distribution.md) |
 | Skill `storytelling` cho agent tự ghi làm phần chính (DM.1 cũ) | BG 6.1 | Agent tự ghi chỉ là phần thêm; động cơ là harvest | DB 1 |
 
 [tn]: experiments/2026-11-03-harvest/README.md

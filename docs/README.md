@@ -14,6 +14,11 @@ Nhặt chất liệu kể chuyện (build in public) từ transcript của Claud
 | Đường dẫn | Là gì | Còn hiệu lực |
 |---|---|---|
 | [prd.md](prd.md) | PRD v2: mục đích, nguyên tắc, pipeline, phần cơ học, cấu trúc code, kiểm thử, việc, đo, câu hỏi mở, các ý đã bỏ | Có |
+| [installation.md](installation.md) | Cài đặt: nền tảng, thư mục, PATH, tuỳ chọn installer, biến môi trường, khoá cấu hình | Có |
+| [cli-reference.md](cli-reference.md) | Mọi lệnh, cờ, mã thoát, dạng `--json`. Sinh từ `lib/commands.mjs` | Có (sinh tự động) |
+| [development.md](development.md) | Chạy từ mã nguồn, test, `--fake-llm`, hợp đồng module | Có |
+| [release-runbook.md](release-runbook.md) | Cắt, kiểm, rút một bản phát hành | Có |
+| [packaging-checklist.md](packaging-checklist.md) | Trạng thái đóng gói và phân phối theo chuẩn cs-packaging-distribution | Có |
 | [experiments/2026-11-03-harvest/](experiments/2026-11-03-harvest/README.md) | Thí nghiệm harvest đợt 1–5: tự lọc, điểm nóng, người ngoài, nhãn user, hook và tension, stakes | Có (bằng chứng) |
 | [experiments/2026-11-03-harvest/harness/](experiments/2026-11-03-harvest/harness/) | Code và prompt đã chạy được: `reduce.mjs`, `prompts.mjs`, `prompts-rank.md`, `run.sh`, `judge.sh`. Kết quả thô nằm ngoài repo | Có (điểm xuất phát cho code) |
 | [naming.md](naming.md) | Đặt tên: tên đã loại, so sánh Momentale và Momentry theo tiêu chí marketing, tên miền, hướng sửa cách đọc, Momentale và Momentell | Có (đang cân; ứng viên chính Momentell) |
@@ -26,5 +31,4 @@ Nhặt chất liệu kể chuyện (build in public) từ transcript của Claud
 ## Liên quan
 
 - Raw Capture Design (tài liệu trong repo riêng của CIS): bối cảnh rộng của CIS. momentry dùng chung nguyên tắc không can thiệp và bắt ở ranh giới phiên.
-- Mã nguồn dự kiến: `` ở gốc repo CIS (chưa có; PRD mục 7).
 - Dữ liệu chạy (sổ đã gom, khoá, kết quả thô của model, chuyện bị giữ lại vì riêng tư trong `quarantine/`) nằm ở `~/.cache/momentry/`, không bao giờ trong repo (PRD mục 6.3, 6.7).
