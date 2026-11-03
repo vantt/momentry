@@ -6,6 +6,9 @@
 
 ### Added
 
+- Host mới: **pi**, **omp (oh-my-pi)**, **Antigravity**. `momentry scan --pi|--omp|--agy` đọc transcript của chúng; `init`/`connect` cài extension `momentry.ts` cho pi/omp, hook `SessionStart` cho Antigravity và `/bip` cho cả ba.
+- Cài và quét ở **mọi profile**: `~/.codex-*`, `~/.pi/accounts/*`, `~/.omp/profiles/*/agent`, `~/.agy-homes/*/.gemini`; `doctor` báo profile chưa cài.
+
 - `momentry quarantine --release all`: kiểm lại mọi chuyện đang bị giữ, thả chuyện sạch vào hộp, chuyện còn vi phạm vẫn bị giữ (thoát 1 nếu còn chuyện bị giữ).
 
 ### Fixed

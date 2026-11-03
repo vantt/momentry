@@ -11,7 +11,7 @@ function Step([string]$m) { Write-Host "== $m" }
 
 try {
     $userHome = Join-Path $work 'home'
-    New-Item -ItemType Directory -Path (Join-Path $userHome '.claude') -Force | Out-Null
+    foreach ($d in '.claude', '.pi\agent', '.omp\agent', '.gemini\config') { New-Item -ItemType Directory -Path (Join-Path $userHome $d) -Force | Out-Null }
     foreach ($v in 'XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_DATA_HOME','CLAUDE_CONFIG_DIR','CODEX_HOME','MOMENTRY_CONFIG','MOMENTRY_CACHE','MOMENTRY_RELEASE_BASE','MOMENTRY_VERSION') { Remove-Item "Env:$v" -ErrorAction SilentlyContinue }
     $env:USERPROFILE = $userHome
     $env:HOME = $userHome
@@ -55,6 +55,10 @@ try {
     if (-not $init.ok) { Fail ('init: ' + ($init | ConvertTo-Json -Depth 6)) }
     $settings = Get-Content -Raw (Join-Path $userHome '.claude\settings.json')
     if ($settings -notmatch 'momentry\.cmd\\" hook session-end') { Fail 'hook registered through momentry.cmd' }
+    foreach ($f in '.pi\agent\extensions\momentry.ts', '.omp\agent\extensions\momentry.ts', '.gemini\config\skills\bip\SKILL.md') {
+        if (-not (Test-Path (Join-Path $userHome $f))) { Fail "init did not install $f" }
+    }
+    if ((Get-Content -Raw (Join-Path $userHome '.pi\agent\extensions\momentry.ts')) -notmatch 'SHIM_CMD = ".*momentry\.cmd"') { Fail 'pi extension does not use the cmd shim' }
     $doc = (& $bin doctor --json) -join "`n" | ConvertFrom-Json
     if (-not $doc.ok) { Fail 'doctor' }
 

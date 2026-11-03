@@ -23,12 +23,27 @@ Cần sẵn: Node ≥ 20 trên PATH, git, và `claude` CLI đã đăng nhập. I
 | Dấu bản cài (ghi cả thư mục shim) | `~/.local/share/momentry/.momentry-managed` | `%LOCALAPPDATA%\momentry\app\.momentry-managed` |
 | Cấu hình người dùng | `~/.config/momentry/config.json` | `%APPDATA%\momentry\config.json` |
 | Cache (sổ, khoá, quarantine, `hook.log`) | `~/.cache/momentry` (quyền 0700) | `%LOCALAPPDATA%\momentry\cache` |
-| Hook, `/bip` Claude Code | `~/.claude/settings.json`, `~/.claude/commands/bip.md` | `%USERPROFILE%\.claude\…` |
-| Hook, `/bip` Codex | `~/.codex/hooks.json`, `~/.codex/prompts/bip.md` | `%USERPROFILE%\.codex\…` |
+| Hook, extension, `/bip` của các agent | xem [Host được hỗ trợ](#host-được-hỗ-trợ) | như cột bên trái, dưới `%USERPROFILE%` |
 
 Linux tôn trọng `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` khi là đường dẫn tuyệt đối. macOS dùng cùng bố cục `~/.config`, `~/.cache` như Linux (có chủ ý, giống đa số CLI dành cho dev).
 
 Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `current`, nên nâng Node hay `momentry update` không làm hook hỏng. Hook trong `settings.json` gọi shim bằng đường dẫn tuyệt đối, nên vẫn chạy kể cả khi `~/.local/bin` chưa có trong PATH của Claude Code.
+
+## Host được hỗ trợ
+
+`momentry init` (và `momentry connect`) cài cho mọi host có trên máy, **ở mọi profile tìm thấy**: thư mục mặc định cùng các profile theo quy ước `~/.codex-*`, `~/.pi/accounts/*`, `~/.omp/profiles/*/agent`, `~/.agy-homes/*/.gemini`. `momentry doctor` báo profile mới chưa được cài; `momentry connect <host> --yes` cài bù. `momentry scan` đọc transcript ở mọi profile.
+
+| Host | Gom tự động bằng | `/bip` | Transcript |
+|---|---|---|---|
+| Claude Code | hook `PreCompact`, `SessionEnd`, `SessionStart` trong `settings.json` | `commands/bip.md` | `projects/<cwd mã hoá>/<uuid>.jsonl` |
+| Codex | hook `PreCompact`, `SessionEnd`, `SessionStart` trong `hooks.json` (Codex hỏi duyệt tin cậy hook mới) | `prompts/bip.md` | `sessions/YYYY/MM/DD/rollout-*.jsonl` |
+| pi | extension `extensions/momentry.ts` (sự kiện `session_start`, `session_before_compact`, `session_shutdown`) | `prompts/bip.md` | `sessions/<cwd>/<ts>_<uuid>.jsonl` |
+| omp (oh-my-pi) | extension `extensions/momentry.ts` (cùng file với pi) | `commands/bip.md` | `sessions/<cwd>/<ts>_<uuid>.jsonl` |
+| Antigravity (`agy`, IDE) | hook `SessionStart` trong nhóm `"momentry"` của `config/hooks.json`; gom các phiên agy trước đó của repo | skill `config/skills/bip/SKILL.md` (`disable-model-invocation: true`) | `antigravity-*/brain/<id>/.system_generated/logs/transcript_full.jsonl` |
+
+Antigravity không có sự kiện kết thúc phiên hay trước compact, chỉ có `SessionStart` và `Stop` (chạy sau mỗi lượt và chặn agent). Theo quyết định 2026-11-03, momentry chỉ dùng `SessionStart`: một phiên agy được gom khi bạn mở phiên agy kế tiếp trong repo đó, hoặc khi chạy `momentry scan --agy`. Transcript của agy không có thư mục làm việc, nên momentry ghi chỉ mục `<cache>/agy-sessions.jsonl` lúc phiên mở; phiên mở trước khi cài momentry không được gom.
+
+Đã kiểm với chương trình thật trên Linux (2026-11-03): pi 1.4.0 và omp 18.12.6 nạp extension và gọi hook (`session_start` → `scan`; với omp cả `session_shutdown` → `harvest` đọc transcript). Antigravity 1.4.4 đòi đăng nhập trước khi mở phiên nên chưa thấy hook chạy trong môi trường thử; định dạng `hooks.json` đối chiếu với tài liệu chính thức và một nhóm hook có sẵn trên máy.
 
 ## PATH
 

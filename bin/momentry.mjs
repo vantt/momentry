@@ -9,7 +9,7 @@ const BIN = fileURLToPath(import.meta.url);
 
 async function run(argv) {
   if (Number(process.versions.node.split('.')[0]) < MIN_NODE) {
-    if (argv[0] === 'hook') return 0; // a hook never fails the session
+    if (argv[0] === 'hook') { if (argv.includes('--agy')) process.stdout.write('{}\n'); return 0; } // a hook never fails the session
     process.stderr.write(`lỗi: momentry cần Node ≥ ${MIN_NODE}, đang chạy ${process.versions.node}\n  sửa: cài Node ≥ ${MIN_NODE} từ https://nodejs.org (hoặc nvm install 22)\n`);
     return 1;
   }

@@ -139,6 +139,54 @@ test('codex: old snake_case entries (ignored by Codex) are replaced by PascalCas
   assert.ok(fs.existsSync(path.join(h, '.codex', 'prompts', 'bip.md')));
 });
 
+test('pi and omp: extension + /bip in every profile; idempotent; edited files kept; remove deletes ours', () => {
+  const { h, env } = home();
+  for (const d of ['.pi/agent', '.pi/accounts/work', '.omp/agent', '.omp/profiles/p1/agent']) fs.mkdirSync(path.join(h, d), { recursive: true });
+  const r = hosts.apply('pi', { prefix: PREFIX, env });
+  assert.equal(r.changes.length, 4, r.changes.join('\n'));
+  const ext = path.join(h, '.pi', 'accounts', 'work', 'extensions', 'momentry.ts');
+  const text = fs.readFileSync(ext, 'utf8');
+  assert.match(text, /pi\.on\("session_shutdown"/);
+  assert.match(text, /const HOST = "pi";/);
+  assert.match(text, /\/\/ momentry:ext sha256=[0-9a-f]{64}\n$/);
+  assert.match(fs.readFileSync(path.join(h, '.pi', 'agent', 'prompts', 'bip.md'), 'utf8'), /\$ARGUMENTS/);
+  assert.deepEqual(hosts.apply('pi', { prefix: PREFIX, env }).changes, []);
+  assert.equal(hosts.inspect('pi', PREFIX, env).status, 'ok');
+
+  hosts.apply('omp', { prefix: PREFIX, env });
+  assert.ok(fs.existsSync(path.join(h, '.omp', 'profiles', 'p1', 'agent', 'commands', 'bip.md')));
+  assert.match(fs.readFileSync(path.join(h, '.omp', 'agent', 'extensions', 'momentry.ts'), 'utf8'), /const HOST = "omp";/);
+
+  fs.mkdirSync(path.join(h, '.pi', 'accounts', 'new'));
+  const s = hosts.inspect('pi', PREFIX, env);
+  assert.equal(s.status, 'missing');
+  assert.deepEqual(s.missing, [path.join(h, '.pi', 'accounts', 'new')], 'a new profile is reported');
+
+  fs.appendFileSync(ext, '// mine\n');
+  hosts.apply('pi', { prefix: PREFIX, remove: true, env });
+  assert.ok(fs.existsSync(ext), 'edited extension kept');
+  assert.ok(!fs.existsSync(path.join(h, '.pi', 'agent', 'extensions', 'momentry.ts')));
+});
+
+test('Antigravity: a "momentry" group next to other groups in config/hooks.json; skill with disable-model-invocation', () => {
+  const { h, env } = home();
+  fs.mkdirSync(path.join(h, '.gemini', 'config'), { recursive: true });
+  fs.mkdirSync(path.join(h, '.agy-homes', 'acc', '.gemini'), { recursive: true });
+  const hj = path.join(h, '.gemini', 'config', 'hooks.json');
+  fs.writeFileSync(hj, JSON.stringify({ herdr: { PreInvocation: [{ type: 'command', command: 'herdr x', timeout: 5 }] } }));
+  hosts.apply('agy', { prefix: PREFIX, env });
+  const j = JSON.parse(fs.readFileSync(hj, 'utf8'));
+  assert.deepEqual(Object.keys(j), ['herdr', 'momentry']);
+  assert.deepEqual(j.momentry, { SessionStart: [{ type: 'command', command: `${PREFIX} hook session-start --agy`, timeout: 10 }] });
+  assert.ok(fs.existsSync(path.join(h, '.agy-homes', 'acc', '.gemini', 'config', 'hooks.json')), 'every account');
+  const skill = fs.readFileSync(path.join(h, '.gemini', 'config', 'skills', 'bip', 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: bip\n[\s\S]*disable-model-invocation: true\n---\n/);
+  assert.doesNotMatch(skill, /\$ARGUMENTS/);
+  assert.equal(hosts.inspect('agy', PREFIX, env).status, 'ok');
+  hosts.apply('agy', { prefix: PREFIX, remove: true, env });
+  assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(hj, 'utf8'))), ['herdr']);
+});
+
 test('ownership regex: only momentry hook commands', () => {
   for (const c of ['"/x/momentry" hook session-end', '"C:\\x\\momentry.cmd" hook pre-compact', '"/n" "/x/bin/momentry.mjs" hook session-start --codex']) assert.ok(hosts.OWN_HOOK.test(c), c);
   for (const c of ['momentry scan', 'my-hook session-end', 'notmomentry hook x']) assert.ok(!hosts.OWN_HOOK.test(c), c);

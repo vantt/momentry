@@ -287,11 +287,11 @@ momentry ledger --forget claude:1a2b3c4d
 
 Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc cờ.
 
-### `momentry connect [claude|codex]`
+### `momentry connect [claude|codex|pi|omp|agy]`
 
-Cài (hoặc --remove gỡ) hook và lệnh /bip cho Claude Code và/hoặc Codex. init đã gọi bước này.
+Cài (hoặc --remove gỡ) hook/extension và lệnh /bip cho Claude Code, Codex, pi, omp, Antigravity, ở mọi profile tìm thấy. init đã gọi bước này.
 
-**Thay đổi:** Claude: ~/.claude/settings.json (khoá hooks), ~/.claude/commands/bip.md. Codex: ~/.codex/hooks.json, ~/.codex/prompts/bip.md. Sao lưu *.momentry-bak-<ts> trước khi sửa; chỉ đụng mục có lệnh "momentry hook".
+**Thay đổi:** Mỗi profile tìm thấy (~/.claude; ~/.codex, ~/.codex-*; ~/.pi/agent, ~/.pi/accounts/*; ~/.omp/agent, ~/.omp/profiles/*/agent; ~/.gemini, ~/.agy-homes/*/.gemini): Claude/Codex: khoá hooks trong settings.json / hooks.json và bip.md; pi/omp: extensions/momentry.ts và bip.md; Antigravity: nhóm "momentry" trong config/hooks.json và config/skills/bip/SKILL.md. Sao lưu *.momentry-bak-* trước khi sửa; chỉ đụng phần của momentry.
 
 | Cờ | Ý nghĩa |
 |---|---|

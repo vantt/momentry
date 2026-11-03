@@ -373,6 +373,8 @@ Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví 
 
 **`/bip`:** một lệnh slash cho Claude (`~/.claude/commands/bip.md`) và prompt tương ứng cho Codex (`~/.codex/prompts/bip.md`), do `init`/`connect` cài. Lệnh này bảo agent gọi `momentry add --by human --note "<ghi chú>"`, tạo ngay một chuyện `captured_by: human`, `hit_by: [bip]`. `add` cũng qua bộ kiểm riêng tư (mục 6.7). Trên Claude, dòng `/bip` trong transcript còn thành điểm nóng loại `bip` ở lần gom sau (mục 5.3). Trên Codex chỉ có đường `add`.
 
+**Host thêm (quyết định của user 2026-11-03):** pi, omp (oh-my-pi), Antigravity. pi/omp không có hook lệnh shell: momentry ghi extension `extensions/momentry.ts` gọi `momentry hook <event> --pi|--omp` khi `session_start`, `session_before_compact`, `session_shutdown`. Antigravity chỉ có `SessionStart` và `Stop` (chạy mỗi lượt, chặn agent): chỉ dùng `SessionStart`, ghi chỉ mục phiên (transcript không có cwd) và gom các phiên agy trước đó của repo. momentry cài và quét ở mọi profile tìm thấy (`~/.codex-*`, `~/.pi/accounts/*`, `~/.omp/profiles/*/agent`, `~/.agy-homes/*/.gemini`). Session id của host mới lấy 8 hex cuối của uuid (UUIDv7 trùng 8 hex đầu trong khoảng 65 giây). Chi tiết: [installation.md](installation.md#host-được-hỗ-trợ).
+
 ### 6.5 Cấu hình
 
 **Repo được quan sát** **(mặc định, user có thể đổi):** chỉ repo có file `.momentry.json` ở git root (có thể là `{}`), hoặc nằm trong biến `MOMENTRY_REPOS` (danh sách đường dẫn, phân cách `:`; `;` trên Windows). Lý do: hook cài ở mức user sẽ chạy trong mọi repo, không nên tự ghi thư mục mới vào repo không liên quan. `momentry init` tạo file này.

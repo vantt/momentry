@@ -11,7 +11,7 @@ trap 'rm -rf "$WORK"' EXIT INT TERM
 unset XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME CLAUDE_CONFIG_DIR CODEX_HOME MOMENTRY_HOME MOMENTRY_INSTALL_DIR \
   MOMENTRY_CONFIG MOMENTRY_CACHE MOMENTRY_RELEASE_BASE MOMENTRY_VERSION MOMENTRY_REPOS MOMENTRY_PRIVACY_SOURCES 2>/dev/null || true
 export HOME="$WORK/home"
-mkdir -p "$HOME/.claude"
+mkdir -p "$HOME/.claude" "$HOME/.pi/agent" "$HOME/.pi/accounts/work" "$HOME/.omp/agent" "$HOME/.gemini/config"
 PATH="$ROOT/test/fixtures/fake-claude:$PATH"   # doctor needs a `claude` that answers --version
 export PATH
 BIN="$HOME/.local/bin/momentry"
@@ -43,6 +43,10 @@ printf 'Trần Thị Bích Ngọc\n' > "$HOME/names.txt"
 (cd "$WORK/repo" && "$BIN" init --yes --json) | json_ok || fail "init --yes --json"
 grep -q "momentry\\\\\" hook session-end" "$HOME/.claude/settings.json" || fail "hook registered through the shim"
 grep -q "add --by human" "$HOME/.claude/commands/bip.md" || fail "/bip installed"
+for f in .pi/agent/extensions/momentry.ts .pi/accounts/work/extensions/momentry.ts .omp/agent/extensions/momentry.ts .pi/agent/prompts/bip.md .omp/agent/commands/bip.md .gemini/config/skills/bip/SKILL.md; do
+  [ -f "$HOME/$f" ] || fail "init did not install $f"
+done
+grep -q '"momentry"' "$HOME/.gemini/config/hooks.json" || fail "Antigravity hook group missing"
 (cd "$WORK/repo" && "$BIN" init --yes) | grep -q "không có gì phải làm" || fail "init is idempotent"
 
 step "doctor"
@@ -88,6 +92,8 @@ set +e; "$BIN" uninstall </dev/null >/dev/null 2>&1; code=$?; set -e
 [ ! -e "$BIN" ] || fail "shim still there"
 [ ! -e "$HOME/.local/share/momentry" ] || fail "install dir still there"
 ! grep -q "momentry" "$HOME/.claude/settings.json" || fail "hooks left in settings.json"
+[ ! -e "$HOME/.pi/agent/extensions/momentry.ts" ] && [ ! -e "$HOME/.omp/agent/extensions/momentry.ts" ] || fail "pi/omp extension left"
+! grep -q '"momentry"' "$HOME/.gemini/config/hooks.json" || fail "Antigravity hook group left"
 [ -f "$HOME/.config/momentry/config.json" ] || fail "config was removed without --purge"
 [ -f "$WORK/repo/.momentry.json" ] || fail "repo file was removed"
 if command -v momentry >/dev/null 2>&1 && [ "$(command -v momentry)" = "$BIN" ]; then fail "command still resolves"; fi
