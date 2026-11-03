@@ -16,7 +16,7 @@ function sandbox() {
   const repo = path.join(base, 'repo');
   fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
   const env = {
-    PATH: process.env.PATH, HOME: path.join(base, 'home'),
+    PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'),
     MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json'),
   };
   return { base, repo, env };

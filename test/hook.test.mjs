@@ -16,7 +16,7 @@ function sandbox(observed = true) {
   const repo = path.join(base, 'repo');
   fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
   if (observed) fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');
-  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json') };
+  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json') };
   const calls = [];
   const spawn = (cmd, args, opts) => { calls.push({ cmd, args, opts }); return { on() {}, unref() { calls.at(-1).unref = true; } }; };
   return { base, repo, env, calls, spawn };

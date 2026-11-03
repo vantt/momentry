@@ -24,7 +24,7 @@ function setup({ lines = 8, privacy = true } = {}) {
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');
   const tr = path.join(base, `${UUID}.jsonl`);
   const env = {
-    PATH: process.env.PATH, HOME: path.join(base, 'home'), TZ: 'UTC',
+    PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'), TZ: 'UTC',
     MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json'),
     ...(privacy ? { MOMENTRY_PRIVACY_SOURCES: JSON.stringify([{ type: 'vault-titles', path: VAULT }]) } : {}),
   };

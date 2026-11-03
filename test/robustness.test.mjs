@@ -36,7 +36,7 @@ function setup() {
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');
   const tr = path.join(base, `${UUID}.jsonl`);
   const env = {
-    PATH: process.env.PATH, HOME: path.join(base, 'home'), TZ: 'UTC',
+    PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'), TZ: 'UTC',
     MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json'),
     MOMENTRY_PRIVACY_SOURCES: JSON.stringify([{ type: 'vault-titles', path: VAULT }]),
   };
@@ -201,7 +201,7 @@ test('readStdin: TTY gives empty; an open stream returns after the timeout', asy
 
 test('hook with a stdin that never closes exits fast and silent', async () => {
   const base = tmp();
-  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json') };
+  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json') };
   const t0 = Date.now();
   const child = spawn(process.execPath, [BIN, 'hook', 'pre-compact', '--codex'], { cwd: base, env, stdio: ['pipe', 'pipe', 'pipe'] });
   let out = '';
@@ -222,7 +222,7 @@ test('hook.log keeps only error kinds, never the payload or model text', () => {
   const repo = path.join(base, 'repo');
   fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');
-  const env = { PATH: process.env.PATH, HOME: base, MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json') };
+  const env = { PATH: process.env.PATH, HOME: base, USERPROFILE: base, MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json') };
   handleHook('pre-compact', 'garbage-bi-mat\n', {}, { env, spawn: () => { throw new Error('x'); } });
   const log = fs.readFileSync(path.join(env.MOMENTRY_CACHE, 'hook.log'), 'utf8');
   assert.match(log, /hook.bad-stdin.*"error":"SyntaxError"/);

@@ -122,7 +122,7 @@ test('cli quarantine lists and releases', () => {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-qcli-'));
   const repo = path.join(base, 'repo');
   fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
-  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'u.json') };
+  const env = { PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'u.json') };
   put('repo', leaky, 'violation', { cacheDir: env.MOMENTRY_CACHE });
   const run = (args, e = env) => spawnSync(process.execPath, [BIN, ...args], { cwd: repo, env: e, encoding: 'utf8' });
   let r = run(['quarantine']);

@@ -142,7 +142,7 @@ function sandbox() {
   const box = path.join(repo, 'docs/storytelling-material');
   fs.mkdirSync(box, { recursive: true });
   const env = {
-    PATH: process.env.PATH, HOME: path.join(base, 'home'),
+    PATH: process.env.PATH, HOME: path.join(base, 'home'), USERPROFILE: path.join(base, 'home'),
     MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'user.json'),
   };
   return { base, repo, box, env };
