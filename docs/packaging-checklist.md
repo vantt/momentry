@@ -27,7 +27,7 @@ Overlay `languages/node.md` không kích hoạt (detect = `package.json`, PRD 4.
 |---|---|---|---|
 | ONB-01/04/06/07 màn hình đầu, thứ tự, lời hứa, lệnh cài + `<details>` Windows | MUST | done | `README.md` |
 | ONB-08 ≤3 lệnh tới giá trị đầu | MUST | done | `init`, `scan --max-sessions 1`, `list --rank`; thêm một lệnh khai báo nguồn chặn lần đầu (dữ liệu của user) |
-| ONB-09 khối lệnh chạy được nguyên văn | MUST | partial | Khối cài trỏ tới `releases/latest`, chỉ chạy được sau bản phát hành đầu tiên; CI chưa trích khối README để chạy |
+| ONB-09 khối lệnh chạy được nguyên văn | MUST | done | Lệnh cài một dòng chạy được với `v0.1.0` công khai (thử 2026-11-03 trong HOME tạm); release.yml cài thử bản nháp trên 3 OS. CI chưa tự trích khối README để chạy |
 | ONB-10/12 `init` kết thúc "✓ Sẵn sàng" + bước tiếp; installer, `init`, README cùng 3 bước | MUST | done | `lib/cli.mjs` `H.init`; `install.sh` `next_steps` |
 | ONB-13 prompt "cài bằng agent" | SHOULD | done | README `<details>`; thử bằng agent thật (xem Verify 12) |
 | ONB-14 lỗi trên đường đầu chỉ cách sửa / doctor | MUST | done | Lỗi dạng lỗi / vì / sửa; check nào cũng có `fix` |
@@ -73,7 +73,7 @@ Overlay `languages/node.md` không kích hoạt (detect = `package.json`, PRD 4.
 | VER-01/02/05/08 | MUST/SHOULD | done | `lib/version.mjs`; release.yml kiểm tag; `scripts/prepare-release.mjs`; `CHANGELOG.md` |
 | VER-04 fingerprint | SHOULD | done | `version --json`: commit, thời điểm commit |
 | REL-02/05/06 | MUST | done | Một quy tắc tên asset; `scripts/package-release.mjs`; `checksums.txt` |
-| REL-03/04/07 CI trước release; draft → smoke → publish | MUST/SHOULD | done (release chưa chạy) | `.github/workflows/release.yml`; CI chạy xanh, release chờ tag đầu tiên |
+| REL-03/04/07 CI trước release; draft → smoke → publish | MUST/SHOULD | done | `v0.1.0`: CI 9/9, draft, smoke 3 OS, publish đều xanh |
 | REL-09 tái lập | SHOULD | done | Đóng gói hai lần ra cùng sha256 |
 | REL-10 action ghim SHA, quyền tối thiểu | SHOULD | done | |
 | REL-13 runbook | SHOULD | done | `docs/release-runbook.md` |
@@ -95,10 +95,10 @@ Không áp dụng: `85-service-daemon` (không daemon; hook tách tiến trình 
 | 8 | pass | `doctor` chỉ đọc, thoát 1 khi chưa đạt, `next` chạy được |
 | 9 | pass | `init --yes` lần hai: "không có gì phải làm" |
 | 10 | pass | `update --check` thoát 10 khi có bản mới (fixture) |
-| 11 | pass | ci.yml chạy xanh; release.yml: tag == VERSION, checksums kiểm lại, action ghim SHA (chờ tag đầu tiên) |
+| 11 | pass | release.yml chạy xanh cho `v0.1.0`: tag == VERSION, checksums kiểm lại, action ghim SHA |
 | 12 | pass | Agent mới chỉ dùng `--help`/`--json` tới `doctor ok`; sau khi thêm `config privacy-add`, vòng có kịch bản hội tụ ở vòng đầu |
 
 ## Còn lại
-- Cắt bản `v0.1.0` (`node scripts/prepare-release.mjs` rồi push tag) để lệnh cài trong README dùng được; `release.yml` chạy lần đầu khi đó.
-- Đo một phiên Claude Code/Codex thật trên Windows gọi hook (shell hiện dựa trên báo cáo cộng đồng, xem `docs/installation.md`).
+- `v0.1.0` đã phát hành 2026-11-03: https://github.com/vantt/momentry/releases/tag/v0.1.0
+- Đo một phiên Claude Code/Codex thật trên Windows gọi hook: theo dõi ở https://github.com/vantt/momentry/issues/1 (shell hiện dựa trên báo cáo cộng đồng, xem `docs/installation.md`).
 - SHOULD còn lại: completions (CMD-20), gợi ý bản mới định kỳ (UX-06), `config edit` (UX-14), cosign (SEC-02/03), doctor gọi thử hook (DOC-05).

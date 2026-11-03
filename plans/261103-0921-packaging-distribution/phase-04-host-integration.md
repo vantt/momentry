@@ -42,7 +42,7 @@ dependencies: [3]
 - [x] `connect --remove` gỡ chỉ mục có dấu sở hữu và file `/bip` có digest đã biết; báo những gì để lại.
 - [x] Doctor nhận diện và nâng cấp mục hook dạng cũ.
 - [x] Spike trên Windows thật: Claude Code và Codex chạy `momentry hook session-start` được không, qua shell nào; ghi kết quả vào phase này và vào `docs/installation.md`.
-  Kết quả (2026-11-03): runner CI `windows-2025` (Windows thật, PowerShell 5.1) cài, `init` ghi hook, `doctor`, `update`, `uninstall` qua. Shell chạy hook lấy từ báo cáo cộng đồng: Claude Code dùng Git Bash, Codex dùng cmd; lệnh hook đổi sang `"C:/…/momentry.cmd"` chạy được ở cả hai, `/bip` gọi `momentry` theo tên. Chưa đo bằng một phiên Claude Code/Codex thật trên Windows (ghi trong `docs/installation.md`).
+  Kết quả (2026-11-03): runner CI `windows-2025` (Windows thật, PowerShell 5.1) cài, `init` ghi hook, `doctor`, `update`, `uninstall` qua. Shell chạy hook lấy từ báo cáo cộng đồng: Claude Code dùng Git Bash, Codex dùng cmd; lệnh hook đổi sang `"C:/…/momentry.cmd"` chạy được ở cả hai, `/bip` gọi `momentry` theo tên. Chưa đo bằng một phiên Claude Code/Codex thật trên Windows: theo dõi ở issue #1 (https://github.com/vantt/momentry/issues/1).
 
 ## Verification
 - HOME tạm có `settings.json` chứa hook khác: `momentry init --yes` thêm 3 mục, giữ hook khác, tạo bản sao lưu; chạy lại không đổi gì; `momentry connect claude --remove --yes` trả file về nội dung tương đương ban đầu.
