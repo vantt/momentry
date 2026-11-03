@@ -110,6 +110,14 @@ test('bip.md: ours is updated, edited or foreign files are left alone', () => {
   assert.ok(fs.existsSync(bip), 'remove keeps a file the user changed');
 });
 
+test('Windows shim: /bip calls momentry by name, hooks keep the absolute path', () => {
+  const { env } = home();
+  const win = '"C:/Users/a/AppData/Local/momentry/bin/momentry.cmd"';
+  hosts.apply('claude', { prefix: win, env });
+  assert.match(fs.readFileSync(hosts.hostTable(env).claude.bipFile, 'utf8'), /^\s*momentry add --by human/m);
+  assert.equal(JSON.parse(fs.readFileSync(hosts.hostTable(env).claude.hookFile, 'utf8')).hooks.SessionEnd[0].hooks[0].command, `${win} hook session-end`);
+});
+
 test('codex: hooks.json events and --codex flag', () => {
   const { h, env } = home();
   fs.mkdirSync(path.join(h, '.codex'));

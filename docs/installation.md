@@ -103,7 +103,14 @@ Cách nhanh nhất, và là cách nên dùng trên Windows (PowerShell 5.1 làm 
 
 ## Hook trên Windows
 
-`momentry init` ghi hook dạng `"…\momentry\bin\momentry.cmd" hook session-end`. Lệnh này chạy được từ cmd và Git Bash. Shell mà Claude Code và Codex dùng để chạy hook trên Windows native chưa được kiểm trên máy thật; nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
+`momentry init` ghi hook dạng `"C:/Users/<bạn>/AppData/Local/momentry/bin/momentry.cmd" hook session-end`: đường dẫn tuyệt đối, dấu `/`. Lý do:
+
+- Claude Code trên Windows chạy lệnh hook qua Git Bash, kể cả khi đặt shell khác, và Git Bash đọc sai đường dẫn có `\` ([anthropics/claude-code#21878](https://github.com/anthropics/claude-code/issues/21878), [báo cáo hook luôn chạy qua `/usr/bin/bash`](https://claudeissues.com/issue/32930-bug-hooks-always-executed-via-usr-bin-bash-on-windows-ignoring-shell-setting)).
+- Codex chạy chuỗi lệnh hook bằng trình thông dịch gốc của Windows (cmd); hook kiểu POSIX hỏng ở đó, còn lệnh gọi `.cmd` thì chạy được ([ghi chú phát hành planning-with-files v3.4.1](https://newreleases.io/project/github/OthmanAdi/planning-with-files/release/v3.4.1)).
+
+Dạng `"C:/…/momentry.cmd"` chạy được trong cả hai. Lệnh `/bip` thì do agent tự chạy trong shell của nó (PowerShell là mặc định của Claude Code trên Windows), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
+
+Đã kiểm trên Windows thật (runner CI `windows-2025`, PowerShell 5.1): cài, `init` ghi hook, `doctor`, `update`, `uninstall`. Chưa kiểm: một phiên Claude Code hay Codex thật gọi hook trên Windows, vì các báo cáo trên là của cộng đồng và hành vi đổi theo phiên bản. Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
 
 ## Gỡ
 
