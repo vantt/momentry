@@ -18,7 +18,7 @@ const SID = 'claude:5e5510aa';
 const MINI = fs.readFileSync(path.join(FIX, 'claude-mini.jsonl'), 'utf8').trimEnd().split('\n');
 
 function setup({ lines = 8, privacy = true } = {}) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-pipe-'));
+  const base = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dm-pipe-')));
   const repo = path.join(base, 'repo');
   fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');

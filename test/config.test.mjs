@@ -48,7 +48,7 @@ test('precedence: flags > env > repo > user > defaults', () => {
 
   c = loadConfig({ cwd: repo, env: { ...env, MOMENTRY_BOX: 'e-box', MOMENTRY_FAKE_LLM: '/fake' } });
   assert.equal(c.box, path.join(repo, 'e-box'));
-  assert.equal(c.fakeLlm, path.resolve('/fake'));
+  assert.equal(c.fakeLlm, path.resolve(repo, '/fake'));
 
   c = loadConfig({ cwd: repo, env: { ...env, MOMENTRY_BOX: 'e-box' }, flags: { box: 'f-box', runs: 4, 'quiet-minutes': 9, 'fake-llm': 'fl' } });
   assert.equal(c.box, path.join(repo, 'f-box'));

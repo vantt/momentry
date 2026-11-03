@@ -26,7 +26,7 @@ const VAULT = path.join(HERE, 'fixtures', 'privacy', 'vault');
 const UUID = '5e5510aa-0000-4000-8000-000000000001';
 const SID = 'claude:5e5510aa';
 const MINI = fs.readFileSync(path.join(FIX, 'claude-mini.jsonl'), 'utf8').trimEnd().split('\n');
-const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'dm-rob-'));
+const tmp = () => fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dm-rob-')));
 const ok = (o) => JSON.stringify({ type: 'result', is_error: false, total_cost_usd: 0.01, result: JSON.stringify(o) });
 
 function setup() {

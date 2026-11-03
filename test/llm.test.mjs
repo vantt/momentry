@@ -54,7 +54,7 @@ test('call: success reads result, cost; prompt on stdin; STORY_HARVEST=1; save a
   assert.equal(c.prompt, base.prompt);
   const saved = JSON.parse(fs.readFileSync(path.join(saveDir, 'harvest-c1-r1.json'), 'utf8'));
   assert.equal(saved.result, '{"x":1}');
-  assert.equal(fs.statSync(saveDir).mode & 0o777, 0o700);
+  if (process.platform !== 'win32') assert.equal(fs.statSync(saveDir).mode & 0o777, 0o700);
   assert.equal(fs.readFileSync(path.join(runDir, 'harvest-c1-r1.prompt.txt'), 'utf8'), base.prompt);
   assert.ok(fs.existsSync(path.join(runDir, 'harvest-c1-r1.json')));
 });
