@@ -20,7 +20,7 @@ test('load/save: missing file is empty; atomic write, dir 0700', () => {
   assert.deepEqual(L.load(dir), { version: 1, sessions: {}, repos: {} });
   const l = L.record(L.load(dir), 'claude:a', info, rec({}));
   L.save(l, dir);
-  assert.equal(fs.statSync(dir).mode & 0o777, 0o700);
+  if (process.platform !== 'win32') assert.equal(fs.statSync(dir).mode & 0o777, 0o700); // Windows has no POSIX modes
   assert.equal(L.load(dir).sessions['claude:a'].lastLine, 10);
   assert.deepEqual(fs.readdirSync(dir), ['ledger.json']);
 });

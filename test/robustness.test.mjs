@@ -42,7 +42,7 @@ function setup() {
   };
   return {
     base, repo, tr, env, box: path.join(repo, 'docs', 'storytelling-material'), cache: env.MOMENTRY_CACHE,
-    write(n, file = tr) { fs.writeFileSync(file, MINI.slice(0, n).map((l) => l.replaceAll('__REPO__', repo)).join('\n') + '\n'); },
+    write(n, file = tr) { fs.writeFileSync(file, MINI.slice(0, n).map((l) => l.replaceAll('__REPO__', JSON.stringify(repo).slice(1, -1))).join('\n') + '\n'); },
     run(args, extra = {}) {
       const r = spawnSync(process.execPath, [BIN, ...args], { cwd: repo, env: { ...env, ...extra }, encoding: 'utf8' });
       return { code: r.status, out: r.stdout, err: r.stderr };

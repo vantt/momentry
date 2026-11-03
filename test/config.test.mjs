@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { loadConfig, isObserved, cacheDir, DEFAULTS, EXIT } from '../lib/config.mjs';
+import { paths } from '../lib/paths.mjs';
 
 function setup({ repoCfg, userCfg } = {}) {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-cfg-'));
@@ -27,7 +28,7 @@ test('defaults', () => {
   assert.deepEqual(c.harvest, DEFAULTS.harvest);
   assert.equal(c.outsider.enabled, true);
   assert.equal(c.lock.staleSec, 3600);
-  assert.equal(c.cacheDir, path.join(env.HOME, '.cache', 'momentry'));
+  assert.equal(c.cacheDir, paths(env).cache);
   assert.equal(c.observed, false);
   assert.equal(c.fakeLlm, null);
 });
@@ -47,7 +48,7 @@ test('precedence: flags > env > repo > user > defaults', () => {
 
   c = loadConfig({ cwd: repo, env: { ...env, MOMENTRY_BOX: 'e-box', MOMENTRY_FAKE_LLM: '/fake' } });
   assert.equal(c.box, path.join(repo, 'e-box'));
-  assert.equal(c.fakeLlm, '/fake');
+  assert.equal(c.fakeLlm, path.resolve('/fake'));
 
   c = loadConfig({ cwd: repo, env: { ...env, MOMENTRY_BOX: 'e-box' }, flags: { box: 'f-box', runs: 4, 'quiet-minutes': 9, 'fake-llm': 'fl' } });
   assert.equal(c.box, path.join(repo, 'f-box'));
@@ -74,7 +75,7 @@ test('privacy from user config and env', () => {
   assert.equal(c.privacy.allowUnchecked, true);
   c = loadConfig({ cwd: repo, env: { ...env, MOMENTRY_PRIVACY_SOURCES: JSON.stringify([{ type: 'lines', path: '/n' }]) } });
   assert.deepEqual(c.privacy.sources, [{ type: 'lines', path: '/n' }]);
-  c = loadConfig({ cwd: repo, env: { HOME: env.HOME, MOMENTRY_CONFIG: '/none.json', MOMENTRY_PRIVACY_SOURCES: '/a.txt:/b.txt', MOMENTRY_ALLOW_UNCHECKED: '1' } });
+  c = loadConfig({ cwd: repo, env: { HOME: env.HOME, MOMENTRY_CONFIG: '/none.json', MOMENTRY_PRIVACY_SOURCES: ['/a.txt', '/b.txt'].join(path.delimiter), MOMENTRY_ALLOW_UNCHECKED: '1' } });
   assert.deepEqual(c.privacy.sources, [{ type: 'lines', path: '/a.txt' }, { type: 'lines', path: '/b.txt' }]);
   assert.equal(c.privacy.allowUnchecked, true);
 });
@@ -97,9 +98,9 @@ test('outside a git repo', () => {
 test('isObserved via file or MOMENTRY_REPOS; cacheDir env', () => {
   const { repo } = setup();
   assert.equal(isObserved(repo, {}), false);
-  assert.equal(isObserved(repo, { MOMENTRY_REPOS: `/nope:${repo}` }), true);
+  assert.equal(isObserved(repo, { MOMENTRY_REPOS: ['/nope', repo].join(path.delimiter) }), true);
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');
   assert.equal(isObserved(repo, {}), true);
   assert.equal(isObserved(null, {}), false);
-  assert.equal(cacheDir({ MOMENTRY_CACHE: '/tmp/x' }), '/tmp/x');
+  assert.equal(cacheDir({ MOMENTRY_CACHE: '/tmp/x' }), path.resolve('/tmp/x'));
 });

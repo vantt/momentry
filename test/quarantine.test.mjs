@@ -31,9 +31,11 @@ test('put writes a 0600 file in a 0700 dir outside the box, without terms', () =
   assert.equal(v.length, 1);
   const file = put('my/repo', leaky, 'violation', { cacheDir, violations: v });
   assert.equal(path.dirname(file), path.join(cacheDir, 'quarantine', 'my_repo'));
-  assert.equal(fs.statSync(path.dirname(file)).mode & 0o777, 0o700);
-  assert.equal(fs.statSync(path.join(cacheDir, 'quarantine')).mode & 0o777, 0o700);
-  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') { // Windows has no POSIX modes; the profile ACL keeps the cache private
+    assert.equal(fs.statSync(path.dirname(file)).mode & 0o777, 0o700);
+    assert.equal(fs.statSync(path.join(cacheDir, 'quarantine')).mode & 0o777, 0o700);
+    assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  }
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
   assert.deepEqual(raw.violations, [{ field: 'body', kind: 'exact' }]);
   assert.equal(raw.storyId, leaky.id);

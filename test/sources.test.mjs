@@ -15,7 +15,7 @@ const line = (o) => JSON.stringify(o) + '\n';
 
 test('claude: ids, encoding, line count', () => {
   assert.equal(claude.sessionId('/x/0a1b2c3d-1111-2222-3333-444455556666.jsonl'), 'claude:0a1b2c3d');
-  assert.equal(claude.encodeProjectDir('/home/u/my.repo_x'), '-home-u-my-repo-x');
+  assert.equal(claude.encodeProjectDir('/home/u/my.repo_x'), process.platform === 'win32' ? path.resolve('/home/u/my.repo_x').replace(/[^A-Za-z0-9]/g, '-') : '-home-u-my-repo-x');
   assert.equal(claude.countLines(CLAUDE), 15);
   const d = tmp();
   fs.writeFileSync(path.join(d, 'a'), 'x\ny');

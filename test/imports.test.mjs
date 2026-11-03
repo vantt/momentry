@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Only the shipped and tested code: bin/, lib/, scripts/, test/ (untracked tool dirs like .claude/ are not ours).
@@ -40,6 +40,6 @@ test('no package.json, no node_modules', () => {
 test('every module loads', async () => {
   for (const f of files.filter((f) => !f.includes(`${path.sep}test${path.sep}`) && !f.includes(`${path.sep}scripts${path.sep}`))) {
     if (f.endsWith(path.join('bin', 'momentry.mjs'))) continue;
-    await import(f);
+    await import(pathToFileURL(f).href);
   }
 });
