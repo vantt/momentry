@@ -1,0 +1,6 @@
+# dữ liệu lấy từ transcript, chưa qua kiểm riêng tư
+/docs/_private/
+# đầu ra thô của harness thí nghiệm
+/docs/experiments/*/harness/out/
+node_modules/
+.DS_Store

@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+// Fake `claude -p` for tests. Reads stdin, answers per FAKE_CLAUDE_PLAN (comma list, one mode per call):
+// ok | prose | is_error | is_error_exit | bad_json | bad_stdout | no_result | exit | hang
+// Call counter and a call log (argv, STORY_HARVEST, prompt length) live in FAKE_CLAUDE_STATE (a dir).
+import fs from 'node:fs';
+import path from 'node:path';
+
+const state = process.env.FAKE_CLAUDE_STATE;
+const plan = (process.env.FAKE_CLAUDE_PLAN || 'ok').split(',');
+const result = process.env.FAKE_CLAUDE_RESULT || '{"ok":true}';
+
+let stdin = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', d => { stdin += d; });
+process.stdin.on('end', () => {
+  let n = 0;
+  if (state) {
+    const cf = path.join(state, 'count');
+    n = fs.existsSync(cf) ? Number(fs.readFileSync(cf, 'utf8')) : 0;
+    fs.writeFileSync(cf, String(n + 1));
+    fs.appendFileSync(path.join(state, 'calls.jsonl'),
+      JSON.stringify({ argv: process.argv.slice(2), storyHarvest: process.env.STORY_HARVEST ?? null, prompt: stdin, pid: process.pid }) + '\n');
+  }
+  const mode = plan[Math.min(n, plan.length - 1)];
+  const out = o => process.stdout.write(JSON.stringify({ type: 'result', duration_ms: 1234, total_cost_usd: 0.01, ...o }));
+  switch (mode) {
+    case 'ok': out({ is_error: false, result }); break;
+    case 'prose': out({ is_error: false, result: 'Đây là kết quả:\n```json\n' + result + '\n```\nHết.' }); break;
+    case 'is_error': out({ is_error: true, subtype: 'error_during_execution', result: 'boom' }); break;
+    case 'is_error_exit': out({ is_error: true, result: 'boom' }); process.exitCode = 1; break;
+    case 'bad_json': out({ is_error: false, result: '{"stories": [ {"title": "cụt' }); break;
+    case 'bad_stdout': process.stdout.write('not json at all'); break;
+    case 'no_result': out({ is_error: false }); break;
+    case 'exit': process.stderr.write('fake: hỏng\n'); process.exitCode = 2; break;
+    case 'hang':
+      if (state) fs.writeFileSync(path.join(state, 'hang.pid'), String(process.pid));
+      process.on('SIGTERM', () => {});
+      setInterval(() => {}, 1000);
+      break;
+    default: process.stderr.write(`fake: mode lạ ${mode}\n`); process.exitCode = 9;
+  }
+});

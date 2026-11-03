@@ -1,0 +1,23 @@
+{"timestamp":"2026-01-10T09:00:00.000Z","type":"session_meta","payload":{"id":"0f9e8d7c-aaaa-7bbb-8ccc-ddddeeeeffff","timestamp":"2026-01-10T09:00:00.000Z","cwd":"/fake/repo/sub","originator":"codex_cli"}}
+{"timestamp":"2026-01-10T09:01:00.000Z","type":"turn_context","payload":{"cwd":"/fake/repo/sub","model":"m"}}
+{"timestamp":"2026-01-10T09:02:00.000Z","type":"response_item","payload":{"type":"message","role":"developer","content":[{"type":"input_text","text":"luật hệ thống 1 → 2"}]}}
+{"timestamp":"2026-01-10T09:03:00.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<environment_context>\n  <cwd>/fake/repo/sub</cwd>\n</environment_context>"}]}}
+{"timestamp":"2026-01-10T09:04:00.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Số lỗi giảm từ 12 xuống 9 rồi."}]}}
+{"timestamp":"2026-01-10T09:05:00.000Z","type":"response_item","payload":{"type":"reasoning","summary":[],"encrypted_content":"zzz"}}
+{"timestamp":"2026-01-10T09:06:00.000Z","type":"event_msg","payload":{"type":"user_message","message":"Số lỗi giảm từ 12 xuống 9 rồi."}}
+{"timestamp":"2026-01-10T09:07:00.000Z","type":"response_item","payload":{"type":"function_call","name":"exec_command","call_id":"c1","arguments":"{\"cmd\":\"git push --force origin main\",\"workdir\":\"/fake/repo\"}"}}
+{"timestamp":"2026-01-10T09:08:00.000Z","type":"response_item","payload":{"type":"function_call_output","call_id":"c1","output":"Chunk ID: a1\nWall time: 0.2 seconds\nProcess exited with code 1\nOutput:\nfatal: bị từ chối"}}
+{"timestamp":"2026-01-10T09:09:00.000Z","type":"response_item","payload":{"type":"custom_tool_call","name":"apply_patch","call_id":"c2","status":"completed","input":"*** Begin Patch\n*** Update File: .codex/config.toml\n@@\n-a\n+b\n*** Add File: src/moi.mjs\n+x\n*** Delete File: cu.txt\n*** End Patch\n"}}
+{"timestamp":"2026-01-10T09:10:00.000Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c2","output":"Success. Updated the following files:\nM .codex/config.toml"}}
+{"timestamp":"2026-01-10T09:11:00.000Z","type":"response_item","payload":{"type":"function_call","name":"shell","call_id":"c3","arguments":"{\"command\":[\"bash\",\"-lc\",\"git rebase -i HEAD~3\"],\"workdir\":\"/fake/repo\"}"}}
+{"timestamp":"2026-01-10T09:12:00.000Z","type":"response_item","payload":{"type":"function_call_output","call_id":"c3","output":"{\"output\":\"đã rebase\",\"metadata\":{\"exit_code\":0,\"duration_seconds\":0.1}}"}}
+{"timestamp":"2026-01-10T09:13:00.000Z","type":"response_item","payload":{"type":"custom_tool_call","name":"exec","call_id":"c4","status":"completed","input":"const r = await tools.exec_command({cmd:\"git reset --hard HEAD\", yield_time_ms:1000});\ntext(JSON.stringify(r));"}}
+{"timestamp":"2026-01-10T09:14:00.000Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c4","output":[{"type":"input_text","text":"Script completed\nWall time 0.1 seconds\nOutput:\n"},{"type":"input_text","text":"{\"chunk_id\":\"b2\",\"wall_time_seconds\":0.01,\"exit_code\":128,\"output\":\"fatal: khóa\"}"}]}}
+{"timestamp":"2026-01-10T09:15:00.000Z","type":"response_item","payload":{"type":"custom_tool_call","name":"exec","call_id":"c5","status":"completed","input":"await tools.apply_patch(\"*** Begin Patch\\n*** Update File: AGENTS.md\\n@@\\n-a\\n+b\\n*** End Patch\\n\");\nconst r = await tools.exec_command({cmd: \"ls -la\"}); text(r.output);"}}
+{"timestamp":"2026-01-10T09:16:00.000Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c5","output":[{"type":"input_text","text":"Script failed\nWall time 0.0 seconds\nOutput:\n"},{"type":"input_text","text":"TypeError: lỗi giả"}]}}
+{"timestamp":"2026-01-10T09:17:00.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Đã xong, tốc độ 0,5 → 0,5."}]}}
+{"timestamp":"2026-01-10T09:18:00.000Z","type":"world_state","payload":{"full":true,"state":{}}}
+{"timestamp":"2026-01-10T09:19:00.000Z","type":"event_msg","payload":{"type":"agent_message","message":"Đã xong"}}
+{"timestamp":"2026-01-10T09:20:00.000Z","type":"response_item","payload":{"type":"function_call","name":"wait","call_id":"c6","arguments":"{\"cell_id\":\"1\",\"yield_time_ms\":100}"}}
+{"timestamp":"2026-01-10T09:21:00.000Z","type":"response_item","payload":{"type":"function_call_output","call_id":"c6","output":[{"type":"input_text","text":"Script running with cell ID 1"}]}}
+{"timestamp":"2026-01-10T09:22:00.000Z","type":"compacted","payload":{"message":"tóm tắt 1 → 9"}}
