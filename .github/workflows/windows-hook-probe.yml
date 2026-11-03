@@ -60,7 +60,7 @@ jobs:
           $j = Get-Content -Raw $hj | ConvertFrom-Json
           $diag = 'cmd /d /c "(echo PATH=%PATH%& echo LOCALAPPDATA=%LOCALAPPDATA%& echo USERPROFILE=%USERPROFILE%& where node& echo where=%ERRORLEVEL%& (echo x>"%LOCALAPPDATA%\momentry\cache\probe-write.txt" && echo cachewrite=ok || echo cachewrite=fail)) > "%TEMP%\codex-hook-diag.txt" 2>&1"'
           $j.hooks.SessionStart += [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $diag }) }
-          $j | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $hj -Encoding UTF8
+          [IO.File]::WriteAllText($hj, ($j | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))  # no BOM: Codex rejects it
           $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --dangerously-bypass-hook-trust "hello" > codex.out 2>&1' -PassThru -NoNewWindow
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
           Get-Content codex.out -ErrorAction SilentlyContinue | Select-Object -First 20
