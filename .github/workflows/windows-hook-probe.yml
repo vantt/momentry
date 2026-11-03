@@ -63,6 +63,10 @@ jobs:
           [IO.File]::WriteAllText($hj, ($j | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))  # no BOM: Codex rejects it
           $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','codex exec --json --dangerously-bypass-hook-trust "hello" > codex-json.out 2>&1' -PassThru -NoNewWindow
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
+          Write-Host '=== codex logs mentioning hooks'
+          Get-ChildItem -Recurse -File (Join-Path $env:USERPROFILE '.codex') -Include *.log,*.jsonl -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'sessions' } | ForEach-Object {
+            Select-String -LiteralPath $_.FullName -Pattern 'hook' -ErrorAction SilentlyContinue | Select-Object -Last 15 | ForEach-Object { $_.Line.Substring(0, [Math]::Min(700, $_.Line.Length)) }
+          }
           Write-Host '=== hook events from codex exec --json'
           Get-Content codex-json.out -ErrorAction SilentlyContinue | Select-String -Pattern 'hook' | ForEach-Object { $_.Line.Substring(0, [Math]::Min(900, $_.Line.Length)) }
           foreach ($sb in 'read-only', 'danger-full-access') {
