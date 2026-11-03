@@ -59,6 +59,17 @@ jobs:
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
           Get-Content codex.out -ErrorAction SilentlyContinue | Select-Object -First 20
           Start-Sleep -Seconds 5
+      - name: diagnose the Codex hook (rollout hook results, same command through cmd /C)
+        shell: powershell
+        working-directory: probe-repo
+        continue-on-error: true
+        run: |
+          $roll = Get-ChildItem -Recurse -Filter 'rollout-*.jsonl' (Join-Path $env:USERPROFILE '.codex\sessions') -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($roll) { Select-String -LiteralPath $roll.FullName -Pattern 'hook' | ForEach-Object { $_.Line.Substring(0, [Math]::Min(600, $_.Line.Length)) } }
+          $cmdline = (Get-Content -Raw (Join-Path $env:USERPROFILE '.codex\hooks.json') | ConvertFrom-Json).hooks.SessionStart[0].hooks[0].command
+          Write-Host "command: $cmdline"
+          '{"session_id":"x","cwd":"' + ((Get-Location).Path -replace '\\','\\') + '"}' | cmd.exe /C "`"$cmdline`""
+          Write-Host "cmd /C exit: $LASTEXITCODE"
       - name: report hook.log
         shell: powershell
         run: |
