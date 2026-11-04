@@ -45,7 +45,47 @@ docker run -d --name momentry-runner-linux --restart unless-stopped \
 # gỡ: docker rm -f momentry-runner-linux && docker volume rm momentry-runner-linux, rồi xoá runner offline trong Settings → Actions → Runners
 ```
 
-Windows và macOS: Settings → Actions → Runners → New self-hosted runner, thêm nhãn `windows` hoặc `macos`. Runner chạy dưới tài khoản thường, không phải Administrator/root. Chỉ dùng runner tự host khi repo còn private, hoặc khi đã chặn workflow chạy từ PR của fork.
+#### Runner Windows
+
+Runner chạy như Windows service dưới một tài khoản riêng `ghrunner`, không phải tài khoản làm việc hằng ngày: job chạy với quyền của tài khoản đó, gồm cả action bên thứ ba và gói npm, nên không được đọc được token, SSH key hay cấu hình host thật của bạn. Service chạy nền, không ảnh hưởng khi bạn đăng nhập và làm việc trên cùng máy, nhưng job làm máy nặng vài phút và dừng khi máy ngủ.
+
+Cần: Windows 10/11 x64, quyền Administrator, Git for Windows (CI có bước `bash`), Node ≥ 20 (không có thì workflow tự tải). Tắt Sleep nếu muốn runner luôn nhận job.
+
+1. Tạo tài khoản (PowerShell Administrator):
+   ```powershell
+   $pw = Read-Host -AsSecureString "Mật khẩu cho ghrunner"
+   New-LocalUser ghrunner -Password $pw -PasswordNeverExpires -Description "GitHub Actions runner"
+   Add-LocalGroupMember -Group Users -Member ghrunner
+   ```
+   Đăng nhập Windows bằng `ghrunner` một lần để tạo profile; muốn kiểm Antigravity thì cài và đăng nhập `agy` trong phiên này. Đăng xuất.
+2. Tải runner (PowerShell Administrator, tài khoản của bạn). Lấy URL và sha256 của bản mới nhất ở [actions/runner releases](https://github.com/actions/runner/releases):
+   ```powershell
+   mkdir C:\actions-runner; cd C:\actions-runner
+   Invoke-WebRequest https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-win-x64-2.338.2.zip -OutFile runner.zip
+   if ((Get-FileHash runner.zip -Algorithm SHA256).Hash -ne 'a1f17aa987fc8158bc7521d284912267a0d01b7c2c4684b33c86783b5e8221cc') { throw 'sai checksum' }
+   Expand-Archive runner.zip -DestinationPath .
+   icacls C:\actions-runner /grant "ghrunner:(OI)(CI)M"
+   ```
+3. Lấy token đăng ký (sống 1 giờ): `gh api -X POST repos/vantt/momentry/actions/runners/registration-token --jq .token`, hoặc Settings → Actions → Runners → New self-hosted runner.
+4. Đăng ký và cài service:
+   ```powershell
+   .\config.cmd --url https://github.com/vantt/momentry --token <TOKEN> `
+     --name "windows-$env:COMPUTERNAME" --labels windows,agy --unattended `
+     --runasservice --windowslogonaccount "$env:COMPUTERNAME\ghrunner" --windowslogonpassword "<mật khẩu ghrunner>"
+   Get-Service actions.runner.*    # Running
+   ```
+   Nhãn `agy` chỉ thêm khi `ghrunner` đã đăng nhập `agy`.
+5. Bật: thêm `{os: windows-2025, label: windows, ...}` vào ma trận `ci.yml` và dòng `windows` trong smoke của `release.yml`, rồi `gh variable set MOMENTRY_SELF_HOSTED --body linux,windows`.
+
+Chỉ chạy runner khi cần: `Set-Service actions.runner.* -StartupType Manual`, rồi `Start-Service`/`Stop-Service`. Gỡ: `.\config.cmd remove --token <REMOVE_TOKEN>` (token lấy bằng `gh api -X POST repos/vantt/momentry/actions/runners/remove-token --jq .token`), xoá `C:\actions-runner` và tài khoản `ghrunner`.
+
+Cài dưới tài khoản của chính bạn cũng được (bỏ bước 1, bỏ `--windowslogonaccount`/`--windowslogonpassword` hoặc chạy `.\run.cmd` thay service), nhưng mọi job khi đó có toàn quyền của bạn; chỉ nên làm trên máy phụ hoặc máy ảo dành cho CI.
+
+#### Runner macOS
+
+Settings → Actions → Runners → New self-hosted runner (macOS), nhãn `macos`, chạy `./svc.sh install && ./svc.sh start` dưới một tài khoản thường riêng.
+
+Runner chạy dưới tài khoản thường, không phải Administrator/root. Chỉ dùng runner tự host khi repo còn private, hoặc khi đã chặn workflow chạy từ PR của fork.
 
 Bộ `--fake-llm` của test đầu cuối nằm ở `test/fixtures/pipeline/`, sinh lại bằng `node test/fixtures/pipeline/make-fixtures.mjs`. Không test nào gọi `claude` thật; `test/fixtures/fake-claude/claude` đứng thay khi cần. `contract.test.mjs` giữ tên và số tham số của mọi export công khai; `imports.test.mjs` cấm import ngoài `node:` và đường dẫn tương đối; `commands.test.mjs` giữ bảng lệnh, handler và tài liệu khớp nhau.
 
