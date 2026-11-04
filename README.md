@@ -105,6 +105,36 @@ momentry doctor --fix --yes
 
 Every failing check comes with a `sửa:` (fix) line containing a runnable command. Hooks log their results to `~/.cache/momentry/hook.log`.
 
+## `gh` commands for maintainers
+
+The repo is private: the commands below need `gh` logged in with write access. Runners check out from GitHub, so push your code first.
+
+Install from a private release (while `curl … | sh` is unavailable):
+
+```sh
+gh release download v0.2.0 --repo vantt/momentry --dir ~/momentry-rel
+sh ~/momentry-rel/install.sh --local-fixture ~/momentry-rel --yes
+```
+
+Windows: download as above into `$HOME\momentry-rel`, then `$env:MOMENTRY_RELEASE_BASE = "$HOME\momentry-rel"` and run `install.ps1` from that folder.
+
+CI (push and PR run Linux plus one Windows job; the full matrix with macOS runs on tags or manual runs):
+
+```sh
+gh workflow run ci.yml --ref main                    # full matrix, 3 OS x 3 Node
+gh workflow run windows-hook-probe.yml --ref main    # check hooks on real Windows; only after changing the Windows hook code
+gh run list --limit 5                                # latest runs
+gh run watch <run-id> --exit-status                  # follow until done
+gh run view <run-id> --log-failed                    # logs of failed jobs
+```
+
+Release: a tag equal to `lib/version.mjs` makes `release.yml` run full CI, create a draft, smoke-test it and publish:
+
+```sh
+git tag v0.3.0 && git push origin v0.3.0
+gh run watch $(gh run list --workflow release.yml --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
+```
+
 ## Documentation
 
 - [docs/cli-reference.md](docs/cli-reference.md): every command, flag, exit code and `--json` shape (generated from code).

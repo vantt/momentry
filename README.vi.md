@@ -101,6 +101,36 @@ momentry doctor --fix --yes
 
 Mỗi check chưa đạt có dòng `sửa:` là lệnh chạy được. Hook ghi kết quả vào `~/.cache/momentry/hook.log`.
 
+## Lệnh `gh` cho người bảo trì
+
+Repo đang private: các lệnh dưới cần `gh` đã đăng nhập bằng tài khoản có quyền ghi. Runner checkout từ GitHub, nên push code trước khi chạy.
+
+Cài từ release private (khi `curl … | sh` chưa dùng được):
+
+```sh
+gh release download v0.2.0 --repo vantt/momentry --dir ~/momentry-rel
+sh ~/momentry-rel/install.sh --local-fixture ~/momentry-rel --yes
+```
+
+Windows: tải như trên vào `$HOME\momentry-rel`, rồi `$env:MOMENTRY_RELEASE_BASE = "$HOME\momentry-rel"` và chạy `install.ps1` trong thư mục đó.
+
+CI (push và PR chỉ chạy Linux + một job Windows; ma trận đầy đủ có macOS chạy khi có tag hoặc chạy tay):
+
+```sh
+gh workflow run ci.yml --ref main                    # ma trận đầy đủ 3 OS × 3 Node
+gh workflow run windows-hook-probe.yml --ref main    # kiểm hook trên Windows thật; chỉ khi sửa phần hook Windows
+gh run list --limit 5                                # các lần chạy gần nhất
+gh run watch <run-id> --exit-status                  # theo dõi tới khi xong
+gh run view <run-id> --log-failed                    # log của job hỏng
+```
+
+Phát hành: tag trùng `lib/version.mjs` thì `release.yml` chạy CI đầy đủ, tạo bản nháp, smoke test rồi publish:
+
+```sh
+git tag v0.3.0 && git push origin v0.3.0
+gh run watch $(gh run list --workflow release.yml --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
+```
+
 ## Tài liệu
 
 - [docs/cli-reference.md](docs/cli-reference.md): mọi lệnh, cờ, mã thoát, dạng `--json` (sinh từ code).
