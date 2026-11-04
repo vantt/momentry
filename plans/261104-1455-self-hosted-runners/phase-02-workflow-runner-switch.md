@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Workflow chọn runner và cô lập HOME"
-status: todo
+status: in-progress
 priority: P1
 effort: "4h"
 dependencies: [1]
@@ -38,3 +38,8 @@ Một biến repo `MOMENTRY_SELF_HOSTED` quyết định job chạy trên GitHub
 
 ## Rollback
 `gh variable delete MOMENTRY_SELF_HOSTED`; workflow trở về GitHub-hosted. Revert commit nếu biểu thức `runs-on` gây lỗi.
+
+## Kết quả (2026-11-04)
+- Commit 72a0104: `runs-on` theo `vars.MOMENTRY_SELF_HOSTED` (danh sách OS) và bước cô lập HOME/USERPROFILE trong `ci.yml`, `release.yml`, `windows-hook-probe.yml`; `docs/development.md` có mục "Runner tự host". actionlint 1.7.7 sạch.
+- Biến đặt `linux`. Run 41811166375: ba job Linux (Node 20/22/24) xanh trên `linux-fg-server-docker`, 250/250 test, installer và agent-native qua; job Windows/macOS vẫn trên GitHub-hosted và bị chặn vì hết quota.
+- Còn lại: kiểm phần Windows của bước cô lập khi có runner Windows (phase 3); kiểm `release` trên self-hosted khi có tag thử (phase 4).

@@ -42,7 +42,7 @@ Một repo có thể có nhiều runner. Mỗi runner gắn nhãn (`self-hosted`
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Runner Linux và kiểm self-hosted có bị chặn không](./phase-01-linux-runner-gate.md) | Done |
-| 2 | [Workflow chọn runner và cô lập HOME](./phase-02-workflow-runner-switch.md) | Pending |
+| 2 | [Workflow chọn runner và cô lập HOME](./phase-02-workflow-runner-switch.md) | In progress (Linux xong) |
 | 3 | [Runner Windows và kiểm agy thật (issue #2)](./phase-03-windows-runner-agy.md) | Pending |
 | 4 | [Runner macOS](./phase-04-macos-runner.md) | Pending |
 | 5 | [Tài liệu vận hành runner](./phase-05-docs.md) | Pending |
