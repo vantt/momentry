@@ -1,10 +1,28 @@
-# momentry landing page: wireframe
+# momentry landing page v2: wireframe
 
-One page. Section numbers match `copy.md`. Desktop is about 1120px content width; mobile is 360–420px with a 16px side gutter. Code blocks never wrap: on mobile they scroll sideways inside their own box, and the page itself never scrolls sideways.
+One page. Section numbers match [copy.md](copy.md) v2. Desktop is about 1120px content width; mobile is 360–420px with a 16px side gutter. Code blocks never wrap: on mobile they scroll sideways inside their own box; the page never scrolls sideways.
 
-Legend: `[[ CODE ]]` = monospace block with a Copy button · `[ Button ]` = button · `( link )` = text link · `{ TERMINAL }` = terminal-styled block (dark, prompt line, no Copy button).
+Legend: `[[ CODE ]]` = monospace block with a Copy button · `[ Button ]` = button · `[* Buy *]` = primary buy button (accent colour, the only filled button on the page) · `( link )` = text link · `{ TERMINAL }` = terminal-styled block (dark, no Copy button).
 
-CTA repeats: hero (1), how it works step 1 (3), final CTA (11), plus the sticky nav "Install" button that scrolls to the hero.
+Primary action: Buy (`{{CHECKOUT_URL}}`). It appears in the sticky nav, the hero (1), the pricing card (7) and the final CTA (10). Secondary action: read a real story file (scrolls to `#example`).
+
+## What changed from v1
+
+| v1 (`site-v1`) | v2 |
+|---|---|
+| CTA: install one-liner from GitHub, OS toggle in hero | CTA: `[* Buy momentry · {{PRICE}} *]`. Install command moved to How it works step 1 with `{{DOWNLOAD_BASE}}`, labelled "arrives with your key" |
+| Secondary CTA: GitHub README | Secondary: "Read a real story file" → `#example` |
+| Nav: … Cost · FAQ · GitHub · [Install] | Nav: … Privacy · Pricing · FAQ · [* Buy · {{PRICE}} *] |
+| Hero headline: "Your agent sessions are full of stories…" | Lead line: "You're not short of ideas. You forgot what you did." Set larger, two lines, more contrast; the hero carries the page's one bold moment |
+| 4 What you get + 5 Ranking (merged) | Same, plus a bold proof line (7 of 8 in the top half) |
+| 7 `/bip` section | Stays folded into How it works step 3 |
+| 8 Cost and requirements | Replaced by **7 Pricing**: price card + running cost + requirements + fit line |
+| none | New **6 Why pay for this**: six tiles |
+| 9 Where it stands (README numbers) | 8 Where it stands (recorded-run numbers), shorter |
+| FAQ: 9 items | FAQ: 13 items, paid and closed-source questions first |
+| Footer: Unlicense, GitHub, changelog, issues | Footer: © · License agreement (`{{EULA_URL}}`) · Contact (`{{SUPPORT_EMAIL}}`) |
+
+**Against "boring":** v1 was a long run of same-weight text sections. v2 changes rhythm, not skeleton: a bigger hero line, a dark full-bleed band for How it works, a tile grid for Why pay, a card for Pricing, and alternating light/tinted backgrounds so each section reads as a new beat. Motion stays minimal (the hero terminal types its five rows once; static under reduced motion).
 
 ---
 
@@ -13,30 +31,29 @@ CTA repeats: hero (1), how it works step 1 (3), final CTA (11), plus the sticky 
 ```text
 +--------------------------------------------------------------------------------+
 | NAV (sticky)                                                                   |
-| momentry      How it works  Example  Privacy  Cost  FAQ  (GitHub)  [ Install ] |
+| momentry     How it works  Example  Privacy  Pricing  FAQ   [* Buy · 29 USD *] |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 1. HERO                                         two columns, 50 / 50           |
+| 1. HERO                                         two columns, 55 / 45           |
 |                                                                                |
-|  Free CLI for Claude Code and Codex   |   { TERMINAL: list --rank }            |
-|                                       |   $ momentry list --rank               |
-|  Your agent sessions are full of      |   id ...      hook ...   tension ...   |
-|  stories. momentry writes them down.  |   (first 4 rows of the demo,           |
-|                                       |    rows type in one by one, once;      |
-|  Subhead (2-3 lines)                  |    static if reduced motion)           |
-|                                       |   caption: illustrative scores,        |
-|  [macOS / Linux / WSL] [Windows]      |   hooks translated                     |
-|  [[ curl -fsSL ...install.sh | sh ]]  |                                        |
-|                                       |                                        |
-|  [ View on GitHub ]                   |                                        |
-|  small: Unlicense · Node 20+ · git ·  |                                        |
-|  claude CLI · output in Vietnamese    |                                        |
+|  eyebrow: For devs who build in public |  { TERMINAL: list --rank }            |
+|           with coding agents           |  $ momentry list --rank               |
+|                                        |  hook ...           tension  stakes   |
+|  You're not short of ideas.            |  (5 rows, type in once)               |
+|  You forgot what you did.     (H1, XL) |  caption: top 5 of 38 from a recorded |
+|                                        |  run; hooks translated; values        |
+|  Subhead (3-4 lines)                   |  illustrative                         |
+|                                        |                                       |
+|  [* Buy momentry · 29 USD *]           |                                       |
+|  ( Read a real story file )            |                                       |
+|  small: one-time license · key + install by email · ~1 USD/session via your    |
+|  claude · stories in Vietnamese for now                                        |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 2. PAIN                                         one column, max 680px text     |
-|   H2 Stop trying to remember what was worth telling this week.                 |
+| 2. PAIN                               tinted background, one column 680px      |
+|   H2 Friday comes and you're trying to remember what was worth telling.        |
 |   3 short paragraphs                                                           |
 |   +------------------+ +------------------+ +------------------+               |
 |   | Memory           | | Scrolling        | | A devlog file    |   3 cards     |
@@ -44,165 +61,166 @@ CTA repeats: hero (1), how it works step 1 (3), final CTA (11), plus the sticky 
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 3. HOW IT WORKS  (#how)                         3 columns, numbered            |
-|  +--------------------+ +--------------------+ +--------------------+          |
-|  | 1 Install          | | 2 Turn it on       | | 3 Keep working     |          |
-|  | 1-2 lines          | | 2-3 lines          | | 1-2 lines          |          |
-|  | [[ curl ... | sh ]]| | [[ momentry init   | | [[ momentry list   |          |
-|  |  (CTA repeat)      | |    privacy-add ]]  | |    --rank ]]       |          |
-|  +--------------------+ +--------------------+ +--------------------+          |
-|  small: Want results now? momentry scan --max-sessions 1                       |
-|                                                                                |
-|  { TERMINAL: full 7-row list --rank demo, full width }                         |
-|  caption (required): real layout, illustrative scores, hooks translated        |
+| 3. HOW IT WORKS (#how)                dark full-bleed band, 3 columns          |
+|  H2 Buy once, turn it on per repo, keep working                                |
+|  +----------------------+ +----------------------+ +----------------------+    |
+|  | 1 Buy and install    | | 2 Turn it on         | | 3 Keep working       |    |
+|  | key + command by     | | [[ momentry init     | | [[ momentry list     |    |
+|  | email                | |    privacy-add ]]    | |    --rank ]]         |    |
+|  | [mac/Linux/WSL][Win] | |                      | | { /bip p95 ... }     |    |
+|  | [[ curl -fsSL        | |                      | |                      |    |
+|  |  {{DOWNLOAD_BASE}}/… ]]| |                    | |                      |    |
+|  | small: exact command | |                      | |                      |    |
+|  | arrives with your key| |                      | |                      |    |
+|  +----------------------+ +----------------------+ +----------------------+    |
+|  small: Want a result now? momentry scan --max-sessions 1 --quiet-minutes 0    |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 4. WHAT YOU GET  (#example)                     60 / 40                        |
-|                                                                                |
-|  H2 One markdown file per moment                                               |
+| 4. WHAT YOU GET (#example)            60 / 40                                  |
+|  H2 One markdown file per moment, ranked                                       |
 |  2-line intro                                                                  |
-|  label: A real story from the author's box,  |  Side note:                     |
-|  translated from Vietnamese                  |  "Harvested stories also carry  |
-|  +-----------------------------------------+ |   ranking fields"               |
-|  | tab: 2026-11-02-mot-ky-tu-unicode.md    | |  [[ yaml: hook, tension,        |
-|  | ---                                     | |     strength, stakes ... ]]     |
-|  | date / status / signals / source ...    | |  caption: values from the spec  |
-|  | ---                                     | |  example, not a real run        |
-|  | # One way of writing Unicode cut ...    | |                                 |
-|  | Context / What happened / Lesson /      | |  status chips:                  |
-|  | Artefact                                | |  raw > picked > drafted >       |
-|  +-----------------------------------------+ |  published · dropped            |
-|  (file block: no Copy button, read-only)     |                                 |
+|  label: A real story from the author's  |  Ranked by what makes a story        |
+|  box. Translated from Vietnamese.       |  worth reading                      |
+|  +-----------------------------------+  |  - Hook                             |
+|  | tab: 2026-11-02-mot-ky-tu-unicode |  |  - Tension                          |
+|  | --- frontmatter ---               |  |  - Stakes                           |
+|  | # One way of writing Unicode ...  |  |  **7 of 8 hand-labelled stories in  |
+|  | Context / What happened /         |  |  the top half of 38** (proof line)  |
+|  | Lesson / Artefact                 |  |  status chips: raw > picked >       |
+|  +-----------------------------------+  |  drafted > published · dropped      |
+|  (read-only, no Copy button)            |  > Under the hood (details, closed) |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 5. RANKING                                      3 columns                      |
-|  H2 Ranked by what makes a story worth reading                                 |
-|  +-------------+ +-------------+ +-------------+                               |
-|  | Hook        | | Tension     | | Stakes      |                               |
-|  +-------------+ +-------------+ +-------------+                               |
-|  small print: sort order line                                                  |
-|  optional paragraph: how hotspots are found                                    |
-+--------------------------------------------------------------------------------+
-
-+--------------------------------------------------------------------------------+
-| 6. PRIVACY  (#privacy)                          50 / 50                        |
-|  H2 Private names stay out of your repo  |  [[ momentry config privacy-add     |
-|  2 paragraphs                            |     "Jane Doe" "secret-project" ]]  |
-|                                          |  flow diagram (simple boxes):       |
-|                                          |  story -> check -> box (repo)       |
-|                                          |                \-> quarantine       |
-|                                          |                    (~/.cache)       |
+| 5. PRIVACY (#privacy)                 tinted background, 50 / 50               |
+|  H2 Client names stay out of your repo |  [[ momentry config privacy-add       |
+|  2 paragraphs                          |     "Jane Doe" "secret-project" ]]    |
+|                                        |  diagram: story -> check -> box (repo)|
+|                                        |                      \-> quarantine   |
 |  +--------------------------------------------------------------------------+  |
-|  | Honesty line (bordered note): transcript is sent to Claude via your CLI  |  |
+|  | Honesty note (bordered): transcript goes to Anthropic via your claude;   |  |
+|  | no momentry server                                                       |  |
 |  +--------------------------------------------------------------------------+  |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 7. /bip                                         50 / 50                        |
-|  H2 Saw something worth telling? Type /bip. |  { TERMINAL: agent prompt line   |
-|  2 short paragraphs                         |    /bip p95 went from 800ms ... }|
+| 6. WHY PAY FOR THIS                   3 x 2 tile grid                          |
+|  H2 You could write the script. This is the rest of it.                        |
+|  intro (2 lines)                                                               |
+|  +----------------+ +----------------+ +----------------+                      |
+|  | Five hosts,    | | Each host's    | | Privacy gate   |                      |
+|  | every profile  | | quirks         | | (Telex)        |                      |
+|  +----------------+ +----------------+ +----------------+                      |
+|  +----------------+ +----------------+ +----------------+                      |
+|  | Windows + WSL  | | doctor +       | | Ranking vs a   |                      |
+|  |                | | checked update | | human          |                      |
+|  +----------------+ +----------------+ +----------------+                      |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 8. COST AND REQUIREMENTS  (#cost)               2 columns + strip              |
-|  H2 Free tool. You pay for the model calls.                                    |
-|  +------------------------------+ +------------------------------+             |
-|  | Cost (3 bullets)             | | Requirements (4 bullets)     |             |
-|  +------------------------------+ +------------------------------+             |
-|  strip: Hooks don't slow you down (1-2 lines)                                  |
+| 7. PRICING (#pricing)                 card left 45, text right 55              |
+|  H2 Pay once. Run it on your own Claude account.                               |
+|  +------------------------------+  |  What it costs to run                     |
+|  | momentry, lifetime license   |  |  1 paragraph (~1 USD/session, outsider)  |
+|  | 29 USD  one-time   (XL)      |  |  "No subscription and no markup on       |
+|  | ✓ CLI for 4 platforms        |  |   tokens."                                |
+|  | ✓ 5 hosts + /bip             |  |                                           |
+|  | ✓ privacy gate               |  |  Requirements (4 bullets)                 |
+|  | ✓ ranking                    |  |                                           |
+|  | ✓ doctor, updates, uninstall |  |  small fit line: not for you yet if ...   |
+|  | ✓ updates v0.x and 1.x       |  |                                           |
+|  | [* Buy momentry · 29 USD *]  |  |                                           |
+|  | small: key + install by email|  |                                           |
+|  | {{REFUND_POLICY}}            |  |                                           |
+|  +------------------------------+  |                                           |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 9. WHERE IT STANDS                              one column, muted panel        |
-|  H2 Where it stands                                                            |
-|  bullet list (all 8 lines; numbers line in bold)                               |
-|  ( Full spec and open questions: docs/prd.md )                                 |
+| 8. WHERE IT STANDS                    muted panel, one column                  |
+|  H2 Version 0.2, honestly                                                      |
+|  5 bullets (recorded-run line bold)                                            |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 10. FAQ  (#faq)                                 one column, 8 accordions       |
-|  > Does it write my blog posts?                                                |
-|  > Will it slow down my sessions?                                              |
+| 9. FAQ (#faq)                         one column, 13 accordions                |
+|  > Why pay for what looks like a script?          (open by default)            |
+|  > It's closed source. Can I trust hooks ...                                   |
+|  > I already pay Anthropic ...                                                 |
 |  > ...                                                                         |
-|  (first item open by default; all text present in HTML for search/no-JS)      |
+|  (all text in HTML for search and no-JS)                                       |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| 11. FINAL CTA                                   centered, max 720px            |
-|  H2 Try it on your last session                                                |
+| 10. FINAL CTA                         centered, max 720px, tinted              |
+|  H2 Get last week back.                                                        |
 |  1 line                                                                        |
-|  [macOS / Linux / WSL] [Windows]                                               |
-|  [[ curl ... | sh ]]                   (CTA repeat)                            |
-|  [[ momentry init / scan --max-sessions 1 / list --rank ]]                     |
-|  [ Read the source on GitHub ]                                                 |
-|  small: Free, public domain. Uninstall any time.                               |
+|  [* Buy momentry · 29 USD *]                                                   |
+|  ( Read a real story file first )                                              |
+|  small: one-time · ~1 USD/session · Vietnamese for now · {{REFUND_POLICY}}     |
 +--------------------------------------------------------------------------------+
 
 +--------------------------------------------------------------------------------+
-| FOOTER   momentry · Unlicense · GitHub · CLI reference · Changelog · Issues    |
+| FOOTER   momentry · © 2026 · License agreement · Contact                       |
 +--------------------------------------------------------------------------------+
 ```
+
+"29 USD" in the sketch is `{{PRICE}}` rendered; the HTML must read it from one variable.
 
 ---
 
 ## Mobile
 
-Everything stacks in one column in the same order. Changes from desktop:
+One column, same order. Changes from desktop:
 
 ```text
 +--------------------------+
 | NAV (sticky, 56px)       |
-| momentry   [Install] [=] |   [=] opens a sheet:
-+--------------------------+   How it works / Example / Privacy /
-                               Cost / FAQ / GitHub
+| momentry  [*Buy*]  [=]   |   [=] opens a sheet: How it works /
++--------------------------+   Example / Privacy / Pricing / FAQ
+                               Nav button drops the price on < 380px
 +--------------------------+
 | 1. HERO                  |
 | eyebrow                  |
-| H1 (2-4 lines)           |
+| H1 (3-4 lines)           |
 | subhead                  |
-| [macOS/Linux] [Windows]  |   toggle full width
-| [[ curl ... | sh  ]] >>  |   scrolls sideways inside box;
-|            [ Copy ]      |   Copy button always visible (right edge)
-| [ View on GitHub ]       |   full-width secondary button
-| small requirements line  |
-|                          |
-| { TERMINAL demo }        |   moved BELOW the CTA; show 4 rows,
-|  id + hook columns only  |   only id/hook/tension columns fit,
-|  caption                 |   block scrolls sideways for the rest
+| [* Buy momentry · 29 *]  |   full width
+| ( Read a real story )    |   centered text link
+| small line               |
+| { TERMINAL }             |   below the CTA; hook column only,
+| caption                  |   block scrolls sideways for the rest
 +--------------------------+
-| 2. PAIN                  |
-| text, then 3 cards       |   cards stack
+| 2. PAIN  text, 3 cards   |   cards stack
 +--------------------------+
-| 3. HOW IT WORKS          |
-| 1 Install  [[ code ]]    |   steps stack, number on the left
-| 2 Turn on  [[ code ]]    |
-| 3 Keep     [[ code ]]    |
-| full demo omitted        |   (hero already showed it)
+| 3. HOW IT WORKS (dark)   |
+| 1 Buy+install [[code]] >>|   steps stack, number on the left
+| 2 Turn on     [[code]]   |
+| 3 Keep going  [[code]]   |
 +--------------------------+
 | 4. WHAT YOU GET          |
 | label                    |
-| file block (scrolls >>)  |   lines wrap at 72 chars in the
-| side note + yaml below   |   source, so it fits ~360px at 13px
+| file block (scrolls >>)  |   lines wrap at 72 chars in source
+| ranking list + proof     |   moved under the file
+| details: Under the hood  |
 +--------------------------+
-| 5. RANKING  3 stacked    |
-+--------------------------+
-| 6. PRIVACY               |
+| 5. PRIVACY               |
 | text, code, diagram      |   diagram turns vertical
 | honesty note             |
 +--------------------------+
-| 7. /bip  text, terminal  |
+| 6. WHY PAY  6 tiles      |   one column; title + 1 line each,
+|                          |   tap to expand the rest
 +--------------------------+
-| 8. COST  Cost, Reqs      |   stacked
+| 7. PRICING               |
+| price card (full width)  |   card first, then running cost,
+| [* Buy *]                |   requirements, fit line
+| running cost, reqs       |
 +--------------------------+
-| 9. WHERE IT STANDS       |
+| 8. WHERE IT STANDS       |
 +--------------------------+
-| 10. FAQ accordions       |
+| 9. FAQ accordions        |
 +--------------------------+
-| 11. FINAL CTA            |
-| toggle, [[curl]], [[3]]  |
-| [ Read the source ... ]  |
+| 10. FINAL CTA            |
+| [* Buy *]  ( story )     |
 +--------------------------+
 | FOOTER (links wrap)      |
 | [ Top ]                  |
@@ -213,9 +231,13 @@ Everything stacks in one column in the same order. Changes from desktop:
 
 ## Behaviour notes
 
-- **OS toggle:** default by `navigator.platform`/userAgent (Windows shows PowerShell first, everything else shows `curl`). The hero toggle and final-CTA toggle stay in sync.
-- **Copy button:** copies the exact one-liner, label `Copy` → `Copied` for 2 s. If the clipboard API fails, label becomes `Select and copy` and the command text is selected.
-- **Terminal demo:** plain text in the HTML (searchable, copyable). Optional one-time type-in animation; none under `prefers-reduced-motion`. Caption is always visible.
-- **Anchors:** `#how`, `#example`, `#privacy`, `#cost`, `#faq`. Nav "Install" scrolls to the hero install block and focuses its Copy button.
-- **No social-proof strip.** There are no testimonials, user counts or stars to show. The proof is the status line in section 9 and the real example in section 4.
-- **Dark mode:** the terminal and code blocks are dark in both themes; page background follows the system theme.
+- **Price:** one variable (`PRICE`) in the page script or build; nav, hero, pricing card, FAQ and final CTA read it.
+- **Buy button:** plain link to `{{CHECKOUT_URL}}` (Lemon Squeezy). If the Lemon Squeezy overlay script is used later, the link must still work without JS.
+- **Secondary link:** smooth-scrolls to `#example` and moves focus to the file block's label.
+- **OS toggle:** only in How it works step 1 now; default by user agent (Windows shows PowerShell first).
+- **Copy button:** on install and command blocks; `Copy` → `Copied` for 2 s; on clipboard failure, select the text and show `Ctrl+C`.
+- **Terminal demo:** plain text in HTML; optional one-time type-in; none under `prefers-reduced-motion`; caption always visible.
+- **Anchors:** `#how`, `#example`, `#privacy`, `#pricing`, `#faq`.
+- **No social-proof strip.** No testimonials, user counts or stars exist. Proof is the recorded run (sections 4, 6, 8) and the real story file.
+- **No GitHub anywhere:** no nav icon, no footer link, no "view source".
+- **Dark mode:** terminal, code blocks and the How it works band stay dark in both themes; the rest follows the system theme.

@@ -1,546 +1,690 @@
 <title>momentry</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="A free CLI that reads your Claude Code and Codex transcripts after each session, writes every moment worth telling as a markdown file in your repo, and ranks them by hook, tension and stakes.">
-<meta property="og:title" content="Your agent sessions are full of stories. momentry writes them down.">
+<!-- PRICE: 29 USD  (copy.md {{PRICE}}). Change every element with class="price": nav button, hero button, price card, card button, FAQ "I already pay Anthropic", final button, plus the meta description below. -->
+<meta name="description" content="momentry reads your Claude Code, Codex, pi, omp and Antigravity sessions after they end and writes every moment worth telling into your repo as a markdown file, ranked by hook, tension and stakes. One-time license, 29 USD.">
+<meta property="og:title" content="You're not short of ideas. You forgot what you did.">
+<meta property="og:description" content="momentry writes the moments from your agent sessions into your repo, ranked, so Friday's post starts from a list.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,500..900&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&family=Atkinson+Hyperlegible+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap">
 <style>
+/* Direction: "petrol and signal". Picked from the ui-ux-pro-max search: Minimalism & Swiss structure, the
+   Productivity Tool palette (deep teal + action orange) and the Developer Mono pairing (JetBrains Mono for
+   display and code, IBM Plex Sans for reading). Teal carries the bands, orange marks the one thing to do,
+   a near-black teal ink holds the terminal and the "how" band. Inside a band everything stays quiet:
+   hairline rules, square corners, no soft shadows. The price card keeps one offset shadow in teal. */
 :root {
-  /* Layout concept: the page is one markdown story file. Headings hang their literal # marks in a left gutter, prose runs left-aligned in a 1120px column, and every command lives in a dark terminal with one highlighter band marking the moment. */
-  --bg: #EDF0EA;          /* listing-paper grey-green */
-  --surface: #F7F8F4;
-  --fg: #172030;          /* blue-black ink */
-  --muted: #536072;
-  --rule: #C8CFC4;
-  --hash: #A3AC9F;        /* hanging markdown marks */
-  --link: #2343B5;
-  --mark: #F2D24A;        /* highlighter */
-  --mark-ink: #172030;
-  --code-bg: #E0E5DC;
-  --btn-bg: #172030;
-  --btn-fg: #F7F8F4;
-  --focus: #2343B5;
-  --term-bg: #141A24;
-  --term-fg: #D8DFE9;
-  --term-dim: #7D899B;
-  --term-rule: #283143;
-  --term-key: #93B3FF;
-  --term-hot: rgba(242, 210, 74, .17);
-  --term-accent: #F2D24A;
-  --term-edge: transparent;
-  --font-display: "Anybody", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --maxw: 1120px;
+  --bg: #F5F7F6;
+  --fg: #0E2321;
+  --muted: #45605C;
+  --rule: #C7D4D1;
+  --surface: #FFFFFF;
+  --tint: #DDEFEB;
+  --link: #0A6B63;
+
+  --teal: #0B5550;
+  --on-teal: #FFFFFF;
+  --on-teal-muted: #BFE3DD;
+  --accent: #FFBF8C;
+  --on-accent: #1A0E06;
+  --orange: #F26B1D;
+  --on-orange: #1A0E06;
+  --ink: #0E2321;
+  --on-ink: #E6F0EE;
+  --on-ink-muted: #A7BFBB;
+  --ink-rule: #284642;
+  --paper: #FFFAF5;
+  --on-paper: #0E2321;
+  --apricot: #FCE3CE;
+  --on-apricot: #0E2321;
+  --ok-bg: #A6E6DB;
+  --on-ok: #0E2321;
+
+  --term-bg: #0A1B1A;
+  --term-fg: #E3EEEC;
+  --term-dim: #8FAAA5;
+  --t-amber: #FCD34D;
+  --t-mint: #5EEAD4;
+  --t-sky: #7DD3FC;
+  --t-orange: #FDA769;
+
+  --btn: #F26B1D;
+  --btn-ink: #1A0E06;
+  --btn-edge: #0E2321;
+  --shadow-ink: #0E2321;
+
+  --nav-bg: #08403C;
+  --term-edge: #0E2321;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #10151D; --surface: #171D27; --fg: #E2E7EE; --muted: #9AA5B5; --rule: #2A323F;
-    --hash: #465061; --link: #9BB2FF; --mark: #E6C93F; --mark-ink: #10151D; --code-bg: #212835;
-    --btn-bg: #E2E7EE; --btn-fg: #10151D; --focus: #9BB2FF;
-    --term-bg: #0A0E14; --term-fg: #D8DFE9; --term-dim: #76839A; --term-rule: #222B3A; --term-key: #93B3FF;
-    --term-hot: rgba(230, 201, 63, .16); --term-accent: #E6C93F; --term-edge: #2E3747;
+    --bg: #0C1615;
+    --fg: #E4EEEC;
+    --muted: #A0B7B3;
+    --rule: #24403C;
+    --surface: #12211F;
+    --tint: #0F2E2A;
+    --link: #74D8CB;
+    --teal: #0A4642;
+    --on-teal: #FFFFFF;
+    --on-teal-muted: #B5DCD6;
+    --accent: #FFBF8C;
+    --on-accent: #1A0E06;
+    --orange: #EE6418;
+    --on-orange: #140A04;
+    --ink: #071110;
+    --on-ink: #E6F0EE;
+    --on-ink-muted: #A7BFBB;
+    --ink-rule: #1F3835;
+    --paper: #FFF6EC;
+    --on-paper: #0E2321;
+    --apricot: #2B1E15;
+    --on-apricot: #F6E7DA;
+    --ok-bg: #8FDACD;
+    --on-ok: #0E2321;
+    --term-bg: #071110;
+    --term-fg: #E3EEEC;
+    --term-dim: #8FAAA5;
+    --btn: #F47A2E;
+    --btn-ink: #1A0E06;
+    --btn-edge: #020606;
+    --shadow-ink: #020606;
+    --nav-bg: #083633;
+    --term-edge: #2C4A46;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #10151D; --surface: #171D27; --fg: #E2E7EE; --muted: #9AA5B5; --rule: #2A323F;
-  --hash: #465061; --link: #9BB2FF; --mark: #E6C93F; --mark-ink: #10151D; --code-bg: #212835;
-  --btn-bg: #E2E7EE; --btn-fg: #10151D; --focus: #9BB2FF;
-  --term-bg: #0A0E14; --term-fg: #D8DFE9; --term-dim: #76839A; --term-rule: #222B3A; --term-key: #93B3FF;
-  --term-hot: rgba(230, 201, 63, .16); --term-accent: #E6C93F; --term-edge: #2E3747;
-  color-scheme: dark;
+    --bg: #0C1615;
+    --fg: #E4EEEC;
+    --muted: #A0B7B3;
+    --rule: #24403C;
+    --surface: #12211F;
+    --tint: #0F2E2A;
+    --link: #74D8CB;
+    --teal: #0A4642;
+    --on-teal: #FFFFFF;
+    --on-teal-muted: #B5DCD6;
+    --accent: #FFBF8C;
+    --on-accent: #1A0E06;
+    --orange: #EE6418;
+    --on-orange: #140A04;
+    --ink: #071110;
+    --on-ink: #E6F0EE;
+    --on-ink-muted: #A7BFBB;
+    --ink-rule: #1F3835;
+    --paper: #FFF6EC;
+    --on-paper: #0E2321;
+    --apricot: #2B1E15;
+    --on-apricot: #F6E7DA;
+    --ok-bg: #8FDACD;
+    --on-ok: #0E2321;
+    --term-bg: #071110;
+    --term-fg: #E3EEEC;
+    --term-dim: #8FAAA5;
+    --btn: #F47A2E;
+    --btn-ink: #1A0E06;
+    --btn-edge: #020606;
+    --shadow-ink: #020606;
+    --nav-bg: #083633;
+    --term-edge: #2C4A46;
+    color-scheme: dark;
 }
 
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 72px; -webkit-text-size-adjust: 100%; }
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
-  margin: 0; background: var(--bg); color: var(--fg);
-  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
   overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
 }
 body::before {
   content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
-  z-index: 10; background: var(--bg);
+  z-index: 10; background: var(--nav-bg);
 }
-a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
-a:hover { text-decoration-thickness: 2px; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
+code, pre, kbd, .mono { font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+:not(pre) > code { font-size: .9em; background: var(--tint); padding: .08em .32em; }
+a { color: var(--link); text-underline-offset: .18em; }
+a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid currentColor; outline-offset: 3px;
+}
+h1, h2, h3 { margin: 0; line-height: 1.04; letter-spacing: -.01em; }
+h2 {
+  font-size: clamp(1.9rem, 3.6vw, 3rem);
+  font-weight: 800;
+  max-width: 22ch;
+}
+h3 { font-size: 1.15rem; font-weight: 750; line-height: 1.25; }
 p { margin: 0 0 1em; }
-ul, ol { margin: 0; padding: 0; }
-code, pre, kbd { font-family: var(--font-mono); }
-:not(pre) > code {
-  font-size: .88em; background: var(--code-bg); padding: .08em .35em; border-radius: 4px;
-  overflow-wrap: anywhere;
-}
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .wrap {
-  max-width: calc(var(--maxw) + 2 * max(16px, env(safe-area-inset-left, 0px)));
-  margin-inline: auto;
+  max-width: 1184px; margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-@media (min-width: 760px) {
-  .wrap { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); }
-}
-.band > .wrap { padding-block: 88px; }
-.band + .band > .wrap { border-top: 1px solid var(--rule); }
-@media (max-width: 759px) { .band > .wrap { padding-block: 60px; } }
-
-/* ---------- headings: the one bold idea, literal markdown marks ---------- */
-h1, h2, h3 { font-family: var(--font-display); font-stretch: 74%; margin: 0; letter-spacing: -.01em; }
-.h2 {
-  font-size: clamp(1.9rem, 1.2rem + 2.4vw, 3rem); font-weight: 780; line-height: 1.04;
-  max-width: 22ch; margin-bottom: 28px; position: relative;
-}
-.hash {
-  font-family: var(--font-mono); font-weight: 400; font-stretch: 100%; color: var(--hash);
-  letter-spacing: 0; margin-right: .3em; font-size: .62em; vertical-align: .22em; user-select: none;
-}
-@media (min-width: 1250px) {
-  .h2 .hash, h1 .hash { position: absolute; right: 100%; top: 0; margin-right: .45em; }
-}
-h3 { font-size: 1.45rem; font-weight: 760; line-height: 1.15; margin-bottom: 8px; }
-.lede { font-size: 1.12rem; max-width: 62ch; color: var(--fg); }
-.prose { max-width: 66ch; }
+@media (min-width: 720px) { .wrap { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); } }
+.band { padding-block: clamp(56px, 8vw, 104px); }
 .small { font-size: .9rem; color: var(--muted); }
-.caption { font-size: .88rem; color: var(--muted); margin-top: 12px; max-width: 72ch; }
+.lead { font-size: 1.15rem; max-width: 62ch; }
+.prose { max-width: 66ch; }
 
-/* ---------- nav ---------- */
+/* ---------- Buttons ---------- */
+.buy {
+  display: inline-block; text-align: center;
+  background: var(--btn); color: var(--btn-ink);
+  border: 2px solid var(--btn-edge);
+  box-shadow: 4px 4px 0 var(--btn-edge);
+  font-weight: 800;
+  text-decoration: none; padding: .8em 1.3em; font-size: 1.05rem; line-height: 1.1;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.buy:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--btn-edge); }
+.buy:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--btn-edge); }
+@media (prefers-reduced-motion: reduce) { .buy { transition: none; } }
+
+/* ---------- Nav ---------- */
 .nav {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
-  background: var(--bg); border-bottom: 1px solid var(--rule);
+  background: var(--nav-bg); color: var(--on-teal);
+  border-bottom: 2px solid var(--shadow-ink);
 }
-.nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
-.brand {
-  font-family: var(--font-display); font-stretch: 80%; font-weight: 820; font-size: 1.5rem;
-  color: var(--fg); text-decoration: none; letter-spacing: -.01em; margin-right: auto;
+.nav .wrap { display: flex; align-items: center; gap: 24px; min-height: 64px; }
+.wordmark {
+  color: var(--on-teal); text-decoration: none;
+  font-weight: 800; font-size: 1.35rem; letter-spacing: -.02em;
+  margin-right: auto;
 }
-.brand span { color: var(--hash); font-family: var(--font-mono); font-weight: 400; font-size: .8em; margin-right: .2em; }
-.nav-links { display: flex; gap: 22px; list-style: none; align-items: center; }
-.nav-links a { color: var(--fg); text-decoration: none; font-size: .95rem; }
+.nav-links { display: flex; gap: 24px; list-style: none; margin: 0; padding: 0; }
+.nav-links a { color: var(--on-teal); text-decoration: none; font-size: .95rem; font-weight: 550; }
 .nav-links a:hover { text-decoration: underline; }
-.gh { display: inline-flex; align-items: center; gap: 6px; }
-.gh svg { width: 17px; height: 17px; fill: currentColor; }
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  font: 600 .95rem/1 var(--font-body); padding: 12px 18px; border-radius: 6px;
-  text-decoration: none; cursor: pointer; border: 1px solid var(--btn-bg);
-  background: var(--btn-bg); color: var(--btn-fg); white-space: nowrap;
+.nav .buy { padding: .55em 1em; font-size: .95rem; box-shadow: 3px 3px 0 var(--btn-edge); }
+.menu-btn {
+  display: none; background: transparent; color: var(--on-teal);
+  border: 2px solid var(--on-teal); width: 44px; height: 40px; padding: 0; cursor: pointer;
 }
-.btn.ghost { background: transparent; color: var(--fg); border-color: var(--muted); }
-.btn.ghost:hover { border-color: var(--fg); }
-.btn.sm { padding: 9px 14px; font-size: .9rem; }
-.menu-btn { display: none; background: none; border: 1px solid var(--rule); color: var(--fg); border-radius: 6px; width: 40px; height: 38px; padding: 0; cursor: pointer; }
-.menu-btn svg { width: 20px; height: 20px; stroke: currentColor; }
-@media (max-width: 899px) {
-  .nav .wrap { gap: 10px; height: 56px; }
-  .menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+.menu-btn span { display: block; width: 18px; height: 2px; background: currentColor; margin: 4px auto; }
+@media (max-width: 860px) {
+  .nav .wrap { gap: 12px; min-height: 56px; }
+  .menu-btn { display: block; order: 3; }
   .nav-links {
-    display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0;
-    background: var(--surface); border-bottom: 1px solid var(--rule);
-    padding: 8px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+    display: none; position: absolute; left: 0; right: 0; top: 100%;
+    flex-direction: column; gap: 0; background: var(--nav-bg);
+    padding: 8px max(16px, env(safe-area-inset-left, 0px)) 16px;
+    border-bottom: 2px solid var(--shadow-ink);
   }
   .nav-links.open { display: flex; }
-  .nav-links a { display: block; padding: 12px 0; font-size: 1.05rem; border-bottom: 1px solid var(--rule); }
+  .nav-links a { display: block; padding: 12px 0; font-size: 1.05rem; border-bottom: 1px solid var(--on-teal-muted); }
   .nav-links li:last-child a { border-bottom: 0; }
 }
+@media (max-width: 379px) { .nav .price-opt { display: none; } }
 
-/* ---------- hero ---------- */
-.hero .wrap { padding-block: 64px 88px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); grid-template-areas: "head head" "left demo"; column-gap: 56px; row-gap: 40px; align-items: start; }
-.hero-head { grid-area: head; }
-.hero-left { grid-area: left; }
-.hero-demo { grid-area: demo; margin: 0; }
-.hero-demo .term pre { font-size: .8rem; }
-.hero .wrap > * { min-width: 0; }
-.eyebrow { font-weight: 600; color: var(--muted); margin-bottom: 18px; font-size: 1rem; }
-h1 {
-  font-size: clamp(2.5rem, 1rem + 5vw, 5.2rem); font-weight: 840; line-height: .96;
-  letter-spacing: -.015em; margin-bottom: 0; position: relative; max-width: 19ch;
+/* ---------- Hero ---------- */
+.hero { background: var(--teal); color: var(--on-teal); padding-block: clamp(40px, 5vw, 64px) clamp(56px, 7vw, 104px); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 58fr) minmax(0, 42fr); gap: clamp(28px, 4vw, 64px); align-items: center; }
+.hero-grid .hero-term { grid-column: 1 / -1; margin-top: clamp(8px, 2vw, 24px); }
+.hero-grid > * { min-width: 0; }
+.eyebrow { font-size: 1rem; color: var(--on-teal-muted); margin-bottom: 20px; font-weight: 550; }
+.hero h1 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 800;
+  line-height: .96; letter-spacing: -.025em;
+  margin: 0;
 }
-h1 .hash { font-size: .5em; vertical-align: .55em; }
-.hero .lede { margin-bottom: 30px; }
-.cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
-.req { margin-top: 18px; font-size: .88rem; color: var(--muted); max-width: 54ch; }
-@media (max-width: 1099px) {
-  .hero .wrap { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "left" "demo"; row-gap: 26px; padding-block: 44px 60px; }
-  .hero-demo { margin-top: 14px; }
-  .cta-row .btn { width: 100%; }
-}
+.hero h1 .l2 { display: block; color: var(--accent); }
+.hero .sub { font-size: 1.12rem; max-width: 56ch; color: var(--on-teal); }
+.hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin: 28px 0 18px; }
+.hero-cta .text-link { color: var(--on-teal); font-weight: 650; }
+.hero .fine { font-size: .92rem; color: var(--on-teal-muted); max-width: 60ch; margin: 0; }
+.hero .fine code { background: transparent; color: var(--on-teal); padding: 0; }
 
-/* ---------- install block ---------- */
-.install { max-width: 560px; }
-.tabs { display: inline-flex; border: 1px solid var(--muted); border-radius: 7px; padding: 3px; gap: 3px; margin-bottom: 14px; background: var(--surface); }
-.tabs button:hover { color: var(--fg); }
-.tabs button {
-  font: 600 .88rem/1 var(--font-body); color: var(--muted); background: none; border: 0;
-  padding: 9px 13px; border-radius: 5px; cursor: pointer;
+/* ---------- Terminal ---------- */
+.term {
+  background: var(--term-bg); color: var(--term-fg);
+  border: 2px solid var(--shadow-ink);
 }
-.tabs button[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-fg); }
-@media (max-width: 899px) { .tabs { display: flex; } .tabs button:hover { color: var(--fg); }
-.tabs button { flex: 1; } }
-.lbl { font-size: .9rem; font-weight: 600; margin: 0 0 8px; }
-.code {
-  display: flex; align-items: stretch; background: var(--term-bg); color: var(--term-fg);
-  border-radius: 8px; overflow: hidden; min-width: 0;
-}
-.code pre {
-  margin: 0; padding: 15px 16px; flex: 1 1 auto; min-width: 0; overflow-x: auto;
-  font-size: .88rem; line-height: 1.65; white-space: pre; scrollbar-width: thin; scrollbar-color: var(--term-rule) transparent;
-}
-.code pre .p { color: var(--term-dim); user-select: none; }
-.copy {
-  flex: 0 0 auto; align-self: stretch; min-width: 8.5ch; padding: 0 14px;
-  font: 600 .85rem/1 var(--font-body); color: var(--term-fg); background: var(--term-bg);
-  border: 0; border-left: 1px solid var(--term-rule); cursor: pointer;
-}
-.copy:hover { color: var(--term-accent); }
-.copy[data-state="ok"] { color: var(--term-accent); }
-.copy[data-state="fail"] { color: var(--term-bg); background: var(--term-accent); }
-.copy:focus-visible { outline-offset: -3px; outline-color: var(--term-accent); }
-.panel .small { margin: 10px 0 0; }
-
-/* ---------- terminal ---------- */
-.term { background: var(--term-bg); color: var(--term-fg); border-radius: 10px; overflow: hidden; min-width: 0; }
 .term-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 10px 16px; border-bottom: 1px solid var(--term-rule); font: .8rem/1.2 var(--font-mono); color: var(--term-dim);
+  display: flex; justify-content: space-between; gap: 12px;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .78rem;
+  color: var(--term-dim); padding: 10px 16px; border-bottom: 1px solid var(--ink-rule);
 }
-.term pre {
-  margin: 0; padding: 16px 18px 18px; overflow-x: auto; font-size: .8rem; line-height: 1.75;
-  white-space: pre; scrollbar-width: thin; scrollbar-color: var(--term-rule) transparent;
-}
-.term .prompt { color: var(--term-key); }
+.term pre { margin: 0; padding: 18px 20px 20px; overflow-x: auto; font-size: .9rem; line-height: 1.8; }
+.term .prompt { color: var(--term-dim); }
 .term .head { color: var(--term-dim); }
-.term .hot { background: var(--term-hot); border-left: 3px solid var(--term-accent); margin-left: -3px; }
-.term .n3 { color: var(--term-accent); font-weight: 600; }
-.term .dim { color: var(--term-dim); }
-.row { display: inline; }
-.r1 { --i: 1; } .r2 { --i: 2; } .r3 { --i: 3; } .r4 { --i: 4; }
+.row { display: block; }
+.t-nho { color: var(--t-amber); }
+.t-it { color: var(--t-sky); }
+.t-tuong { color: var(--t-mint); }
+.t-giup { color: var(--t-orange); }
+.stk { color: var(--t-amber); font-weight: 600; }
+.term-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.term-body > * { min-width: 0; }
+@media (max-width: 1080px) { .term-body { grid-template-columns: minmax(0, 1fr); } .legend { border-left: 0 !important; border-top: 1px solid var(--ink-rule); } }
+.legend { display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px 14px; padding: 18px 20px; border-left: 1px solid var(--ink-rule); font-size: .78rem; color: var(--term-dim); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+.legend b { font-weight: 500; }
+.hero .caption { font-size: .86rem; color: var(--on-teal-muted); margin: 12px 0 0; }
 @media (prefers-reduced-motion: no-preference) {
-  .typed .row { animation: rowin .01s linear both; animation-delay: calc(var(--i) * 110ms + 120ms); }
-}
-@keyframes rowin { from { visibility: hidden; } to { visibility: visible; } }
-.hero .term { margin-top: 4px; }
-.hero .caption { font-size: .84rem; }
-
-/* ---------- pain ---------- */
-.pain-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 44px; border-top: 1px solid var(--fg); }
-.pain-cards li { list-style: none; padding: 18px 24px 4px 0; }
-.pain-cards li + li { padding-left: 24px; border-left: 1px solid var(--rule); }
-.pain-cards b { display: block; font-family: var(--font-display); font-stretch: 78%; font-size: 1.25rem; font-weight: 760; line-height: 1.15; margin-bottom: 4px; }
-.pain-cards span { color: var(--muted); }
-@media (max-width: 759px) {
-  .pain-cards { grid-template-columns: minmax(0, 1fr); }
-  .pain-cards li, .pain-cards li + li { padding: 16px 0; border-left: 0; border-bottom: 1px solid var(--rule); }
+  .hero .row.r { animation: rowin .42s cubic-bezier(.2,.7,.2,1) both; }
+  .hero .row.r:nth-of-type(3) { animation-delay: .25s; }
+  .hero .row.r:nth-of-type(4) { animation-delay: .37s; }
+  .hero .row.r:nth-of-type(5) { animation-delay: .49s; }
+  .hero .row.r:nth-of-type(6) { animation-delay: .61s; }
+  .hero .row.r:nth-of-type(7) { animation-delay: .73s; }
+  @keyframes rowin { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 }
 
-/* ---------- steps ---------- */
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; list-style: none; counter-reset: step; margin-bottom: 20px; }
-.steps > li { min-width: 0; display: flex; flex-direction: column; }
+/* ---------- Pain ---------- */
+.pain .prose { margin-top: 28px; }
+.cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 40px; }
+.cards3 > div { border-top: 4px solid var(--fg); padding-top: 14px; min-width: 0; }
+.cards3 b { display: block; font-size: 1.1rem; margin-bottom: 4px; }
+.cards3 p { margin: 0; color: var(--muted); }
+
+/* ---------- How (navy band) ---------- */
+.how { background: var(--ink); color: var(--on-ink); }
+.how .small { color: var(--on-ink-muted); }
+.how a { color: var(--on-ink); }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 48px; border-top: 1px solid var(--ink-rule); }
+.step { padding: 28px 28px 8px 0; min-width: 0; }
+.step + .step { padding-left: 28px; border-left: 1px solid var(--ink-rule); }
 .step-n {
-  font-family: var(--font-display); font-stretch: 70%; font-weight: 860; font-size: 3.4rem; line-height: .9;
-  color: var(--fg); margin-bottom: 14px; display: block;
+  display: block; font-size: 4.2rem; line-height: .9; font-weight: 800;
+  color: var(--accent); margin-bottom: 14px;
 }
-.steps p { color: var(--fg); }
-.steps .code { margin-top: 12px; }
-.steps .code pre { font-size: .82rem; }
-.full-demo { margin-top: 56px; }
-.full-demo pre { font-size: .8rem; }
-@media (max-width: 899px) {
-  .steps { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .steps > li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 8px; }
-  .steps > li > * { grid-column: 2; }
-  .steps .step-n { grid-column: 1; grid-row: 1 / span 3; font-size: 2.6rem; }
-  .full-demo { display: none; }
+.step h3 { margin-bottom: 10px; }
+.step p { color: var(--on-ink-muted); }
+.step p code, .how .small code { background: var(--ink-rule); color: var(--on-ink); }
+.cmd { display: flex; align-items: flex-start; background: var(--term-bg); border: 1px solid var(--ink-rule); margin: 14px 0 10px; }
+.cmd pre { flex: 1 1 auto; min-width: 0; margin: 0; padding: 14px 12px 14px 16px; overflow-x: auto; font-size: .84rem; line-height: 1.6; color: var(--term-fg); }
+.copy {
+  flex: none; margin: 8px 8px 8px 0;
+  font: 600 .75rem/1 "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  background: var(--term-bg); color: var(--term-fg); border: 1px solid var(--term-dim);
+  padding: 6px 8px; cursor: pointer; min-width: 58px;
 }
+.copy:hover { background: var(--ink-rule); }
+.copy[data-state="ok"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.copy[data-state="fail"] { background: var(--orange); color: var(--on-orange); border-color: var(--orange); }
+.os { display: flex; gap: 0; margin-top: 16px; }
+.os button {
+  font: 600 .8rem/1 "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  background: transparent; color: var(--on-ink-muted); border: 1px solid var(--ink-rule); padding: 8px 10px; cursor: pointer;
+}
+.os button + button { border-left: 0; }
+.os button[aria-pressed="true"] { background: var(--on-ink); color: var(--ink); border-color: var(--on-ink); }
+.os + .cmd { margin-top: 0; }
+.bip { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .84rem; color: var(--t-mint); border-left: 3px solid var(--orange); padding: 8px 12px; margin: 14px 0; overflow-x: auto; white-space: nowrap; }
+.how .after { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--ink-rule); }
 
-/* ---------- example ---------- */
-.ex-grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 44px; align-items: start; margin-top: 36px; }
+/* ---------- Example ---------- */
+.ex-grid { display: grid; grid-template-columns: minmax(0, 60fr) minmax(0, 40fr); gap: clamp(28px, 4vw, 56px); margin-top: 40px; align-items: start; }
 .ex-grid > * { min-width: 0; }
-.file .term-bar { justify-content: flex-start; padding: 0; }
-.file .tab { padding: 10px 16px; color: var(--term-fg); background: var(--term-rule); border-right: 1px solid var(--term-rule); }
-.file pre { font-size: .8rem; line-height: 1.7; }
-.md-fm { color: var(--term-dim); }
-.md-k { color: var(--term-key); }
-.md-h { color: var(--term-fg); font-weight: 600; }
-.md-b { color: var(--term-fg); font-weight: 600; }
-.side h3 { font-size: 1.25rem; }
-.side .code pre { font-size: .8rem; }
-.side .c { color: var(--term-dim); }
-.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; list-style: none; margin-top: 10px; }
-.chips li { font: .82rem/1 var(--font-mono); padding: 6px 9px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
-.chips li.sep { border: 0; background: none; padding: 0; color: var(--muted); }
-.chips li.drop { border-style: dashed; color: var(--muted); }
-@media (max-width: 899px) { .ex-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; } }
-
-/* ---------- ranking ---------- */
-.rank { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; list-style: none; margin: 40px 0 28px; }
-.rank li { min-width: 0; border-top: 1px solid var(--fg); padding-top: 18px; }
-.rank .sample {
-  display: block; font: .82rem/1.5 var(--font-mono); color: var(--muted); margin-top: 14px;
-  padding-top: 10px; border-top: 1px dashed var(--rule);
+.file-label { font-size: .92rem; color: var(--muted); margin: 0 0 10px; }
+.file-label:focus { outline: 3px solid var(--link); outline-offset: 4px; }
+.file { background: var(--term-bg); color: var(--term-fg); border: 2px solid var(--term-edge); }
+.file-tab {
+  display: inline-block; font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .8rem;
+  background: var(--accent); color: var(--on-accent); padding: 7px 14px; font-weight: 600;
 }
-.rank .sample mark { background: var(--mark); color: var(--mark-ink); padding: 0 .25em; }
-@media (max-width: 899px) { .rank { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+.file pre { margin: 0; padding: 18px 18px 22px; overflow-x: auto; font-size: .78rem; line-height: 1.7; }
+.fm { color: var(--term-dim); }
+.fk { color: var(--t-sky); }
+.fv { color: var(--term-fg); }
+.fs { color: var(--t-amber); }
+.md-h { color: var(--t-amber); font-weight: 600; }
+.md-b { color: var(--t-mint); font-weight: 600; }
+.rank h3 { font-size: 1.4rem; margin-bottom: 18px; }
+.rank dl { margin: 0; }
+.rank dt { font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; gap: 10px; }
+.rank dt::before { content: ""; width: 14px; height: 14px; background: var(--sw); flex: none; border: 2px solid var(--fg); }
+.rank dd { margin: 4px 0 18px 24px; color: var(--muted); }
+.proof { font-weight: 800; font-size: 1.12rem; border-left: 6px solid var(--orange); padding: 4px 0 4px 14px; margin: 8px 0 24px; }
+.status { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 24px; padding: 0; list-style: none; font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; }
+.status li { border: 1px solid var(--fg); padding: 3px 8px; }
+.status li.sep { border: 0; padding: 0; color: var(--muted); }
+details.hood { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 12px 0; }
+details.hood summary { cursor: pointer; font-weight: 700; }
+details.hood p { margin: 10px 0 2px; color: var(--muted); }
 
-/* ---------- privacy ---------- */
-.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
-.two > * { min-width: 0; }
-@media (max-width: 899px) { .two { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
-.flow { margin-top: 28px; display: grid; grid-template-columns: auto 28px auto 28px auto; grid-template-rows: auto 34px auto; align-items: center; justify-content: start; }
-.node { border: 1px solid var(--fg); border-radius: 5px; padding: 10px 12px; font-size: .92rem; background: var(--surface); line-height: 1.3; min-width: 0; }
-.node small { display: block; color: var(--muted); font-size: .8rem; font-family: var(--font-mono); overflow-wrap: anywhere; margin-top: 2px; }
-.node.q { border-style: dashed; grid-column: 3 / span 3; grid-row: 3; justify-self: start; }
-.arr { width: 28px; height: 14px; color: var(--muted); }
-.arr-down { grid-column: 3; grid-row: 2; justify-self: center; width: 14px; height: 34px; color: var(--muted); }
-.honesty { margin-top: 48px; border: 1px solid var(--fg); border-radius: 6px; padding: 20px 24px; max-width: 900px; background: var(--surface); }
-.honesty p { margin: 0; }
-@media (max-width: 559px) {
-  .flow { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; justify-items: start; }
-  .flow > * { grid-column: 1 !important; grid-row: auto !important; }
-  .flow .arr { transform: rotate(90deg); margin: 6px 0 6px 10px; }
-  .arr-down { display: none; }
-  .node.q::before { content: "or, if a name matches: "; color: var(--muted); font-size: .8rem; display: block; }
+/* ---------- Privacy ---------- */
+.privacy { background: var(--tint); }
+.priv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); margin-top: 32px; align-items: start; }
+.priv-grid > * { min-width: 0; }
+.privacy .cmd { border-color: var(--term-edge); margin-top: 0; }
+.flow { display: grid; grid-template-columns: auto minmax(20px, 1fr) auto minmax(20px, 1fr) auto; gap: 0; align-items: center; margin-top: 24px; font-size: .9rem; }
+.flow .node { border: 2px solid var(--fg); background: var(--surface); padding: 8px 10px; font-weight: 700; text-align: center; }
+.flow .node small { display: block; font-weight: 400; color: var(--muted); font-size: .74rem; white-space: nowrap; }
+.flow .node.ok { background: var(--accent); color: var(--on-accent); border-color: var(--shadow-ink); }
+.flow .node.ok small { color: var(--on-accent); }
+.flow .node.q { background: var(--orange); color: var(--on-orange); border-color: var(--shadow-ink); }
+.flow .node.q small { color: var(--on-orange); }
+.flow .arr { height: 2px; background: var(--fg); position: relative; margin: 0 4px; }
+.flow .arr::after { content: ""; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left: 7px solid var(--fg); border-right: 0; }
+.flow .arr span { position: absolute; bottom: 6px; left: 0; right: 8px; text-align: center; font-size: .74rem; color: var(--muted); white-space: nowrap; }
+.flow .vdown { grid-column: 3; grid-row: 2; justify-self: center; width: 2px; height: 44px; background: var(--fg); position: relative; }
+.flow .vdown::after { content: ""; position: absolute; bottom: -1px; left: -4px; border: 5px solid transparent; border-top: 7px solid var(--fg); border-bottom: 0; }
+.flow .vdown span { position: absolute; left: 10px; top: 12px; white-space: nowrap; font-size: .74rem; color: var(--muted); }
+.flow-q { grid-column: 3; grid-row: 3; margin-top: 4px; }
+.flow-v { display: none; }
+.honest { border: 2px solid var(--fg); background: var(--surface); padding: 20px 24px; margin-top: 40px; max-width: 900px; }
+.honest p { margin: 0; }
+
+/* ---------- Why pay ---------- */
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 40px; border-top: 2px solid var(--fg); border-left: 1px solid var(--rule); }
+.tile { padding: 22px 22px 24px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); min-width: 0; }
+.tile h3 { margin-bottom: 8px; }
+.tile p { margin: 0; color: var(--muted); font-size: .98rem; }
+
+/* ---------- Pricing (pink band) ---------- */
+.pricing { background: var(--orange); color: var(--on-orange); }
+.pricing h2 { max-width: 20ch; }
+.price-grid { display: grid; grid-template-columns: minmax(0, 45fr) minmax(0, 55fr); gap: clamp(32px, 5vw, 72px); margin-top: 44px; align-items: start; }
+.price-grid > * { min-width: 0; }
+.card {
+  background: var(--accent); color: var(--on-accent);
+  border: 3px solid var(--shadow-ink);
+  box-shadow: 12px 12px 0 var(--teal), 12px 12px 0 3px var(--shadow-ink);
+  padding: 0 0 26px;
 }
-
-/* ---------- bip ---------- */
-.bip-term pre { font-size: .9rem; padding: 22px 20px; }
-.bip-term .prompt { color: var(--term-accent); }
-
-/* ---------- cost ---------- */
-.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
-.cols > div { min-width: 0; }
-.cols h3 { border-bottom: 1px solid var(--fg); padding-bottom: 10px; margin-bottom: 14px; }
-.list { list-style: none; }
-.list li { padding: 9px 0 9px 22px; position: relative; border-bottom: 1px solid var(--rule); }
-.list li::before { content: "-"; position: absolute; left: 2px; color: var(--muted); font-family: var(--font-mono); }
-.strip { margin-top: 36px; padding: 18px 0 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
-.strip b { font-family: var(--font-display); font-stretch: 78%; font-size: 1.2rem; }
-.strip p { margin: 0; color: var(--muted); }
-@media (max-width: 759px) { .cols, .strip { grid-template-columns: minmax(0, 1fr); gap: 32px; } .strip { gap: 6px; } }
-
-/* ---------- status ---------- */
-.status-panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 28px 32px; max-width: 900px; }
-.status-panel .list li:last-child { border-bottom: 0; }
-@media (max-width: 559px) { .status-panel { padding: 20px 18px; } }
-
-/* ---------- faq ---------- */
-.faq { max-width: 820px; border-top: 1px solid var(--fg); }
-.faq details { border-bottom: 1px solid var(--rule); }
-.faq summary {
-  list-style: none; cursor: pointer; padding: 18px 40px 18px 0; position: relative;
-  font-weight: 600; font-size: 1.08rem;
+.card-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  background: var(--shadow-ink); color: var(--accent);
+  font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; padding: 8px 20px;
 }
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary svg { position: absolute; right: 4px; top: 22px; width: 16px; height: 16px; stroke: var(--muted); transition: transform .15s ease; }
-.faq details[open] summary svg { transform: rotate(45deg); }
-.faq details > p { margin: 0 0 20px; max-width: 66ch; color: var(--fg); }
-@media (prefers-reduced-motion: reduce) { .faq summary svg { transition: none; } }
+.card-body { padding: 22px 26px 0; }
+.card .name { font-weight: 800; font-size: 1.15rem; margin: 0 0 6px; }
+.card .amount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 18px; border-bottom: 3px solid var(--shadow-ink); padding-bottom: 16px; }
+.card .amount .price {
+  font-size: clamp(3.6rem, 7vw, 5.6rem); font-weight: 800;
+  line-height: .9; letter-spacing: -.035em;
+}
+.card .amount span:last-child { font-weight: 700; font-size: 1.05rem; }
+.card ul { list-style: none; margin: 0 0 24px; padding: 0; }
+.card li { position: relative; padding: 6px 0 6px 28px; border-bottom: 1px solid var(--on-accent); }
+.card li:last-child { border-bottom: 0; }
+.card li::before { content: ""; position: absolute; left: 2px; top: .78em; width: 12px; height: 12px; background: var(--teal); border: 2px solid var(--shadow-ink); }
+.card li code { background: transparent; padding: 0; font-weight: 600; }
+.card .buy { width: 100%; background: var(--shadow-ink); color: var(--accent); box-shadow: 4px 4px 0 var(--teal); font-size: 1.12rem; }
+.card .buy:hover { box-shadow: 5px 5px 0 var(--teal); }
+.card .buy:active { box-shadow: 1px 1px 0 var(--teal); }
+.card .after { font-size: .9rem; margin: 14px 0 0; }
+.run h3 { font-size: 1.35rem; margin: 0 0 12px; }
+.run p, .run li { color: var(--on-orange); }
+.run code { background: transparent; padding: 0; font-weight: 600; }
+.run .flat { font-weight: 800; font-size: 1.12rem; }
+.run ul { padding-left: 1.1em; margin: 0 0 22px; }
+.run .fit { font-size: .92rem; border-top: 2px solid var(--on-orange); padding-top: 12px; }
 
-/* ---------- final ---------- */
-.final .wrap > .inner { max-width: 720px; }
-.final .install { max-width: none; }
-.final .then { margin: 26px 0 8px; font-weight: 600; }
-.final .h2 { font-size: clamp(2.2rem, 1.2rem + 3.4vw, 3.8rem); }
+/* ---------- Status ---------- */
+.stands { background: var(--accent); color: var(--on-accent); border-top: 2px solid var(--shadow-ink); border-bottom: 2px solid var(--shadow-ink); }
+.stands ul { list-style: none; padding: 0; margin: 28px 0 0; max-width: 820px; }
+.stands li { padding: 12px 0 12px 26px; border-bottom: 1px solid var(--on-accent); position: relative; }
+.stands li::before { content: ""; position: absolute; left: 0; top: 1.05em; width: 12px; height: 12px; background: var(--sw, var(--on-accent)); border: 2px solid var(--on-accent); }
+.stands li.done { --sw: var(--teal); }
+.stands li.open { --sw: var(--orange); }
 
-/* ---------- footer ---------- */
-footer .wrap { padding-block: 28px 40px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; font-size: .92rem; color: var(--muted); }
-footer .brand { font-size: 1.15rem; margin-right: 8px; }
-footer ul { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; }
-footer a { color: var(--muted); }
+/* ---------- FAQ ---------- */
+.faq-list { margin-top: 32px; max-width: 860px; border-top: 2px solid var(--fg); }
+.faq-list details { border-bottom: 1px solid var(--rule); }
+.faq-list summary {
+  cursor: pointer; list-style: none; padding: 18px 40px 18px 0; position: relative;
+  font-weight: 750; font-size: 1.08rem;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; position: absolute; right: 6px; top: 12px; font-size: 1.6rem; font-weight: 500; }
+.faq-list details[open] summary::after { content: "\2212"; }
+.faq-list details p { margin: 0 0 18px; max-width: 70ch; color: var(--muted); }
+
+/* ---------- Final ---------- */
+.final { background: var(--teal); color: var(--on-teal); text-align: left; }
+.final h2 { font-size: clamp(2.6rem, 6vw, 5rem); font-weight: 800; line-height: .95; max-width: none; }
+.final .lead { color: var(--on-teal); margin: 22px 0 0; }
+.final .lead code { background: transparent; color: var(--accent); padding: 0; }
+.final .hero-cta .text-link { color: var(--on-teal); font-weight: 650; }
+.final .fine { color: var(--on-teal-muted); font-size: .92rem; max-width: 64ch; margin: 0; }
+.final .fine code { background: transparent; color: var(--on-teal); padding: 0; }
+
+footer { background: var(--ink); color: var(--on-ink-muted); padding-block: 28px; font-size: .92rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
+footer a { color: var(--on-ink); }
+footer .wm { color: var(--on-ink); font-weight: 800; }
 footer .top { margin-left: auto; display: none; }
-@media (max-width: 759px) { footer .top { display: inline-flex; } }
 
-/* ---------- v2 additions ---------- */
-::selection { background: var(--mark); color: var(--mark-ink); }
-.term pre ::selection, .code pre ::selection { background: var(--term-accent); color: var(--term-bg); }
-.term, .code { box-shadow: 0 0 0 1px var(--term-edge); }
-.install .code pre, .steps .code pre, .two .code pre, .final .code pre, .again .code pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-figure { margin: 0; }
-.mt-s { margin-top: 12px; } .mt-m { margin-top: 20px; } .mt-l { margin-top: 28px; } .mb-0 { margin-bottom: 0; }
-.side h3, .pain-cards b, .strip b { font-size: 1.25rem; }
-.steps .bip { margin-top: 18px; }
-.steps .bip .term pre { padding: 12px 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.steps .bip .prompt { color: var(--term-accent); }
-.pushes { margin-top: 56px; }
-.pushes h3 { margin-bottom: 14px; }
-.pushes .list li b { font-family: var(--font-display); font-stretch: 78%; font-size: 1.15rem; margin-right: .35em; }
-.under { margin-top: 22px; max-width: 66ch; border-top: 1px solid var(--rule); }
-.under summary { cursor: pointer; padding: 14px 0; font-weight: 600; min-height: 44px; }
-.under p { color: var(--fg); }
-.again { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule); max-width: 720px; }
-.again .lbl { font-size: 1rem; }
-.status-panel .links { margin: 18px 0 0; }
-@media (max-width: 899px) {
-  .tabs button { min-height: 44px; }
-  .menu-btn { width: 44px; height: 44px; }
-  .nav .btn.sm { min-height: 44px; }
-  footer ul a, .status-panel a, footer .brand { display: inline-flex; align-items: center; min-height: 44px; }
-  .copy { min-height: 44px; }
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .hero-grid, .ex-grid, .priv-grid, .price-grid { grid-template-columns: minmax(0, 1fr); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .step, .step + .step { padding: 24px 0 8px; border-left: 0; border-bottom: 1px solid var(--ink-rule); display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: 14px; }
+  .step > * { grid-column: 2; min-width: 0; }
+  .step .step-n { grid-column: 1; grid-row: 1 / span 6; font-size: 3rem; }
 }
+@media (max-width: 640px) {
+  body { font-size: 1rem; }
+  .cards3, .tiles { grid-template-columns: minmax(0, 1fr); }
+  .hero-cta { flex-direction: column; align-items: stretch; text-align: center; }
+  .hero-cta .buy { width: 100%; }
+  .card { box-shadow: 8px 8px 0 var(--teal), 8px 8px 0 3px var(--shadow-ink); margin-right: 8px; }
+  .card-body { padding: 20px 18px 0; }
+  .flow { display: none !important; }
+  .flow-v { display: flex; flex-direction: column; gap: 6px; margin-top: 20px; font-size: .9rem; }
+  .flow-v .node { border: 2px solid var(--fg); background: var(--surface); padding: 8px 12px; font-weight: 700; }
+  .flow-v .node small { display: block; font-weight: 400; color: var(--muted); }
+  .flow-v .node.ok { background: var(--accent); color: var(--on-accent); border-color: var(--shadow-ink); }
+  .flow-v .node.q { background: var(--orange); color: var(--on-orange); border-color: var(--shadow-ink); }
+  .flow-v .node.ok small, .flow-v .node.q small { color: inherit; }
+  .flow-v .down { padding-left: 14px; color: var(--muted); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .82rem; }
+  footer .top { display: inline; }
+  .honest { padding: 16px; }
+}
+/* ---------- fix round v3 ---------- */
+.steps { list-style: none; padding: 0; margin-bottom: 0; }
+.intro { margin-top: 20px; }
+.run .req { margin-top: 28px; }
+.price-sub { margin: 14px 0 0; font-weight: 650; color: var(--on-orange); }
+.rank dt.sw-y { --sw: var(--accent); }
+.rank dt.sw-p { --sw: var(--orange); }
+.rank dt.sw-b { --sw: var(--teal); }
+.buy-steps { list-style: none; counter-reset: bs; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid var(--shadow-ink); font-size: .84rem; line-height: 1.35; }
+.buy-steps li { counter-increment: bs; padding: 10px 10px 10px; min-width: 0; border-bottom: 0 !important; }
+.buy-steps li + li { border-left: 2px solid var(--shadow-ink); }
+.buy-steps li::before { content: counter(bs); position: static !important; display: block; width: auto !important; height: auto !important; background: none !important; border: 0 !important; font-weight: 800; font-size: 1.3rem; line-height: 1; margin-bottom: 4px; }
+.buy-steps code { overflow-wrap: anywhere; }
+.file-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: stretch; gap: 0; border-bottom: 1px solid var(--ink-rule); }
+.lang { display: flex; }
+.lang button { font: 500 .76rem/1.2 "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; background: transparent; color: var(--term-dim); border: 0; border-left: 1px solid var(--ink-rule); padding: 8px 12px; cursor: pointer; }
+.lang button[aria-selected="true"] { color: var(--term-fg); box-shadow: inset 0 -3px 0 var(--orange); }
+.lang button:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.cmd pre { padding-right: 24px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.os button:focus-visible, .card .buy:focus-visible, .nav .buy:focus-visible { outline: 3px solid var(--on-teal); outline-offset: 3px; }
+.card .buy:focus-visible { outline-color: var(--shadow-ink); }
+.os button:focus-visible { outline-color: var(--accent); }
+pre:focus-visible, .bip:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+@media (max-width: 640px) {
+  .term .row.r { white-space: normal; padding: 6px 0; border-top: 1px solid var(--ink-rule); }
+  .term .row.r .pad, .term .row.head { display: none; }
+  .term .row.r .t-nho, .term .row.r .t-it, .term .row.r .t-tuong, .term .row.r .t-giup { display: inline-block; margin: 0 1ch; }
+  .copy { min-height: 36px; }
+  .os button { min-height: 40px; }
+  .hood summary, .text-link, footer .top { display: inline-block; padding-block: 9px; }
+  .lang { width: 100%; }
+  .lang button { flex: 1; min-height: 40px; }
+  .lang button:first-child { border-left: 0; }
+  .buy-steps { grid-template-columns: minmax(0, 1fr); }
+  .buy-steps li + li { border-left: 0; border-top: 2px solid var(--shadow-ink); }
+}
+
+/* ---------- v4 re-skin: petrol and signal ---------- */
+h1, h2, .wordmark, .step-n, .card .amount .price, .buy, footer .wm, .buy-steps li::before {
+  font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+h1, h2 { letter-spacing: -.035em; }
+h2 { font-weight: 800; line-height: 1.08; }
+h3 { font-weight: 700; }
+.wordmark { font-size: 1.25rem; letter-spacing: -.04em; }
+.buy { font-weight: 700; letter-spacing: -.01em; }
+.hero h1 { font-size: clamp(2.1rem, 4.4vw, 3.9rem); line-height: 1.02; letter-spacing: -.045em; }
+.final h2 { font-size: clamp(2.2rem, 5.4vw, 4.4rem); letter-spacing: -.045em; }
+.step-n { color: var(--orange); }
+.bip { color: var(--t-orange); border-left-color: var(--orange); }
+.copy[data-state="fail"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.file-tab { background: var(--orange); color: var(--on-orange); }
+.card { background: var(--paper); color: var(--on-paper); }
+.card li { border-bottom-color: var(--rule); }
+.card-head { color: var(--accent); }
+.card .buy { background: var(--btn); color: var(--btn-ink); border-color: var(--shadow-ink); }
+.card .buy:focus-visible { outline-color: var(--shadow-ink); }
+.stands { background: var(--apricot); color: var(--on-apricot); }
+.stands li { border-bottom-color: color-mix(in srgb, var(--on-apricot) 30%, transparent); }
+.stands li::before { border-color: var(--on-apricot); }
+.stands li.done { --sw: var(--t-mint); }
+.stands li.open { --sw: var(--orange); }
+.flow .node.ok, .flow-v .node.ok { background: var(--ok-bg); color: var(--on-ok); }
+.rank dt.sw-y { --sw: var(--orange); }
+.rank dt.sw-p { --sw: var(--t-mint); }
+.rank dt.sw-b { --sw: var(--teal); }
+.cards3 > div { border-top-color: var(--teal); }
+.privacy :not(pre) > code { background: var(--surface); }
 </style>
 
-<header class="nav">
+<nav class="nav" aria-label="Main">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="momentry, back to top"><span aria-hidden="true">#</span>momentry</a>
-    <nav aria-label="Main">
-      <ul class="nav-links" id="nav-links">
-        <li><a href="#how">How it works</a></li>
-        <li><a href="#example">Example</a></li>
-        <li><a href="#privacy">Privacy</a></li>
-        <li><a href="#cost">Cost</a></li>
-        <li><a href="#faq">FAQ</a></li>
-        <li><a class="gh" href="https://github.com/vantt/momentry" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a></li>
-      </ul>
-    </nav>
-    <a class="btn sm" href="#install" data-goto-install>Install</a>
-    <button class="menu-btn" type="button" aria-controls="nav-links" aria-expanded="false" aria-label="Open menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-    </button>
+    <a class="wordmark" href="#top">momentry</a>
+    <button class="menu-btn" type="button" aria-controls="nav-links" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#example">Example</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="buy" href="{{CHECKOUT_URL}}" target="_blank" rel="noopener">Buy<span class="price-opt"> · <span class="price">29 USD</span></span></a>
   </div>
-</header>
-
+</nav>
 <p class="visually-hidden" id="copy-status" aria-live="polite"></p>
 
 <main id="top">
 
-<!-- 1. HERO -->
-<section class="hero" aria-labelledby="hero-h">
-  <div class="wrap">
-    <div class="hero-head">
-      <h1 id="hero-h"><span class="hash" aria-hidden="true">#</span>Your agent sessions are full of stories. momentry writes them down.</h1>
+<!-- 1. Hero -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">For creators who work with AI agents</p>
+      <h1>You’re not short of ideas. <span class="l2">You forgot what you did.</span></h1>
     </div>
-    <div class="hero-left">
-      <p class="lede">momentry is a free CLI. After each Claude Code or Codex session, it reads the transcript and saves every moment worth telling as a markdown file in your repo. A number that moved. A root cause nobody suspected. A decision you reversed. Then it ranks them, so on Friday you open a list instead of a blank page.</p>
-
-      <div class="install" id="install" data-install>
-        <div class="tabs" role="group" aria-label="Operating system">
-          <button type="button" data-os="unix" aria-pressed="true">macOS / Linux / WSL</button>
-          <button type="button" data-os="win" aria-pressed="false">Windows</button>
-        </div>
-        <div class="panel" data-panel="unix">
-          <p class="lbl">Install (Linux, macOS, WSL)</p>
-          <div class="code"><pre><code>curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh | sh</code></pre><button class="copy" type="button">Copy</button></div>
-        </div>
-        <div class="panel" data-panel="win" hidden>
-          <p class="lbl">Windows (PowerShell)</p>
-          <div class="code"><pre><code>irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex</code></pre><button class="copy" type="button">Copy</button></div>
-          <p class="small">The installer adds <code>%LOCALAPPDATA%\momentry\bin</code> to your PATH. Open a new terminal afterwards.</p>
-        </div>
+    <div>
+      <p class="sub">The best thing you did this week happened mid-session, in chat with your agent. momentry reads your Claude Code, Codex, pi, omp and Antigravity sessions after they end and writes each moment worth telling into your repo as a markdown file: a number that moved, a root cause nobody suspected, a decision you reversed. Then it ranks them, so on Friday you start from a list.</p>
+      <div class="hero-cta">
+        <a class="buy" href="{{CHECKOUT_URL}}" target="_blank" rel="noopener">Buy momentry · <span class="price">29 USD</span></a>
+        <a class="text-link" href="#example" data-story>Read a real story file</a>
       </div>
-
-      <div class="cta-row">
-        <a class="btn ghost" href="https://github.com/vantt/momentry#readme" target="_blank" rel="noopener">Read the README on GitHub</a>
-      </div>
-      <p class="req">Free, public domain (Unlicense). Needs Node 20+, git and a logged-in <code>claude</code> CLI. Harvesting costs about 1 USD per long session, billed through your own <code>claude</code>. Stories and CLI messages are in Vietnamese for now.</p>
+      <p class="fine">One-time license, updates through 1.x included. You get your key and the install command by email. Runs through your own <code>claude</code> CLI: about 1 USD per 150k-token window. A session that compacts pays once per window. Needs Claude Code installed and logged in, even if you work in Codex, pi, omp or Antigravity. Stories and CLI messages are in Vietnamese for now.</p>
     </div>
-
-    <figure class="hero-demo">
-      <div class="term">
-        <div class="term-bar"><span>your-repo</span><span>momentry list --rank</span></div>
-<pre class="typed" aria-label="Output of momentry list --rank, first four rows, trimmed to hook, tension and stakes"><span class="prompt">$</span> momentry list --rank
-<span class="head">hook                                      tension      stakes</span>
-<span class="row r1 hot">One Unicode form cut search scores 8x     nho_ma_to    <span class="n3">3</span>     </span>
-<span class="row r2">Adding an abbreviation dictionary made …  giup_ma_hai  <span class="n3">3</span></span>
-<span class="row r3">Machine drafts 51 test questions, human…  it_ma_nhieu  <span class="n3">3</span></span>
-<span class="row r4">Hybrid search buried the semantic hit a…  giup_ma_hai  2</span></pre>
+    <div class="hero-term">
+      <div class="term" role="figure" aria-label="Terminal output of momentry list --rank">
+        <div class="term-bar"><span>your-repo</span><span>momentry 0.2.0</span></div>
+<div class="term-body"><pre><code><span class="row"><span class="prompt">$</span> momentry list --rank</span><span class="row head">hook                                                     tension          stakes</span><span class="row r">One way of writing Unicode cut search scores 8x<span class="pad">          </span><span class="t-nho">nho_ma_to</span><span class="pad">        </span><span class="stk">3</span></span><span class="row r">A machine drafted the test questions, a human reviewed<span class="pad">   </span><span class="t-it">it_ma_nhieu</span><span class="pad">      </span><span class="stk">3</span></span><span class="row r">How bad is Vietnamese search in Obsidian? I measured it<span class="pad">  </span><span class="t-tuong">tuong_ma_hoa_ra</span><span class="pad">  </span><span class="stk">3</span></span><span class="row r">Adding an abbreviation dictionary made search worse<span class="pad">      </span><span class="t-giup">giup_ma_hai</span><span class="pad">      </span><span class="stk">3</span></span><span class="row r">Hybrid search buried the semantic hit<span class="pad">                    </span><span class="t-giup">giup_ma_hai</span><span class="pad">      </span><span class="stk">2</span></span></code></pre>
+        <div class="legend" aria-label="Tension labels">
+          <span><b class="t-nho">nho_ma_to</b> small cause, big effect</span>
+          <span><b class="t-it">it_ma_nhieu</b> little in, a lot out</span>
+          <span><b class="t-tuong">tuong_ma_hoa_ra</b> expected X, found Y</span>
+          <span><b class="t-giup">giup_ma_hai</b> meant to help, made it worse</span>
+        </div></div>
       </div>
-      <figcaption class="caption">Real output format from the author's repo, trimmed to three columns. Text translated from Vietnamese; scores illustrative.</figcaption>
-    </figure>
+      <p class="caption">The top 5 of 38 stories from a recorded run on one of the author's sessions (2026-11-04). Hooks translated from Vietnamese. Tension and stakes reconstructed; the raw output of that run wasn't kept.</p>
+    </div>
   </div>
-</section>
+</header>
 
-<!-- 2. PAIN -->
-<section class="band" aria-labelledby="pain-h">
+<!-- 2. Pain -->
+<section class="band pain" aria-labelledby="pain-h">
   <div class="wrap">
-    <h2 class="h2" id="pain-h"><span class="hash" aria-hidden="true">##</span>Stop trying to remember what was worth telling this week.</h2>
+    <h2 id="pain-h">Friday comes and you’re trying to remember what was worth telling.</h2>
     <div class="prose">
-      <p>The best part of your week happened mid-session, in the chat with your agent. A benchmark jumped. A bug turned out to be one invisible character. You threw away an approach you'd spent a day on, and you had a good reason.</p>
-      <p>By the time the session ended, it was gone. The transcript is still on disk, thousands of lines of JSONL that nobody reads again.</p>
-      <p>So the weekly post says "shipped some fixes". The blog idea stays an idea. The report gets written from <code>git log</code>, which shows what changed but never why it was interesting.</p>
+      <p>A benchmark jumped. A bug turned out to be one invisible character. You threw away a day's approach, for a good reason. All of it happened in the chat with your agent, and by the end of the session it was gone.</p>
+      <p>The transcript is still on disk: thousands of lines of JSONL nobody reads again.</p>
+      <p>So the weekly post says "shipped some fixes". The report gets written from <code>git log</code>, which shows what changed and never why it was interesting. And the things that would make a good post feel normal to you, because you were there.</p>
     </div>
-    <ul class="pain-cards">
-      <li><b>Memory</b><span>keeps what felt hard. Readers want what was surprising.</span></li>
-      <li><b>Scrolling transcripts</b><span>takes longer than the work did.</span></li>
-      <li><b>A devlog file</b><span>only works on days you remember to stop and write.</span></li>
-    </ul>
+    <div class="cards3">
+      <div><b>Memory</b><p>keeps what felt hard. Readers want what was surprising.</p></div>
+      <div><b>Scrolling transcripts</b><p>takes longer than the work did.</p></div>
+      <div><b>A devlog file</b><p>works on the days you remember to stop and write.</p></div>
+    </div>
   </div>
 </section>
 
-<!-- 3. HOW IT WORKS (with /bip) -->
-<section class="band" id="how" aria-labelledby="how-h">
+<!-- 3. How it works -->
+<section class="band how" id="how" aria-labelledby="how-h">
   <div class="wrap">
-    <h2 class="h2" id="how-h"><span class="hash" aria-hidden="true">##</span>Three commands, then it runs on its own</h2>
+    <h2 id="how-h">Buy once, turn it on per repo, keep working</h2>
     <ol class="steps">
-      <li>
+      <li class="step">
         <span class="step-n" aria-hidden="true">1</span>
-        <h3>Install</h3>
-        <p>One line. It checks the sha256, tries the new version before switching to it, and puts <code>momentry</code> on your PATH.</p>
-        <p class="mb-0"><a href="#install" data-goto-install>Use the command at the top of the page</a>.</p>
+        <h3>Buy and install</h3>
+        <p>Your license key and the install command arrive by email. The installer checks the sha256, tries the new version before switching to it, and puts <code>momentry</code> on your PATH. Activate with your key.</p>
+        <div data-install>
+          <div class="os" role="group" aria-label="Operating system">
+            <button type="button" data-os="unix" aria-pressed="true">macOS / Linux / WSL</button>
+            <button type="button" data-os="win" aria-pressed="false">Windows</button>
+          </div>
+          <div class="cmd" data-panel="unix"><pre><code>curl -fsSL {{DOWNLOAD_BASE}}/install.sh | sh</code></pre><button class="copy" type="button">Copy</button></div>
+          <div class="cmd" data-panel="win" hidden><pre><code>irm {{DOWNLOAD_BASE}}/install.ps1 | iex</code></pre><button class="copy" type="button">Copy</button></div>
+        </div>
+        <p class="small">The exact command arrives with your key.</p>
       </li>
-      <li>
+      <li class="step">
         <span class="step-n" aria-hidden="true">2</span>
         <h3>Turn it on for a repo</h3>
-        <p><code>init</code> creates <code>.momentry.json</code> and the story box, installs the hooks and the <code>/bip</code> command (backing up each file first), and checks everything. If you haven't listed any private names yet, its check fails and tells you how to add them. Until you do, stories go to quarantine instead of your repo.</p>
-        <div class="code"><pre><code>cd your-repo
+        <p><code>init</code> creates the story box, installs the hooks and the <code>/bip</code> command for every agent it finds, in every profile, and backs up each file first. Then you list the names that must never reach the repo.</p>
+        <div class="cmd"><pre><code>cd your-repo
 momentry init
 momentry config privacy-add "Client Name" "secret-project"</code></pre><button class="copy" type="button">Copy</button></div>
       </li>
-      <li>
+      <li class="step">
         <span class="step-n" aria-hidden="true">3</span>
-        <h3>Keep working. Read the list when you want to write.</h3>
-        <p>Hooks harvest in the background after every session and before every compaction. When it's time to write, open the ranked list.</p>
-        <div class="code"><pre><code>momentry list --rank</code></pre><button class="copy" type="button">Copy</button></div>
-        <div class="bip">
-          <p>Saw something worth telling? Type <code>/bip</code> and a short note. The agent saves two to four sentences to the box right away, through the same privacy check.</p>
-          <div class="term"><pre><span class="prompt">&gt;</span> /bip p95 went from 800ms to 90ms after swapping the Map for an LRU</pre></div>
-        </div>
+        <h3>Keep working. Read the list when you write.</h3>
+        <p>Hooks harvest in the background after every session and before every compaction. When it's time to write:</p>
+        <div class="cmd"><pre><code>momentry list --rank</code></pre><button class="copy" type="button">Copy</button></div>
+        <p>Saw something worth telling? Type <code>/bip</code> and a short note. The agent saves two to four sentences to the box right away, through the same privacy check.</p>
+        <div class="bip">/bip p95 went from 800ms to 90ms after swapping the Map for an LRU</div>
       </li>
     </ol>
-    <p class="small">Want results right now? <code>momentry scan --max-sessions 1 --quiet-minutes 0</code> harvests your latest session on demand. By default, <code>scan</code> skips sessions touched in the last 30 minutes, and <code>--quiet-minutes 0</code> turns that off.</p>
-
-    <figure class="full-demo">
-      <div class="term">
-        <div class="term-bar"><span>your-repo</span><span>7 stories</span></div>
-<pre aria-label="Full output of momentry list --rank"><span class="prompt">$</span> momentry list --rank
-<span class="head">id                                     date        status  hook                                      tension         stakes  strength  hits</span>
-<span class="hot">2026-11-02-mot-ky-tu-unicode           2026-11-02  raw     One Unicode form cut search scores 8x     nho_ma_to       <span class="n3">3</span>       <span class="n3">3</span>         1   </span>
-2026-11-02-tu-dien-lam-te-hon          2026-11-02  raw     Adding an abbreviation dictionary made …  giup_ma_hai     <span class="n3">3</span>       <span class="n3">3</span>         1
-2026-11-03-may-soan-nguoi-duyet        2026-11-03  raw     Machine drafts 51 test questions, human…  it_ma_nhieu     <span class="n3">3</span>       2         1
-2026-11-02-hybrid-lan-at-y-nghia       2026-11-02  raw     Hybrid search buried the semantic hit a…  giup_ma_hai     2       2         1
-2026-11-02-lo-rieng-tu-trong-commit    2026-11-02  raw     A sub-agent leaked private data through…  cam_ma_van_lot  2       2         1
-<span class="dim">2026-11-02-pkill-tu-ban-minh           2026-11-02  raw     The agent killed its own shell            khac            0       1         1
-2026-11-03-hop-chua-sinh-ra-giua-chat  2026-11-03  raw     This story box was born mid-chat          none            1       0         1</span></pre>
-      </div>
-      <figcaption class="caption">All seven stories from the same box. The two dimmed rows have no tension, so they sink to the bottom.</figcaption>
-    </figure>
+    <p class="small after">Want a result right now? <code>momentry scan --max-sessions 1 --quiet-minutes 0</code> harvests your latest session on demand.</p>
   </div>
 </section>
 
-<!-- 4. WHAT YOU GET (with ranking) -->
-<section class="band" id="example" aria-labelledby="ex-h">
+<!-- 4. What you get -->
+<section class="band example" id="example" aria-labelledby="ex-h">
   <div class="wrap">
-    <h2 class="h2" id="ex-h"><span class="hash" aria-hidden="true">##</span>One markdown file per moment</h2>
-    <p class="lede">Each story lands in your repo as a plain markdown file with frontmatter. You can grep it, link it to other stories, and commit it. Nothing is deleted. You move a story along by editing its <code>status</code>: <code>raw</code>, <code>picked</code>, <code>drafted</code>, <code>published</code> or <code>dropped</code>.</p>
-
+    <h2 id="ex-h">One markdown file per moment, ranked</h2>
+    <p class="lead intro">Each story is a plain markdown file in your repo. Grep it, link it, commit it. Nothing is deleted. You move a story along by editing its <code>status</code>: <code>raw</code>, <code>picked</code>, <code>drafted</code>, <code>published</code> or <code>dropped</code>.</p>
     <div class="ex-grid">
-      <figure>
-        <p class="lbl">A real story from the author's box, translated from Vietnamese.</p>
-        <div class="term file">
-          <div class="term-bar"><span class="tab">2026-11-02-mot-ky-tu-unicode.md</span></div>
-<pre><span class="md-fm">---</span>
-<span class="md-k">date:</span> 2026-11-02
-<span class="md-k">status:</span> raw
-<span class="md-k">signals:</span> [surprising root cause]
-<span class="md-k">source:</span> chat Claude, V15, PR vantt/obsidian-hybrid-search#4
-<span class="md-k">links:</span> [2026-11-02-do-tim-kiem-tieng-viet]
-<span class="md-k">threads:</span> [obsidian-hieu-tieng-viet]
-<span class="md-fm">---</span>
+      <div>
+        <p class="file-label" id="file-label" tabindex="-1">A real story from the author's box. The first tab is translated for this page; momentry writes it in Vietnamese today, as in the second tab.</p>
+        <div class="file" role="figure" aria-labelledby="file-label">
+          <div class="file-top">
+            <span class="file-tab">2026-11-02-mot-ky-tu-unicode.md</span>
+            <div class="lang" role="tablist" aria-label="Story language">
+              <button type="button" role="tab" id="tab-en" aria-controls="story-en" aria-selected="true">Translated for this page</button>
+              <button type="button" role="tab" id="tab-vi" aria-controls="story-vi" aria-selected="false" tabindex="-1">What you get today (Vietnamese)</button>
+            </div>
+          </div>
+          <div role="tabpanel" id="story-en" aria-labelledby="tab-en">
+<pre><code><span class="fm">---</span>
+<span class="fk">date:</span> <span class="fv">2026-11-02</span>
+<span class="fk">status:</span> <span class="fs">raw</span>
+<span class="fk">signals:</span> <span class="fv">[surprising root cause]</span>
+<span class="fk">source:</span> <span class="fv">chat Claude, V15</span>
+<span class="fk">links:</span> <span class="fv">[2026-11-02-do-tim-kiem-tieng-viet]</span>
+<span class="fk">threads:</span> <span class="fv">[obsidian-hieu-tieng-viet]</span>
+<span class="fm">---</span>
 
 <span class="md-h"># One way of writing Unicode cut search scores 8x</span>
 
@@ -556,195 +700,206 @@ form brought the score back to 0.6.
 thing you're measuring. With Vietnamese text, suspect Unicode first.
 
 <span class="md-b">**Artefact:**</span> two strings that look identical but differ in bytes (build your
-own example; don't use real note names).</pre>
+own example; don't use real note names).</code></pre>
+          </div>
+          <div role="tabpanel" id="story-vi" aria-labelledby="tab-vi" lang="vi" hidden>
+<pre><code><span class="fm">---</span>
+<span class="fk">date:</span> <span class="fv">2026-11-02</span>
+<span class="fk">status:</span> <span class="fs">raw</span>
+<span class="fk">signals:</span> <span class="fv">[nguyên nhân bất ngờ]</span>
+<span class="fk">source:</span> <span class="fv">chat Claude, V15</span>
+<span class="fk">links:</span> <span class="fv">[2026-11-02-do-tim-kiem-tieng-viet]</span>
+<span class="fk">threads:</span> <span class="fv">[obsidian-hieu-tieng-viet]</span>
+<span class="fm">---</span>
+
+<span class="md-h"># Một kiểu viết Unicode làm điểm tìm kiếm tụt 8 lần</span>
+
+<span class="md-b">**Bối cảnh:**</span> Chữ "ệ" viết được hai kiểu trong máy: một ký tự (NFC)
+hoặc chữ "e" cộng dấu (NFD). Mắt người không phân biệt được.
+
+<span class="md-b">**Chuyện gì xảy ra:**</span> Lần đo đầu ra nDCG 0,075, thấp vô lý. Gốc: bộ máy
+tìm kiếm lưu đường dẫn kiểu NFD, golden set viết tay kiểu NFC, phép so sánh
+chuỗi không bao giờ khớp. Chuẩn hoá về một kiểu thì điểm về 0,6.
+
+<span class="md-b">**Bài học:**</span> Số đo tệ bất thường thì nghi thước đo trước khi nghi thứ
+được đo; với tiếng Việt, nghi Unicode đầu tiên.
+
+<span class="md-b">**Artefact:**</span> hai chuỗi trông giống hệt nhau mà khác byte (tự dựng ví dụ,
+không dùng tên note thật).</code></pre>
+          </div>
         </div>
-      </figure>
-
-      <aside class="side">
-        <h3>Ranking fields</h3>
-        <p>Stories that momentry harvests also carry ranking fields in the frontmatter:</p>
-        <div class="code"><pre><code><span class="md-k">hook:</span> "Một ký tự Unicode làm điểm tìm kiếm tụt 8 lần"
-<span class="md-k">tension:</span> nho_ma_to      <span class="c"># tiny cause, big effect</span>
-<span class="md-k">strength:</span> 3
-<span class="md-k">stakes:</span> 3
-<span class="md-k">hit_by:</span> [hotspot, harvest, outsider]
-<span class="md-k">privacy:</span> checked</code></pre></div>
-        <p class="caption">Field values from the spec's example, not from a real run.</p>
-
-        <p class="lbl mt-l mb-0">Status, edited by you</p>
-        <ul class="chips" aria-label="Story status values">
-          <li>raw</li><li class="sep" aria-hidden="true">&gt;</li>
-          <li>picked</li><li class="sep" aria-hidden="true">&gt;</li>
-          <li>drafted</li><li class="sep" aria-hidden="true">&gt;</li>
-          <li>published</li><li class="sep" aria-hidden="true">or</li>
-          <li class="drop">dropped</li>
+      </div>
+      <div class="rank">
+        <h3>Ranked by what makes a story worth reading</h3>
+        <dl>
+          <dt class="sw-y">Hook</dt>
+          <dd>A one-line opener under 15 words, with a number when there is one.</dd>
+          <dt class="sw-p">Tension</dt>
+          <dd>The gap between what you expected and what happened: a tiny cause with a big effect, a fix that made things worse, a guard something slipped past. Stories with no tension sink. They stay in the list.</dd>
+          <dt class="sw-b">Stakes</dt>
+          <dd>How much the moment mattered to what the session was about. momentry works out the session's main goal and scores each story 0 to 3 against it.</dd>
+        </dl>
+        <p class="proof">Checked once against hand labels: on the session it was tuned on, 7 of the 8 stories the author had marked worth telling landed in the top half of 38.</p>
+        <ul class="status" aria-label="Story status values">
+          <li>raw</li><li class="sep" aria-hidden="true">&gt;</li><li>picked</li><li class="sep" aria-hidden="true">&gt;</li><li>drafted</li><li class="sep" aria-hidden="true">&gt;</li><li>published</li><li class="sep" aria-hidden="true">or</li><li>dropped</li>
         </ul>
-
-        <p class="small mt-l"><code>links</code> and <code>threads</code> let a small story today join a longer series later. That's why momentry keeps everything and filters last.</p>
-      </aside>
-    </div>
-
-    <div class="pushes">
-      <h3>Ranked by what makes a story worth reading</h3>
-      <p class="prose"><code>list --rank</code> shows every story. It only changes the order. Three things push a story up:</p>
-      <ul class="list prose">
-        <li><b>Hook.</b> A one-line opener under 15 words, with a number or a concrete detail when there is one.</li>
-        <li><b>Tension.</b> The gap between what you expected and what happened. Stories with no real tension sink to the bottom. They stay in the list.</li>
-        <li><b>Stakes.</b> How much the moment mattered to the session's main goal, which momentry works out itself and scores each story 0 to 3 against.</li>
-      </ul>
-      <p class="small mt-m">Stories with tension come first. Then they're sorted by stakes × strength, by how many harvest runs caught them, and by date.</p>
-      <details class="under">
-        <summary>Under the hood</summary>
-        <p>Before any model reads the transcript, four plain scripts mark hotspots: commands that failed, before/after numbers, git resets and reverts, and edits to agent config. Your <code>/bip</code> marks count too. The harvest has to give a verdict on every hotspot, and a script checks that none were skipped.</p>
-      </details>
+        <details class="hood">
+          <summary>Under the hood</summary>
+          <p>Before any model reads the transcript, four plain scripts mark hotspots: failed commands, before/after numbers, git resets and reverts, and edits to agent config. Your <code>/bip</code> marks count too. The harvest must give a verdict on every hotspot, and a script checks none were skipped. Recorded run: 28 of 28 answered.</p>
+        </details>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 5. PRIVACY -->
-<section class="band" id="privacy" aria-labelledby="priv-h">
+<!-- 5. Privacy -->
+<section class="band privacy" id="privacy" aria-labelledby="priv-h">
   <div class="wrap">
-    <div class="two">
-      <div>
-        <h2 class="h2" id="priv-h"><span class="hash" aria-hidden="true">##</span>Private names stay out of your repo</h2>
-        <p>You list the names that must never reach the repo: people, clients, project codenames.</p>
-        <p>Every story is checked before it's written: every field, the filename, and every line appended to an older story. Matching also catches the name with accents stripped and typed in Telex, because that's how one leaked in the author's own repo, through a test fixture.</p>
-        <p>A story that matches goes to quarantine in <code>~/.cache/momentry/quarantine/</code>, outside the repo, where you can read it and decide. If you haven't set a block list yet, stories go to quarantine too. They don't go into the repo unchecked.</p>
-        <p>Run <code>momentry check --staged</code> as a git pre-commit hook for a last check.</p>
+    <h2 id="priv-h">Client names stay out of your repo</h2>
+    <div class="priv-grid">
+      <div class="prose">
+        <p>You list the names that must never reach the repo: people, clients, codenames.</p>
+        <p>Every story is checked before it's written: every field, the filename, and every line added to an older story. Matching also catches the name with accents stripped and typed in Telex, because that's how one leaked in the author's own repo, through a test fixture.</p>
+        <p>A story that matches goes to quarantine in momentry's cache folder (<code>momentry paths</code> shows it), outside the repo, where you read it and decide. With no block list set, stories go to quarantine too. Add <code>momentry check --staged</code> to your pre-commit hook for a last check.</p>
       </div>
       <div>
-        <div class="code"><pre><code>momentry config privacy-add "Jane Doe" "secret-project"</code></pre><button class="copy" type="button">Copy</button></div>
-        <div class="flow" role="img" aria-label="A story goes through the privacy check. Clean stories go to the box in your repo. Stories that match a blocked name go to quarantine in ~/.cache, outside the repo.">
-          <div class="node">story</div>
-          <svg class="arr" viewBox="0 0 28 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7h22M19 2l5 5-5 5"/></svg>
-          <div class="node">privacy check</div>
-          <svg class="arr" viewBox="0 0 28 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7h22M19 2l5 5-5 5"/></svg>
-          <div class="node">box<small>in your repo</small></div>
-          <svg class="arr-down" viewBox="0 0 14 34" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M7 2v28M2 25l5 5 5-5"/></svg>
-          <div class="node q">quarantine<small>~/.cache/momentry/quarantine/</small></div>
+        <div class="cmd"><pre><code>momentry config privacy-add "Jane Doe" "secret-project"</code></pre><button class="copy" type="button">Copy</button></div>
+        <div class="flow" aria-hidden="true">
+          <div class="node">story<small>from a harvest or /bip</small></div>
+          <div class="arr"></div>
+          <div class="node">check<small>exact, no accents, Telex</small></div>
+          <div class="arr"></div>
+          <div class="node ok">box in your repo<small>no match</small></div>
+          <div class="vdown"><span>match, or no block list</span></div>
+          <div class="node q flow-q">quarantine<small>outside the repo</small></div>
         </div>
+        <div class="flow-v" aria-hidden="true">
+          <div class="node">story<small>from a harvest or /bip</small></div>
+          <div class="down">|</div>
+          <div class="node">check<small>exact, no accents, Telex</small></div>
+          <div class="down">| no match</div>
+          <div class="node ok">box in your repo</div>
+          <div class="down">| match, or no block list</div>
+          <div class="node q">quarantine<small>outside the repo</small></div>
+        </div>
+        <p class="visually-hidden">Each story goes through the check. With no match it is written to the box in your repo; with a match, or with no block list set, it goes to quarantine outside the repo.</p>
       </div>
     </div>
-    <div class="honesty">
-      <p>momentry sends the transcript to Anthropic's Claude through your own <code>claude -p</code>, with your settings, tools and MCP servers switched off for that call. For Claude Code sessions that is the provider that already saw it. For Codex and the other hosts it is a second provider. The block list controls what gets written into your repo, not what Claude reads.</p>
+    <div class="honest">
+      <p>momentry sends the transcript to Anthropic through your own <code>claude -p</code>, with your settings, tools and MCP servers off for that call. For Claude Code sessions that is the provider that already saw it; for Codex and the other hosts it is a second one. Transcripts go to Anthropic only, through your own <code>claude -p</code>. momentry's own network calls are the license check and update downloads; they carry no session content. The block list controls what is written into your repo, not what Claude reads.</p>
     </div>
   </div>
 </section>
 
-<!-- 6. COST -->
-<section class="band" id="cost" aria-labelledby="cost-h">
+<!-- 6. Why pay -->
+<section class="band why" aria-labelledby="why-h">
   <div class="wrap">
-    <h2 class="h2" id="cost-h"><span class="hash" aria-hidden="true">##</span>Free tool. You pay for the model calls.</h2>
-    <div class="cols">
-      <div>
-        <h3>Cost</h3>
-        <ul class="list">
-          <li>momentry is free and in the public domain (Unlicense).</li>
-          <li>Harvesting runs through your own logged-in <code>claude</code> CLI. A session of about 150k tokens costs about 1 USD. The one real run so far cost 0.95 USD.</li>
-          <li>The biggest piece is the "outsider" pass (about 0.65 USD per window), which rewrites a story from the angle of what others would want to learn. Turn it off with <code>outsider.enabled = false</code>.</li>
-        </ul>
+    <h2 id="why-h">You could write the script. This is the rest of it.</h2>
+    <p class="lead intro">Piping one transcript to Claude takes an afternoon. Making it run after every session, on every agent you use, without leaking a name or breaking your config, took the rest.</p>
+    <div class="tiles">
+      <div class="tile"><h3>Five hosts, every profile.</h3><p>Claude Code, Codex, pi, omp and Antigravity. <code>init</code> installs into every profile it finds (<code>~/.codex-*</code>, pi accounts, omp profiles, Antigravity homes) and <code>doctor</code> flags new ones.</p></div>
+      <div class="tile"><h3>Each host’s quirks.</h3><p>Codex silently ignores the wrong event-key case. On Windows, Claude Code runs hooks in Git Bash, Codex in PowerShell, Antigravity in <code>cmd</code>. momentry writes the command each one expects.</p></div>
+      <div class="tile"><h3>A privacy gate that knows Vietnamese typing.</h3><p>Exact, accent-stripped and Telex matching on every field and filename, quarantine outside the repo, and <code>quarantine --release all</code> once you've fixed the list.</p></div>
+      <div class="tile"><h3>Windows and WSL.</h3><p>A native PowerShell installer, no admin rights, correct <code>%APPDATA%</code> paths. WSL keeps its own config.</p></div>
+      <div class="tile"><h3><code>doctor</code> and checked updates.</h3><p><code>doctor</code> checks Node, git, <code>claude</code>, config, hooks and install, and prints a command for every failure. <code>update</code> verifies the sha256, tries the new version first and keeps the old one if anything fails.</p></div>
+      <div class="tile"><h3>Ranking checked against hand labels.</h3><p>Ranking checked once against hand labels: on the session it was tuned on, 7 of 8 landed in the top half. Not yet checked on other projects.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Pricing -->
+<section class="band pricing" id="pricing" aria-labelledby="price-h">
+  <div class="wrap">
+    <h2 id="price-h">Pay once. Run it on your own Claude account.</h2>
+    <p class="lead price-sub">Use it forever. Updates through 1.x included.</p>
+    <div class="price-grid">
+      <div class="card">
+        <div class="card-head"><span>license.md</span><span>status: yours</span></div>
+        <div class="card-body">
+          <p class="name">momentry, lifetime license</p>
+          <p class="amount"><span class="price">29 USD</span><span>one-time</span></p>
+          <ul aria-label="What you get">
+            <li>The momentry CLI for Linux, macOS, WSL and Windows</li>
+            <li>Hooks and <code>/bip</code> for Claude Code, Codex, pi, omp and Antigravity</li>
+            <li>The privacy gate, quarantine and pre-commit check</li>
+            <li>Ranking by hook, tension and stakes</li>
+            <li><code>doctor</code>, checked updates and clean uninstall</li>
+            <li>Updates for v0.x and 1.x</li>
+          </ul>
+          <a class="buy" href="{{CHECKOUT_URL}}" target="_blank" rel="noopener">Buy momentry · <span class="price">29 USD</span></a>
+          <ol class="buy-steps" aria-label="After you pay">
+            <li><b>Pay</b> (checkout by Lemon Squeezy)</li>
+            <li><b>Email</b> with key and install command</li>
+            <li><code>momentry init</code> in a repo</li>
+          </ol>
+          <p class="after">License key and install command by email. {{REFUND_POLICY}}</p>
+        </div>
       </div>
-      <div>
-        <h3>Requirements</h3>
-        <ul class="list">
+      <div class="run">
+        <h3>What it costs to run</h3>
+        <p>momentry calls models through your own logged-in <code>claude</code> CLI, so you pay Anthropic directly at their price. About 1 USD per 150k-token window. A session that compacts pays once per window. The recorded run cost 1.01 USD. The biggest piece is the outsider pass, about 0.65 USD, which rewrites a story from the angle of what others want to learn. Turn it off with <code>outsider.enabled = false</code>.</p>
+        <p class="flat">No subscription and no markup on tokens.</p>
+        <h3 class="req">Requirements</h3>
+        <ul>
           <li>Node 20 or newer</li>
           <li>git</li>
-          <li>A logged-in <code>claude</code> CLI (Codex, pi, omp and Antigravity users need it too)</li>
+          <li>A logged-in <code>claude</code> CLI (every host needs it)</li>
           <li>Linux, macOS, WSL or Windows</li>
         </ul>
-      </div>
-    </div>
-    <div class="strip">
-      <b>Hooks don't slow you down</b>
-      <p>The hooks exit right away, print nothing and start the harvest as a background process. No model is called inside your session. Hooks only run in repos where you ran <code>momentry init</code>.</p>
-    </div>
-    <div class="again install" data-install>
-      <p class="lbl">Install it now</p>
-      <div class="tabs" role="group" aria-label="Operating system">
-        <button type="button" data-os="unix" aria-pressed="true">macOS / Linux / WSL</button>
-        <button type="button" data-os="win" aria-pressed="false">Windows</button>
-      </div>
-      <div class="panel" data-panel="unix">
-        <div class="code"><pre><code>curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh | sh</code></pre><button class="copy" type="button">Copy</button></div>
-      </div>
-      <div class="panel" data-panel="win" hidden>
-        <div class="code"><pre><code>irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex</code></pre><button class="copy" type="button">Copy</button></div>
+        <p class="fit">Stories and CLI messages are in Vietnamese for now. Not for you yet if you need English stories today, want finished posts, or can't send transcripts to Anthropic.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 7. STATUS -->
-<section class="band" aria-labelledby="status-h">
+<!-- 8. Where it stands -->
+<section class="band stands" aria-labelledby="stands-h">
   <div class="wrap">
-    <h2 class="h2" id="status-h"><span class="hash" aria-hidden="true">##</span>Where it stands</h2>
-    <div class="status-panel">
-      <ul class="list">
-        <li><b>Version 0.2.0</b>, released 2026-11-03. Hooks have run for real with Claude Code (Windows), Codex (Linux and Windows), and pi, omp and Antigravity (Linux).</li>
-        <li>The harvest-and-score pipeline is tested with fake data and has been run for real once: <b>28/28 hotspots answered, 8/8 human-labelled stories found, 0.95 USD.</b></li>
-        <li>Not verified yet: pi, omp and Antigravity on Windows, and the ranking scores on sessions other than the ones they were designed on.</li>
-        <li><b>The CLI, the docs and the stories are in Vietnamese for now.</b> The English README covers install and use.</li>
-      </ul>
-      <p class="small links">What changed in each release: <a href="https://github.com/vantt/momentry/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG on GitHub</a>.</p>
-    </div>
+    <h2 id="stands-h">Version 0.2, honestly</h2>
+    <ul>
+      <li class="done"><b>Version 0.2.0</b>, released 2026-11-03.</li>
+      <li class="done"><b>Hooks run with the real agents:</b> Claude Code, Codex, pi and omp on Linux and Windows; Antigravity on Linux, Windows still to check.</li>
+      <li class="done"><b>The pipeline has been run for real and recorded:</b> 28/28 hotspots answered, 7 of 8 hand-labelled stories in the top half, 1.01 USD.</li>
+      <li class="open"><b>macOS:</b> install and tests run in CI; hooks not yet checked with real agents on a Mac.</li>
+      <li class="open"><b>Not checked yet:</b> the ranking on sessions from other kinds of projects.</li>
+      <li class="open"><b>Stories and CLI messages are in Vietnamese for now.</b></li>
+    </ul>
   </div>
 </section>
 
-<!-- 8. FAQ -->
-<section class="band" id="faq" aria-labelledby="faq-h">
+<!-- 9. FAQ -->
+<section class="band faq" id="faq" aria-labelledby="faq-h">
   <div class="wrap">
-    <h2 class="h2" id="faq-h"><span class="hash" aria-hidden="true">##</span>Questions</h2>
-    <div class="faq">
-      <details open><summary>Does it write my blog posts?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>No. It finds and ranks the material. You pick the stories and write the post. Outlines and drafts are out of scope for now.</p></details>
-      <details><summary>Will it slow down my Claude Code or Codex sessions?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>No. The hooks exit immediately and start the harvest in the background. No model call happens inside your session.</p></details>
-      <details><summary>What does a harvest cost?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>About 1 USD for a session of around 150k tokens, billed through your own <code>claude</code> CLI. Turning off the outsider pass cuts most of that.</p></details>
-      <details><summary>Does my transcript leave my machine?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>Yes. momentry sends the transcript to Anthropic's Claude through your own <code>claude -p</code>. For Claude Code sessions that is the provider that already saw it. For Codex and the other hosts it is a second provider. The block list controls what gets written into your repo, not what Claude reads.</p></details>
-      <details><summary>I only use Codex. Can I use it?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>Yes, but you still need a logged-in <code>claude</code> CLI, since that's what reads the sessions. Codex hooks work in v0.2.0 and have run for real on Linux and Windows. If a hook doesn't fire, <code>momentry scan --codex</code> harvests by hand.</p></details>
-      <details><summary>Does it work with pi, omp or Antigravity?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>Yes, since v0.2.0. <code>init</code> installs their hooks and <code>/bip</code> too, and <code>momentry scan --pi</code>, <code>--omp</code> or <code>--agy</code> harvests by hand. They have run for real on Linux, not yet on Windows.</p></details>
-      <details><summary>Why is the output in Vietnamese?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>momentry was built inside a Vietnamese-language project, so its CLI messages and prompts were written in Vietnamese, and the stories come out in Vietnamese too. That's the state today. The README is in English.</p></details>
-      <details><summary>What does it change on my machine?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p><code>init</code> adds hooks and a <code>/bip</code> command to your agent config, backs up each file first, and only touches its own entries. <code>momentry uninstall --dry-run</code> shows what removal would do; <code>momentry uninstall --yes</code> removes it and keeps your stories.</p></details>
-      <details><summary>Something isn't working. Now what?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></summary>
-        <p>Run <code>momentry doctor</code>. Every failing check prints a command that fixes it. Hooks log to <code>~/.cache/momentry/hook.log</code>.</p></details>
+    <h2 id="faq-h">Questions</h2>
+    <div class="faq-list">
+      <details open><summary>Why pay for what looks like a script?</summary><p>The part that sends one transcript to Claude is small. What you pay for is everything around it: hooks for five agents in every profile, the right command for each Windows shell, a privacy gate that catches Telex and accent-stripped names, quarantine, <code>doctor</code>, checked updates, and ranking checked once against hand labels.</p></details>
+      <details><summary>It’s closed source. Can I trust hooks in my agent config?</summary><p>You can see every change before and after. <code>momentry hooks --print --claude</code> prints what it would add. <code>init</code> backs up each file, touches only momentry's own entries and refuses to edit broken JSON. Hooks fire in every session but do nothing outside repos where you ran <code>init</code>. <code>momentry uninstall --dry-run</code> lists what removal would undo; <code>uninstall --yes</code> removes it and keeps your stories.</p></details>
+      <details><summary>I already pay Anthropic. Why pay again?</summary><p>You pay Anthropic for the model calls, through the account you already have. The <span class="price">29 USD</span> buys the tool, once. There's no momentry subscription and no markup on tokens.</p></details>
+      <details><summary>What does a harvest cost?</summary><p>About 1 USD per 150k-token window, billed by Anthropic through your own <code>claude</code>. A session that compacts pays once per window. Turning off the outsider pass cuts about 0.65 USD of that.</p></details>
+      <details><summary>Is it billed per token if I’m on a Pro or Max plan?</summary><p><code>claude -p</code> uses whatever your <code>claude</code> login uses. On a subscription, harvests count toward your plan's usage limits instead of costing dollars.</p></details>
+      <details><summary>Does my transcript leave my machine?</summary><p>Yes, to Anthropic, through your own <code>claude -p</code>. For Claude Code sessions that's the provider that already saw it; for other hosts it's a second one. Transcripts go to Anthropic only, through your own <code>claude -p</code>. momentry's own network calls are the license check and update downloads; they carry no session content. The block list controls what is written into your repo.</p></details>
+      <details><summary>Does it write my posts?</summary><p>No. It finds and ranks the material. You pick the stories and write.</p></details>
+      <details><summary>Will it slow down my sessions?</summary><p>No. Hooks exit right away and start the harvest in the background. No model call happens inside your session.</p></details>
+      <details><summary>Why is the output in Vietnamese?</summary><p>momentry was built inside a Vietnamese-language project, and its prompts ask for Vietnamese titles and hooks. That's the state today.</p></details>
+      <details><summary>I use Codex, pi, omp or Antigravity. Does it work?</summary><p>Yes. <code>init</code> installs their hooks and <code>/bip</code>. You still need a logged-in <code>claude</code> CLI, since that's what reads the sessions. Antigravity hooks have run on Linux; Windows is not checked yet. If a hook doesn't fire, <code>momentry scan --codex</code> (or <code>--pi</code>, <code>--omp</code>, <code>--agy</code>) harvests by hand.</p></details>
+      <details><summary>How do I get it after paying?</summary><p>You get a license key and the install command by email. Run the command, activate with your key, then <code>momentry init</code> in a repo.</p></details>
+      <details><summary>What updates are included?</summary><p>Every release in v0.x and 1.x. <code>momentry update</code> checks for a new version and installs it.</p></details>
+      <details><summary>What if it doesn’t work for me?</summary><p>Run <code>momentry doctor</code> first: every failing check prints the command that fixes it. {{REFUND_POLICY}}</p></details>
+      <details><summary>How do I remove it?</summary><p><code>momentry uninstall --yes</code> removes the hooks, <code>/bip</code> and the install, and keeps your stories and config.</p></details>
     </div>
   </div>
 </section>
 
-<!-- 9. FINAL CTA -->
+<!-- 10. Final CTA -->
 <section class="band final" aria-labelledby="final-h">
   <div class="wrap">
-    <div class="inner">
-      <h2 class="h2" id="final-h"><span class="hash" aria-hidden="true">##</span>Try it on your last session</h2>
-      <p class="lede">Install, run <code>momentry init</code> in a repo, then harvest your most recent session.</p>
-      <div class="install" data-install>
-        <div class="tabs" role="group" aria-label="Operating system">
-          <button type="button" data-os="unix" aria-pressed="true">macOS / Linux / WSL</button>
-          <button type="button" data-os="win" aria-pressed="false">Windows</button>
-        </div>
-        <div class="panel" data-panel="unix">
-          <div class="code"><pre><code>curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh | sh</code></pre><button class="copy" type="button">Copy</button></div>
-        </div>
-        <div class="panel" data-panel="win" hidden>
-          <p class="lbl">Windows (PowerShell)</p>
-          <div class="code"><pre><code>irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex</code></pre><button class="copy" type="button">Copy</button></div>
-        </div>
-      </div>
-      <p class="then">Then:</p>
-      <div class="code"><pre><code>momentry init
-momentry scan --max-sessions 1 --quiet-minutes 0
-momentry list --rank</code></pre><button class="copy" type="button">Copy</button></div>
-      <div class="cta-row mt-l">
-        <a class="btn ghost" href="https://github.com/vantt/momentry" target="_blank" rel="noopener">Read the source and docs on GitHub</a>
-      </div>
-      <p class="req">Free, public domain. Harvesting costs about 1 USD per long session, billed through your own <code>claude</code>. Uninstall any time with <code>momentry uninstall --yes</code>.</p>
+    <h2 id="final-h">Get last week back.</h2>
+    <p class="lead">Buy once and run <code>momentry init</code> in a repo. Once you've added your block list, your next session ends with stories in the box.</p>
+    <div class="hero-cta">
+      <a class="buy" href="{{CHECKOUT_URL}}" target="_blank" rel="noopener">Buy momentry · <span class="price">29 USD</span></a>
+      <a class="text-link" href="#example" data-story>Read a real story file first</a>
     </div>
+    <p class="fine">One-time license, updates through 1.x. Model calls about 1 USD per 150k-token window, through your own <code>claude</code>; a session that compacts pays once per window. Stories and CLI messages are in Vietnamese for now. {{REFUND_POLICY}}</p>
   </div>
 </section>
 
@@ -752,25 +907,19 @@ momentry list --rank</code></pre><button class="copy" type="button">Copy</button
 
 <footer>
   <div class="wrap">
-    <a class="brand" href="#top"><span aria-hidden="true">#</span>momentry</a>
-    <span>Public domain (Unlicense)</span>
-    <ul>
-      <li><a href="https://github.com/vantt/momentry" target="_blank" rel="noopener">GitHub</a></li>
-      <li><a href="https://github.com/vantt/momentry/blob/main/docs/cli-reference.md" target="_blank" rel="noopener">CLI reference</a></li>
-      <li><a href="https://github.com/vantt/momentry/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
-      <li><a href="https://github.com/vantt/momentry/issues" target="_blank" rel="noopener">Report an issue</a></li>
-    </ul>
-    <a class="btn ghost sm top" href="#top">Top</a>
+    <span class="wm">momentry</span>
+    <span>© 2026</span>
+    <a href="{{EULA_URL}}" target="_blank" rel="noopener">License agreement</a>
+    <a href="mailto:{{SUPPORT_EMAIL}}">Contact</a>
+    <a class="top" href="#top">Top</a>
   </div>
 </footer>
 
 <script>
 (function () {
-  // OS toggle, synced across every install block
+  // OS toggle for the install block; Windows visitors see PowerShell first
   var ua = (navigator.userAgent || '') + ' ' + (navigator.platform || '');
-  var os = /Win/i.test(ua) ? 'win' : 'unix';
-  function setOS(next) {
-    os = next;
+  function setOS(os) {
     document.querySelectorAll('[data-install]').forEach(function (box) {
       box.querySelectorAll('[data-os]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.os === os)); });
       box.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== os; });
@@ -779,7 +928,27 @@ momentry list --rank</code></pre><button class="copy" type="button">Copy</button
   document.querySelectorAll('[data-os]').forEach(function (b) {
     b.addEventListener('click', function () { setOS(b.dataset.os); });
   });
-  setOS(os);
+  setOS(/Win/i.test(ua) ? 'win' : 'unix');
+
+  // Story language tabs
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.lang [role="tab"]'));
+  function selectTab(t, focus) {
+    tabs.forEach(function (x) {
+      var on = x === t;
+      x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) t.focus();
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { selectTab(t); });
+    t.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        selectTab(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
+      }
+    });
+  });
 
   // Copy buttons
   var live = document.getElementById('copy-status');
@@ -800,23 +969,10 @@ momentry list --rank</code></pre><button class="copy" type="button">Copy</button
         clearTimeout(timer);
         timer = setTimeout(function () { btn.textContent = 'Copy'; btn.dataset.state = ''; }, state === 'fail' ? 4000 : 2000);
       }
-      function fail() { selectText(code); done('Ctrl+C', 'fail', 'Command selected. Press Ctrl+C or Cmd+C to copy.'); }
+      function fail() { selectText(code); done('Selected', 'fail', 'Command selected. Press Ctrl+C or Cmd+C to copy.'); }
       try {
         navigator.clipboard.writeText(text).then(function () { done('Copied', 'ok', 'Copied to clipboard.'); }, fail);
       } catch (e) { fail(); }
-    });
-  });
-
-  // Install links: scroll to the hero install block and focus its visible Copy button
-  document.querySelectorAll('[data-goto-install]').forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      var box = document.getElementById('install');
-      if (!box) return;
-      e.preventDefault();
-      box.scrollIntoView({ block: 'center' });
-      var btn = box.querySelector('.panel:not([hidden]) .copy');
-      if (btn) btn.focus({ preventScroll: true });
-      closeMenu();
     });
   });
 
@@ -832,5 +988,17 @@ momentry list --rank</code></pre><button class="copy" type="button">Copy</button
   });
   links.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', closeMenu); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+
+  // "Read a real story file": scroll to the example and move focus to the file label
+  document.querySelectorAll('[data-story]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var label = document.getElementById('file-label');
+      if (!label) return;
+      e.preventDefault();
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      label.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      label.focus({ preventScroll: true });
+    });
+  });
 })();
 </script>

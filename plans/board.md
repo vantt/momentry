@@ -2,17 +2,21 @@
 
 This board is high-level: one row = one epic = one plan. Step status and evidence live in the plan, not here.
 
-**Last updated:** 2026-11-04 · **Released version:** v0.2.0 (2026-11-03)
+**Context:** momentry is the experimental first slice of CIS (Creator Intelligence System, `vantt/cis`). Current focus: **selling it**. Every sales step (E8, E10–E15) lives in one plan: [sales](261104-sales/plan.md). What sells tells CIS which audience to build for next ([audiences](../website/content/audiences.md)).
+
+**Last updated:** 2026-11-04 (sales plan linked, CIS context) · **Released version:** v0.2.0 (2026-11-03)
 
 ## Overview
 
-9 epics:
+15 epics:
 - 1 done: E2.
-- 2 in progress: E1, E3.
-- 0 not started.
-- 6 backlog, no plan: E4, E5, E6, E7, E8, E9.
+- 3 in progress: E1, E3, E8.
+- 1 not started: E10.
+- 5 in the sales plan, backlog: E11–E15.
+- 5 backlog, no plan: E4, E5, E6, E7, E9.
 
 Main path: E1 and E3 close (record real runs, Antigravity on Windows) → E4 validate the mechanism → E5 real use → E6 story assembly.
+Sales path (focus): E10 close the source → E12 host the page → E11 sell to devs. Landing page v2 for the paid product is in progress on branch `website-v2` (E8).
 
 ## In progress
 
@@ -20,7 +24,7 @@ Steps the agent is running, taken from plans. Steps waiting on the human are not
 
 | ID | Step | Plan | Notes |
 |---|---|---|---|
-| (none) | | | |
+| E8 | S0.8 Landing page v2 for the paid product (content, design, review) | [sales](261104-sales/plan.md) | Branch `website-v2`; separate artifact to compare with v1 |
 
 ## Next
 
@@ -39,9 +43,9 @@ At most 3 epics, in the order to open them.
 
 | # | Epic | Plan | Priority | First step | Who | Condition |
 |---|---|---|---|---|---|---|
-| 1 | E4 Validate the mechanism | — (rows DM.8–DM.10 in [PRD §9](../docs/prd.md)) | P1 | Write the plan; DM.9 run on 1–2 sessions of another domain, at least one Codex | Agent | E1 closed |
-| 2 | E5 Real use and measurement | — (DM.11 in PRD §9) | P1 | Write the plan around PRD §10 metrics | Agent, then human uses it 1–2 weeks | E4 plan open |
-| 3 | E8 Marketing copy | — | P2 | Write the plan from `website/content/` | Agent | None |
+| 1 | E10 Close the source | [sales](261104-sales/plan.md) S0.1–S0.7 | P1 | S0.1 draft the EULA; S0.2–S0.3 license lines and move the `gh` section out of README | Agent; human approves the EULA, creates the R2 bucket | Domain and R2 for S0.4–S0.6 |
+| 2 | E4 Validate the mechanism | — (rows DM.8–DM.10 in [PRD §9](../docs/prd.md)) | P1 | Write the plan; DM.9 run on 1–2 sessions of another domain, at least one Codex | Agent | E1 closed |
+| 3 | E5 Real use and measurement | — (DM.11 in PRD §9) | P1 | Write the plan around PRD §10 metrics | Agent, then human uses it 1–2 weeks | E4 plan open |
 
 ## Needs the human
 
@@ -49,6 +53,7 @@ The only section that holds steps waiting on the human.
 
 | ID | Step | Plan | What the human must do |
 |---|---|---|---|
+| Sales | Six open questions | [sales](261104-sales/plan.md) § Câu hỏi còn mở | Domain, R2 vs releases repo, final price, Lemon Squeezy or Gumroad, refund policy, story language |
 | E1 | DM.6, DM.7 forced-compact sessions | [PRD §9](../docs/prd.md) | Force a compact in one Claude Code and one Codex session with hooks installed; kill one session midway |
 | E3 | Antigravity hook on Windows ([issue #2](https://github.com/vantt/momentry/issues/2)) | [more-agent-hosts](261103-1110-more-agent-hosts/plan.md) | On a Windows machine with agy signed in, run `scripts/probe-agy-windows.ps1` and paste the result into the issue; passes on `hook fired: True` |
 
@@ -65,8 +70,14 @@ All epics, from idea to done. One plan per epic. The board shows no progress; re
 | E5 | Real use 1–2 weeks and measurement (DM.11) | — | 📥 Backlog | P1 | E1 | Metrics in PRD §10 |
 | E6 | Editing, threads, hooks, draft post (DM.12) | — | 📥 Backlog | P3 | E5, box ≥ 30 stories | |
 | E7 | Multi-repo box and cross-repo threads (DM.13) | — | 📥 Backlog | P3 | E5 | |
-| E8 | Marketing copy: pain and selling points, pricing, posts | — | 📥 Backlog | P2 | — | Landing page v1 shipped (`site-v1`); `website/content/selling-points.md` collecting |
+| E8 | Marketing copy: pain and selling points, pricing, posts | [sales](261104-sales/plan.md) | 🔄 Doing | P2 | — | v2 (paid) on branch `website-v2`. Landing page v1 built (`site-v1`, `website/src/`), not hosted; its copy still says free and Unlicense. `website/content/selling-points.md` collecting. Track competitors (Taplio, Typefully, Castmagic, Supergrow) |
 | E9 | Release signing (cosign, SEC-02/03) and shell completions | — | 📥 Backlog | P3 | E2 | Deferred out of E2's scope |
+| E10 | Close the source: proprietary EULA, binaries on Cloudflare R2 (replaces the releases-only repo idea), installer and update URLs | [sales](261104-sales/plan.md) | ⬜ Todo | P1 | — | Repo already private, so `install.sh`/`install.ps1` from `vantt/momentry` 404 for outsiders. `LICENSE` still Unlicense; change README ×2, CHANGELOG. Move sales docs to `docs/_private/`? The `gh` section of README ships in release tarballs and names the private repo: move it to `docs/development.md` |
+| E11 | Sell to devs: Lemon Squeezy or Gumroad, 19–29 USD lifetime, light license-key check, pricing on the landing page | [sales](261104-sales/plan.md) | 📥 Backlog | P2 | E10, E12 | Build momentry in public with momentry; collect feedback from first buyers. Go on when people pay and ask for post drafts |
+| E12 | Host the landing page on Cloudflare Pages | [sales](261104-sales/plan.md) | 📥 Backlog | P2 | E10 | Replaces `.github/workflows/website.yml` (GitHub Pages; fails on a private repo). Copy must match E10 and E11: license, price, download link |
+| E13 | Pro features: post drafts (X, LinkedIn, Threads, newsletter, weekly report), personal voice, cheaper LLM pass | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E11 | Overlaps E6 (draft post); decide which epic owns drafting when either opens |
+| E14 | Validate with vibe coders and creators: separate landing page, waitlist at 15–20 USD/month | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E11 | Lead line "Anh không thiếu ý tưởng, anh quên mất mình đã làm gì." Go on at a few hundred signups |
+| E15 | Hosted product: desktop or web app, more sources (Cursor, Lovable, Bolt, ChatGPT/Claude exports), accounts, subscription billing | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E14 | Privacy gate on the sales page, data policy, onboarding under 2 minutes |
 
 Status: 📥 Backlog, ⬜ Todo, 🔄 Doing, ⏸ Waiting, ✅ Done, ❌ Dropped.
 Priority: P1 needed first, P2 should do, P3 later.
