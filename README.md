@@ -2,13 +2,15 @@
 
 **English** · [Tiếng Việt](README.vi.md)
 
-**Stop trying to remember what was worth telling this week: momentry picks it out of your Claude Code and Codex sessions for you.**
+*Picks `build-in-public` story material out of your Claude Code, Codex, pi, omp and Antigravity sessions.*
+
+**Stop trying to remember what was worth telling this week: momentry picks it out of your coding-agent sessions for you. One markdown file per moment, ranked by hook, tension and stakes.**
 
 Keep working with your coding agent as usual. After each session, momentry reads the transcript and looks for the moments that matter: a number that moved, a surprising root cause, a decision that got reversed, an approach outsiders would want to learn. Each one is written as a markdown file in your repo and ranked by hook, tension and stakes. Built for people who build in public, write technical blogs or put together weekly reports and don't want to lose the material.
 
 [Quick start](#quick-start) · [CLI reference](docs/cli-reference.md) · [Installation details](docs/installation.md) · [Specification](docs/prd.md)
 
-*Picks build-in-public story material out of your Claude Code and Codex sessions: one markdown file per moment, ranked by hook, tension and stakes.*
+
 
 > The CLI output and the documents under `docs/` are currently in Vietnamese.
 
@@ -32,7 +34,7 @@ irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex
 The installer adds `%LOCALAPPDATA%\momentry\bin` to your user PATH; open a new terminal after installing.
 </details>
 
-**2. Enable it for your repo.** `init` creates `.momentry.json` and the story box, installs the hooks and the `/bip` command for Claude Code/Codex (with backups), then checks everything. On first run it asks you to declare the private names to block (people, project names…) so nothing leaks into the repo, using `momentry config privacy-add "<name>"`:
+**2. Enable it for your repo.** `init` creates `.momentry.json` and the story box, installs the hooks (or extension) and the `/bip` command for Claude Code, Codex, pi, omp and Antigravity, in every profile it finds (with backups), then checks everything. On first run it asks you to declare the private names to block (people, project names…) so nothing leaks into the repo, using `momentry config privacy-add "<name>"`:
 
 ```sh
 cd <your repo>
@@ -46,12 +48,12 @@ momentry scan --max-sessions 1
 momentry list --rank
 ```
 
-From now on the hooks harvest after every session. To mark a moment yourself while you work, type `/bip <note>` in Claude Code or Codex.
+From now on the hooks harvest after every session. To mark a moment yourself while you work, type `/bip <note>` in your agent.
 
 <details>
 <summary>Install with your agent</summary>
 
-Paste into Claude Code or Codex:
+Paste into your agent (Claude Code, Codex, pi, omp, Antigravity):
 
 > Install momentry from https://github.com/vantt/momentry (install.sh, or install.ps1 on Windows), then in this repo follow `momentry init --help` and `momentry doctor --help` until `momentry doctor --json` returns `"ok": true`. If a private-names file is needed, ask me which names to block.
 
@@ -60,7 +62,7 @@ Then say: "harvest the last session with momentry and show me the 3 strongest st
 
 ## What it does
 
-- **Harvests after each session.** The `SessionEnd`, `PreCompact`, `SessionStart` (Claude Code) and `pre_compact` (Codex) hooks run in the background, never slow the session down, and only run in repos that have been `init`ed.
+- **Harvests after each session.** `SessionEnd`, `PreCompact` and `SessionStart` hooks (Claude Code, Codex), a `momentry.ts` extension (pi, omp) and a `SessionStart` hook (Antigravity, harvested when the next session opens) run in the background, never slow the session down, and only run in repos that have been `init`ed.
 - **Manual marking with `/bip`.** The agent writes 2–4 sentences about what just happened and saves it to the box.
 - **Privacy is a hard gate.** Stories that contain a blocked name are kept out of the repo (`momentry quarantine`). `momentry check --staged` works as a git pre-commit hook.
 - **Capture everything, filter later.** Nothing is deleted; you change a story's `status` (`raw`, `picked`, `drafted`, `published`, `dropped`).
@@ -110,6 +112,6 @@ Every failing check comes with a `sửa:` (fix) line containing a runnable comma
 - [docs/development.md](docs/development.md): running from source, tests, `--fake-llm`, module contracts, releasing.
 - [docs/prd.md](docs/prd.md): specification; [docs/README.md](docs/README.md): documentation index.
 
-Status: the harvest-and-score pipeline is tested with fake data and has been run for real once (28/28 hotspots, 8/8 human-labelled stories, 0.95 USD); the Codex hooks have not yet been verified on a real machine (PRD section 9).
+Status: the harvest-and-score pipeline is tested with fake data and has been run for real once (28/28 hotspots, 8/8 human-labelled stories, 0.95 USD). Hooks have been verified with the real agents: Claude Code and Codex on Linux and Windows, pi, omp and Antigravity on Linux (details in [docs/installation.md](docs/installation.md#host-được-hỗ-trợ)).
 
 License: [LICENSE](LICENSE).

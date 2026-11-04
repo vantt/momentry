@@ -2,13 +2,13 @@
 
 [English](README.md) · **Tiếng Việt**
 
-**Không còn phải ngồi nhớ lại tuần này có chuyện gì đáng kể: momentry tự nhặt chúng từ các phiên Claude Code và Codex của bạn.**
+*Picks `build-in-public` story material out of your Claude Code, Codex, pi, omp and Antigravity sessions.*
+
+**Không còn phải ngồi nhớ lại tuần này có chuyện gì đáng kể: momentry tự nhặt chúng từ các phiên làm việc với coding agent của bạn.**
 
 Bạn cứ làm việc với coding agent như thường. Sau mỗi phiên, momentry đọc transcript và tìm những khoảnh khắc đáng kể: con số đổi, nguyên nhân bất ngờ, quyết định bị đảo, cách làm người ngoài muốn học. Mỗi chuyện được ghi thành một file markdown trong repo và xếp hạng theo câu hook, sự giằng xé và mức ảnh hưởng. Dành cho người build in public, viết blog kỹ thuật hay làm báo cáo tuần mà không muốn mất chất liệu.
 
 [Bắt đầu nhanh](#bắt-đầu-nhanh) · [Tham chiếu lệnh](docs/cli-reference.md) · [Cài đặt chi tiết](docs/installation.md) · [Đặc tả](docs/prd.md)
-
-*Picks build-in-public story material out of your Claude Code and Codex sessions: one markdown file per moment, ranked by hook, tension and stakes.*
 
 ## Bắt đầu nhanh
 
@@ -30,7 +30,7 @@ irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex
 Installer thêm `%LOCALAPPDATA%\momentry\bin` vào PATH của user; mở terminal mới sau khi cài.
 </details>
 
-**2. Bật cho repo của bạn.** `init` tạo `.momentry.json` và hộp chuyện, cài hook và lệnh `/bip` cho Claude Code/Codex (có sao lưu), rồi kiểm mọi thứ. Lần đầu nó sẽ nhắc bạn khai báo những tên riêng tư cần chặn (tên người, tên dự án…) để không có gì lọt vào repo, bằng `momentry config privacy-add "<tên>"`:
+**2. Bật cho repo của bạn.** `init` tạo `.momentry.json` và hộp chuyện, cài hook (hoặc extension) và lệnh `/bip` cho Claude Code, Codex, pi, omp và Antigravity, ở mọi profile tìm thấy (có sao lưu), rồi kiểm mọi thứ. Lần đầu nó sẽ nhắc bạn khai báo những tên riêng tư cần chặn (tên người, tên dự án…) để không có gì lọt vào repo, bằng `momentry config privacy-add "<tên>"`:
 
 ```sh
 cd <repo của bạn>
@@ -44,12 +44,12 @@ momentry scan --max-sessions 1
 momentry list --rank
 ```
 
-Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/bip <ghi chú>` trong Claude Code hoặc Codex.
+Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/bip <ghi chú>` trong agent của bạn.
 
 <details>
 <summary>Cài bằng agent của bạn</summary>
 
-Dán vào Claude Code hoặc Codex:
+Dán vào agent của bạn (Claude Code, Codex, pi, omp, Antigravity):
 
 > Cài momentry từ https://github.com/vantt/momentry (install.sh, hoặc install.ps1 trên Windows), rồi trong repo này làm theo `momentry init --help` và `momentry doctor --help` cho tới khi `momentry doctor --json` trả `"ok": true`. Nếu cần file tên riêng tư, hỏi tôi những tên cần chặn.
 
@@ -58,7 +58,7 @@ Sau đó nói: "gom phiên vừa rồi bằng momentry và cho tôi xem 3 chuy�
 
 ## Làm được gì
 
-- **Tự gom sau phiên.** Hook `SessionEnd`, `PreCompact`, `SessionStart` (Claude Code) và `pre_compact` (Codex) chạy nền, không làm chậm phiên, chỉ chạy trong repo đã `init`.
+- **Tự gom sau phiên.** Hook `SessionEnd`, `PreCompact`, `SessionStart` (Claude Code, Codex), extension `momentry.ts` (pi, omp) và hook `SessionStart` (Antigravity, gom khi mở phiên kế tiếp) chạy nền, không làm chậm phiên, chỉ chạy trong repo đã `init`.
 - **Đánh dấu tay bằng `/bip`.** Agent viết 2–4 câu về chuyện vừa xảy ra và ghi vào hộp.
 - **Riêng tư là chốt chặn.** Chuyện có tên trong danh sách chặn bị giữ ngoài repo (`momentry quarantine`). `momentry check --staged` dùng được làm git pre-commit hook.
 - **Ghi nhiều, lọc sau.** Không xoá gì; bạn đổi `status` của chuyện (`raw`, `picked`, `drafted`, `published`, `dropped`).
@@ -108,6 +108,6 @@ Mỗi check chưa đạt có dòng `sửa:` là lệnh chạy được. Hook ghi
 - [docs/development.md](docs/development.md): chạy từ mã nguồn, test, `--fake-llm`, hợp đồng module, phát hành.
 - [docs/prd.md](docs/prd.md): đặc tả; [docs/README.md](docs/README.md): mục lục tài liệu.
 
-Trạng thái: pipeline gom và chấm có test với dữ liệu giả và đã chạy thật một lần (28/28 điểm nóng, 8/8 chuyện người gắn nhãn, 0,95 USD); hook trên Codex chưa kiểm trên máy thật (PRD mục 9).
+Trạng thái: pipeline gom và chấm có test với dữ liệu giả và đã chạy thật một lần (28/28 điểm nóng, 8/8 chuyện người gắn nhãn, 0,95 USD); hook đã kiểm với agent thật: Claude Code và Codex trên Linux và Windows; pi, omp và Antigravity trên Linux (chi tiết ở [docs/installation.md](docs/installation.md#host-được-hỗ-trợ)).
 
 Giấy phép: [LICENSE](LICENSE).
