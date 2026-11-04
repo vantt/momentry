@@ -16,6 +16,45 @@ File gom câu chữ, nỗi đau, lý do mua, dùng khi viết landing page, pric
 - **"Get last week back."** (2026-11-04)
   Ngữ cảnh: heading CTA cuối landing v2. Ngắn, nối thẳng vào câu dẫn "quên mất mình đã làm gì".
 
+## Ứng viên headline (2026-11-04)
+
+Góc nhìn: ai cũng muốn xây kênh mạng xã hội, ai cũng ngại viết. Thứ thiếu là chuyện để kể, không phải câu chữ. momentry không viết bài, nên headline không được hứa "viết hộ".
+
+So sánh hai câu đã có:
+- "Your agent sessions are full of stories. momentry writes them down." (v1): nói rõ chuyện đến từ đâu và sản phẩm làm gì, giọng tích cực. Cần đổi "agent sessions" thành "AI sessions" cho bản chung.
+- "You're not short of ideas. You forgot what you did." (v2): đánh trúng nỗi đau nhưng trách người đọc ("anh quên"), không nói sản phẩm làm gì. Hợp làm câu phụ hoặc câu trong phần Pain hơn là headline.
+
+Ứng viên:
+1. **You did the work. momentry finds the story.** (em chọn: ngắn, khen người đọc, nói đúng việc máy làm)
+2. Your AI sessions are full of stories. momentry writes them down. (v1, bản chung)
+3. Your next post is already in your chat history.
+4. Every session with your AI hides a story worth posting.
+5. Post about the work you actually did.
+6. Build in public without keeping a diary.
+7. Nothing to post? You did plenty this week.
+8. The hard part of posting isn't writing. It's remembering what happened.
+9. Show your work. momentry keeps the receipts.
+10. Real stories for your feed, dug out of your real work.
+
+Subhead đi với số 1: "Every session with your AI agent hides a post: a number that moved, a fix nobody expected, a call you reversed. momentry reads your sessions and hands you a ranked list of stories worth telling. You just tell them."
+
+### Nhánh "kho báu bị giấu" (2026-11-04)
+
+Ý: trong lúc làm, mình đi ngang qua những chuyện đáng kể mà không nhận ra. Chúng nằm lại trong phiên chat. momentry giúp nhận ra chúng.
+
+11. **The best stories are buried in your work. momentry digs them up.** (em chọn: hình ảnh đào lên khớp với chữ "mined", nói rõ việc máy làm)
+12. You walked past your best story this week. momentry didn't.
+13. Your best post is hiding in work you already finished.
+14. Somewhere in today's session is a story you didn't notice.
+15. The story was there. You were too busy working to see it.
+16. Every session leaves something worth telling behind. momentry picks it up.
+17. Hidden in your work: the stories people actually want to read.
+18. You don't need new ideas. You need to see the ones you already had.
+19. The good stories happen mid-task. That's why nobody notices them.
+20. Treasure in plain sight: the moments you were too close to see.
+
+Dùng làm tiêu đề phần Pain (giải thích vì sao bị giấu): 15, 19 hoặc 20. Câu 20 nối với điểm "chuyện mình thấy bình thường" trong PRD (curse of knowledge).
+
 ## Pain point
 
 - **Thứ đáng kể thì thấy bình thường vì mình ở trong đó.** (2026-11-04)
