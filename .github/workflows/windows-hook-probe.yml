@@ -1,4 +1,4 @@
-# Manual probe for issue #1: on a real Windows runner, does Claude Code (and Codex) invoke momentry's hook?
+# Manual probe: on a real Windows runner, do Claude Code, Codex, pi and omp invoke momentry's hook?
 # No credentials are used: the CLI sessions fail to authenticate, but SessionStart-type hooks fire before that.
 name: windows-hook-probe
 
@@ -22,9 +22,11 @@ jobs:
       - name: install Claude Code and Codex CLIs
         shell: powershell
         run: |
-          npm install -g @anthropic-ai/claude-code @openai/codex
+          npm install -g @anthropic-ai/claude-code @openai/codex @earendil-works/pi-coding-agent @oh-my-pi/pi-coding-agent
           claude --version
           codex --version
+          pi --version
+          omp --version
       - name: install momentry from this commit and init a repo
         shell: powershell
         run: |
@@ -37,6 +39,7 @@ jobs:
           Set-Location probe-repo
           git init -q
           & $bin config privacy-add 'Probe Name'
+          foreach ($d in '.pi\agent', '.omp\agent') { New-Item -ItemType Directory -Path (Join-Path $env:USERPROFILE $d) -Force | Out-Null }
           & $bin init --yes
           Get-Content (Join-Path $env:USERPROFILE '.claude\settings.json')
       - name: open a Claude Code session (no credentials)
@@ -59,6 +62,20 @@ jobs:
           if (-not $p.WaitForExit(90000)) { $p.Kill() }
           Get-Content codex.out -ErrorAction SilentlyContinue | Select-String 'hook:|failed to parse'
           Start-Sleep -Seconds 5
+      - name: open pi and omp sessions (pi without credentials; omp with a local dead provider, no network)
+        shell: powershell
+        working-directory: probe-repo
+        run: |
+          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','pi -p "hello" > pi.out 2>&1' -PassThru -NoNewWindow
+          if (-not $p.WaitForExit(90000)) { $p.Kill() }
+          Get-Content pi.out -ErrorAction SilentlyContinue | Select-Object -Last 3
+          $models = @('providers:', '   local:', '      baseUrl: http://127.0.0.1:9/v1', '      apiKey: LOCAL_DEAD_KEY', '      api: openai-completions', '      models:', '         - id: dead', '           name: Dead local model', '           api: openai-completions', '           reasoning: false', '           input: [text]', '           contextWindow: 8000', '           maxTokens: 512')
+          [IO.File]::WriteAllLines((Join-Path $env:USERPROFILE '.omp\agent\models.yml'), $models)
+          $env:LOCAL_DEAD_KEY = 'x'
+          $p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','omp -p --model local/dead "hello" > omp.out 2>&1' -PassThru -NoNewWindow
+          if (-not $p.WaitForExit(120000)) { $p.Kill() }
+          Get-Content omp.out -ErrorAction SilentlyContinue | Select-Object -Last 3
+          Start-Sleep -Seconds 8
       - name: report hook.log
         shell: powershell
         run: |
@@ -68,4 +85,6 @@ jobs:
           $fail = $false
           if ($text -notmatch '"event":"hook\.spawned","runtime":"claude"') { Write-Host '::error::Claude Code did not invoke the momentry hook'; $fail = $true }
           if ($text -notmatch '"event":"hook\.spawned","runtime":"codex"') { Write-Host '::error::Codex did not invoke the momentry hook'; $fail = $true }
+          if ($text -notmatch '"event":"hook\.spawned","runtime":"pi"') { Write-Host '::error::pi did not invoke the momentry hook'; $fail = $true }
+          if ($text -notmatch '"event":"hook\.spawned","runtime":"omp"') { Write-Host '::error::omp did not invoke the momentry hook'; $fail = $true }
           if ($fail) { exit 1 }
