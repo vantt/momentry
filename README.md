@@ -112,6 +112,6 @@ Every failing check comes with a `sửa:` (fix) line containing a runnable comma
 - [docs/development.md](docs/development.md): running from source, tests, `--fake-llm`, module contracts, releasing.
 - [docs/prd.md](docs/prd.md): specification; [docs/README.md](docs/README.md): documentation index.
 
-Status: the harvest-and-score pipeline is tested with fake data and has been run for real once (28/28 hotspots, 8/8 human-labelled stories, 0.95 USD). Hooks have been verified with the real agents: Claude Code and Codex on Linux and Windows, pi, omp and Antigravity on Linux (details in [docs/installation.md](docs/installation.md#host-được-hỗ-trợ)).
+Status: the harvest-and-score pipeline is tested with fake data and has been run for real once (28/28 hotspots, 8/8 human-labelled stories, 0.95 USD). Hooks have been verified with the real agents: Claude Code, Codex, pi and omp on Linux and Windows, Antigravity on Linux (details in [docs/installation.md](docs/installation.md#host-được-hỗ-trợ)).
 
 License: [LICENSE](LICENSE).

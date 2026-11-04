@@ -108,6 +108,6 @@ Mỗi check chưa đạt có dòng `sửa:` là lệnh chạy được. Hook ghi
 - [docs/development.md](docs/development.md): chạy từ mã nguồn, test, `--fake-llm`, hợp đồng module, phát hành.
 - [docs/prd.md](docs/prd.md): đặc tả; [docs/README.md](docs/README.md): mục lục tài liệu.
 
-Trạng thái: pipeline gom và chấm có test với dữ liệu giả và đã chạy thật một lần (28/28 điểm nóng, 8/8 chuyện người gắn nhãn, 0,95 USD); hook đã kiểm với agent thật: Claude Code và Codex trên Linux và Windows; pi, omp và Antigravity trên Linux (chi tiết ở [docs/installation.md](docs/installation.md#host-được-hỗ-trợ)).
+Trạng thái: pipeline gom và chấm có test với dữ liệu giả và đã chạy thật một lần (28/28 điểm nóng, 8/8 chuyện người gắn nhãn, 0,95 USD); hook đã kiểm với agent thật: Claude Code, Codex, pi và omp trên Linux và Windows; Antigravity trên Linux (chi tiết ở [docs/installation.md](docs/installation.md#host-được-hỗ-trợ)).
 
 Giấy phép: [LICENSE](LICENSE).

@@ -131,7 +131,7 @@ Mỗi host chạy lệnh hook bằng một shell khác nhau trên Windows, nên 
 
 Lệnh `/bip` do agent tự chạy trong shell của nó (PowerShell là mặc định), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
 
-Đã kiểm trên Windows thật (runner CI `windows-2025`, workflow `windows-hook-probe`, 2026-11-03): Claude Code gọi hook lúc mở và kết thúc phiên, `harvest` đọc được transcript; Codex v0.166 gọi hook `SessionStart`. Chưa kiểm trên Windows: pi, omp và Antigravity (đã kiểm trên Linux). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
+Đã kiểm trên Windows thật (runner CI `windows-2025`, workflow `windows-hook-probe`, 2026-11-04): Claude Code gọi hook lúc mở và kết thúc phiên, `harvest` đọc được transcript; Codex v0.166, pi 1.5.0 và omp 18.16 gọi hook lúc mở phiên. Antigravity chưa chạy thật trên Windows vì cần một tài khoản đã đăng nhập (đã kiểm trên Linux). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
 
 ## Gỡ
 
