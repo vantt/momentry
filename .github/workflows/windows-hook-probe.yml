@@ -22,7 +22,7 @@ jobs:
       - name: install Claude Code and Codex CLIs
         shell: powershell
         run: |
-          npm install -g @anthropic-ai/claude-code @openai/codex @earendil-works/pi-coding-agent @oh-my-pi/pi-coding-agent
+          npm install -g bun @anthropic-ai/claude-code @openai/codex @earendil-works/pi-coding-agent @oh-my-pi/pi-coding-agent   # omp runs on Bun
           claude --version
           codex --version
           pi --version
