@@ -16,12 +16,31 @@ jobs:
 
   draft:
     needs: ci
-    runs-on: ubuntu-24.04
+    runs-on: ${{ contains(vars.MOMENTRY_SELF_HOSTED, 'linux') && fromJSON('["self-hosted","linux"]') || 'ubuntu-24.04' }}
     permissions:
       contents: write
     outputs:
       tag: ${{ steps.v.outputs.tag }}
     steps:
+      - name: isolate HOME on a self-hosted runner (Unix)
+        if: runner.environment == 'self-hosted' && runner.os != 'Windows'
+        shell: bash
+        run: |
+          h="$RUNNER_TEMP/home"; rm -rf "$h"; mkdir -p "$h/.npm-global/bin"
+          printf '%s\n' "HOME=$h" "XDG_CONFIG_HOME=$h/.config" "XDG_CACHE_HOME=$h/.cache" "XDG_DATA_HOME=$h/.local/share" \
+            "npm_config_prefix=$h/.npm-global" "MOMENTRY_NO_MODIFY_PATH=1" >> "$GITHUB_ENV"
+          echo "$h/.npm-global/bin" >> "$GITHUB_PATH"
+      - name: isolate USERPROFILE on a self-hosted runner (Windows)
+        if: runner.environment == 'self-hosted' && runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $h = Join-Path $env:RUNNER_TEMP 'home'
+          if (Test-Path $h) { Remove-Item -Recurse -Force $h }
+          $npm = Join-Path $h 'npm-global'
+          New-Item -ItemType Directory -Path $npm, (Join-Path $h 'AppData\Local'), (Join-Path $h 'AppData\Roaming') -Force | Out-Null
+          @("HOME=$h", "USERPROFILE=$h", "LOCALAPPDATA=$h\AppData\Local", "APPDATA=$h\AppData\Roaming", "npm_config_prefix=$npm", 'MOMENTRY_NO_MODIFY_PATH=1') |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $npm | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -52,14 +71,36 @@ jobs:
   smoke:
     needs: draft
     name: smoke (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ contains(vars.MOMENTRY_SELF_HOSTED, matrix.label) && fromJSON(format('["self-hosted","{0}"]', matrix.label)) || matrix.os }}
     permissions:
       contents: write   # draft releases are only visible to tokens with push access; this job only downloads
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-15, windows-2025]
+        include:
+          - { os: ubuntu-24.04, label: linux }
+          - { os: macos-15, label: macos }
+          - { os: windows-2025, label: windows }
     steps:
+      - name: isolate HOME on a self-hosted runner (Unix)
+        if: runner.environment == 'self-hosted' && runner.os != 'Windows'
+        shell: bash
+        run: |
+          h="$RUNNER_TEMP/home"; rm -rf "$h"; mkdir -p "$h/.npm-global/bin"
+          printf '%s\n' "HOME=$h" "XDG_CONFIG_HOME=$h/.config" "XDG_CACHE_HOME=$h/.cache" "XDG_DATA_HOME=$h/.local/share" \
+            "npm_config_prefix=$h/.npm-global" "MOMENTRY_NO_MODIFY_PATH=1" >> "$GITHUB_ENV"
+          echo "$h/.npm-global/bin" >> "$GITHUB_PATH"
+      - name: isolate USERPROFILE on a self-hosted runner (Windows)
+        if: runner.environment == 'self-hosted' && runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $h = Join-Path $env:RUNNER_TEMP 'home'
+          if (Test-Path $h) { Remove-Item -Recurse -Force $h }
+          $npm = Join-Path $h 'npm-global'
+          New-Item -ItemType Directory -Path $npm, (Join-Path $h 'AppData\Local'), (Join-Path $h 'AppData\Roaming') -Force | Out-Null
+          @("HOME=$h", "USERPROFILE=$h", "LOCALAPPDATA=$h\AppData\Local", "APPDATA=$h\AppData\Roaming", "npm_config_prefix=$npm", 'MOMENTRY_NO_MODIFY_PATH=1') |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $npm | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
@@ -83,7 +124,7 @@ jobs:
         run: |
           $env:MOMENTRY_RELEASE_BASE = (Resolve-Path rel).Path
           $env:MOMENTRY_NO_MODIFY_PATH = '1'
-          $env:MOMENTRY_ALLOW_ROOT = '1'   # Windows runners run as Administrator
+          if ($env:RUNNER_ENVIRONMENT -ne 'self-hosted') { $env:MOMENTRY_ALLOW_ROOT = '1' }   # GitHub's Windows runners run as Administrator
           powershell -NoProfile -ExecutionPolicy Bypass -File rel/install.ps1
           $bin = Join-Path $env:LOCALAPPDATA 'momentry\bin\momentry.cmd'
           if ((& $bin --version) -ne "momentry $($env:GITHUB_REF_NAME.Substring(1))") { exit 1 }
@@ -92,7 +133,7 @@ jobs:
 
   publish:
     needs: [draft, smoke]
-    runs-on: ubuntu-24.04
+    runs-on: ${{ contains(vars.MOMENTRY_SELF_HOSTED, 'linux') && fromJSON('["self-hosted","linux"]') || 'ubuntu-24.04' }}
     permissions:
       contents: write
     steps:

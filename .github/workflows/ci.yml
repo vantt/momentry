@@ -2,6 +2,8 @@
 # Also called by release.yml before anything is published.
 # Push and PR run the lite matrix (Linux on every Node, Windows on one); a tag or a manual run adds macOS
 # and the rest of Windows. macOS bills 10x and Windows 2x in a private repo.
+# Repo variable MOMENTRY_SELF_HOSTED lists the OSes that run on our own runners (e.g. "linux" or "linux,windows,macos");
+# see docs/development.md. Unset, every job runs on GitHub-hosted runners.
 name: ci
 
 on:
@@ -22,14 +24,33 @@ permissions: {}
 jobs:
   test:
     name: test (${{ matrix.os }}, node ${{ matrix.node }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ contains(vars.MOMENTRY_SELF_HOSTED, matrix.label) && fromJSON(format('["self-hosted","{0}"]', matrix.label)) || matrix.os }}
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON((github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')) && '[{"os":"ubuntu-24.04","node":"20"},{"os":"ubuntu-24.04","node":"22"},{"os":"ubuntu-24.04","node":"24"},{"os":"windows-2025","node":"20"},{"os":"windows-2025","node":"22"},{"os":"windows-2025","node":"24"},{"os":"macos-15","node":"20"},{"os":"macos-15","node":"22"},{"os":"macos-15","node":"24"}]' || '[{"os":"ubuntu-24.04","node":"20"},{"os":"ubuntu-24.04","node":"22"},{"os":"ubuntu-24.04","node":"24"},{"os":"windows-2025","node":"22"}]') }}
+        include: ${{ fromJSON((github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')) && '[{"os":"ubuntu-24.04","label":"linux","node":"20"},{"os":"ubuntu-24.04","label":"linux","node":"22"},{"os":"ubuntu-24.04","label":"linux","node":"24"},{"os":"windows-2025","label":"windows","node":"20"},{"os":"windows-2025","label":"windows","node":"22"},{"os":"windows-2025","label":"windows","node":"24"},{"os":"macos-15","label":"macos","node":"20"},{"os":"macos-15","label":"macos","node":"22"},{"os":"macos-15","label":"macos","node":"24"}]' || '[{"os":"ubuntu-24.04","label":"linux","node":"20"},{"os":"ubuntu-24.04","label":"linux","node":"22"},{"os":"ubuntu-24.04","label":"linux","node":"24"},{"os":"windows-2025","label":"windows","node":"22"}]') }}
     steps:
+      - name: isolate HOME on a self-hosted runner (Unix)
+        if: runner.environment == 'self-hosted' && runner.os != 'Windows'
+        shell: bash
+        run: |
+          h="$RUNNER_TEMP/home"; rm -rf "$h"; mkdir -p "$h/.npm-global/bin"
+          printf '%s\n' "HOME=$h" "XDG_CONFIG_HOME=$h/.config" "XDG_CACHE_HOME=$h/.cache" "XDG_DATA_HOME=$h/.local/share" \
+            "npm_config_prefix=$h/.npm-global" "MOMENTRY_NO_MODIFY_PATH=1" >> "$GITHUB_ENV"
+          echo "$h/.npm-global/bin" >> "$GITHUB_PATH"
+      - name: isolate USERPROFILE on a self-hosted runner (Windows)
+        if: runner.environment == 'self-hosted' && runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $h = Join-Path $env:RUNNER_TEMP 'home'
+          if (Test-Path $h) { Remove-Item -Recurse -Force $h }
+          $npm = Join-Path $h 'npm-global'
+          New-Item -ItemType Directory -Path $npm, (Join-Path $h 'AppData\Local'), (Join-Path $h 'AppData\Roaming') -Force | Out-Null
+          @("HOME=$h", "USERPROFILE=$h", "LOCALAPPDATA=$h\AppData\Local", "APPDATA=$h\AppData\Roaming", "npm_config_prefix=$npm", 'MOMENTRY_NO_MODIFY_PATH=1') |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $npm | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

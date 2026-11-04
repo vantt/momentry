@@ -23,6 +23,30 @@ sh scripts/test-agent-native.sh    # agent chỉ dùng --json đi tới doctor o
 
 Trên Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-installer.ps1`. CI chạy cả ba trên Linux, macOS, Windows với Node 20, 22, 24 ([.github/workflows/ci.yml](../.github/workflows/ci.yml)).
 
+### Runner tự host
+
+Biến repo `MOMENTRY_SELF_HOSTED` liệt kê các OS chạy trên máy riêng, ví dụ `linux` hoặc `linux,windows,macos`. OS có trong biến chạy trên runner `[self-hosted, <os>]`; OS không có, hoặc khi chưa đặt biến, chạy trên runner của GitHub. Trên runner tự host, mỗi job dùng HOME/USERPROFILE, LOCALAPPDATA, APPDATA và npm prefix tạm dưới `$RUNNER_TEMP`, và không sửa PATH người dùng, nên job không đụng cấu hình thật của máy.
+
+```sh
+gh variable set MOMENTRY_SELF_HOSTED --body linux      # bật cho Linux
+gh variable delete MOMENTRY_SELF_HOSTED                # trở về runner GitHub
+gh api repos/vantt/momentry/actions/runners --jq '.runners[] | [.name, .status, (.labels|map(.name)|join(","))] | @tsv'
+gh api -X POST repos/vantt/momentry/actions/runners/registration-token --jq .token   # token đăng ký, sống 1 giờ
+```
+
+Runner Linux chạy trong Docker; volume giữ đăng ký nên khởi động lại không cần token mới:
+
+```sh
+docker volume create momentry-runner-linux
+TOKEN=$(gh api -X POST repos/vantt/momentry/actions/runners/registration-token --jq .token)
+docker run -d --name momentry-runner-linux --restart unless-stopped \
+  -v momentry-runner-linux:/home/runner/state -e TOKEN="$TOKEN" -e RUNNER_NAME="linux-$(hostname)-docker" \
+  --entrypoint bash ghcr.io/actions/actions-runner:2.338.2 -c 'cd ~ && for f in .runner .credentials .credentials_rsaparams; do [ -f state/$f ] && cp state/$f .; done; if [ ! -f .runner ]; then ./config.sh --url https://github.com/vantt/momentry --token "$TOKEN" --name "$RUNNER_NAME" --labels linux,docker --unattended --replace && cp .runner .credentials .credentials_rsaparams state/; fi; unset TOKEN; exec ./run.sh'
+# gỡ: docker rm -f momentry-runner-linux && docker volume rm momentry-runner-linux, rồi xoá runner offline trong Settings → Actions → Runners
+```
+
+Windows và macOS: Settings → Actions → Runners → New self-hosted runner, thêm nhãn `windows` hoặc `macos`. Runner chạy dưới tài khoản thường, không phải Administrator/root. Chỉ dùng runner tự host khi repo còn private, hoặc khi đã chặn workflow chạy từ PR của fork.
+
 Bộ `--fake-llm` của test đầu cuối nằm ở `test/fixtures/pipeline/`, sinh lại bằng `node test/fixtures/pipeline/make-fixtures.mjs`. Không test nào gọi `claude` thật; `test/fixtures/fake-claude/claude` đứng thay khi cần. `contract.test.mjs` giữ tên và số tham số của mọi export công khai; `imports.test.mjs` cấm import ngoài `node:` và đường dẫn tương đối; `commands.test.mjs` giữ bảng lệnh, handler và tài liệu khớp nhau.
 
 Sửa `lib/commands.mjs` thì sinh lại tham chiếu lệnh:
