@@ -121,7 +121,7 @@ Windows: download as above into `$HOME\momentry-rel`, then `$env:MOMENTRY_RELEAS
 CI (push and PR run Linux plus one Windows job; the full matrix with macOS runs on tags or manual runs):
 
 ```sh
-gh workflow run ci.yml --ref main                    # full matrix, 3 OS x 3 Node
+gh workflow run ci.yml --ref main                    # Linux x Node 20/22/24 (Windows/macOS off for now)
 gh workflow run windows-hook-probe.yml --ref main    # check hooks on real Windows; only after changing the Windows hook code
 gh run list --limit 5                                # latest runs
 gh run watch <run-id> --exit-status                  # follow until done

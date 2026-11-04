@@ -21,7 +21,7 @@ sh scripts/test-installer.sh       # vòng đời installer: cài, init, doctor,
 sh scripts/test-agent-native.sh    # agent chỉ dùng --json đi tới doctor ok
 ```
 
-Trên Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-installer.ps1`. CI chạy cả ba trên Linux, macOS, Windows với Node 20, 22, 24 ([.github/workflows/ci.yml](../.github/workflows/ci.yml)).
+Trên Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-installer.ps1`. CI chạy cả ba với Node 20, 22, 24 ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). Hiện CI và bước cài thử bản nháp của release chỉ chạy Linux, vì phút runner GitHub đã hết và chưa có runner Windows/macOS tự host; khi có, thêm lại dòng `windows`/`macos` vào ma trận.
 
 ### Runner tự host
 

@@ -117,7 +117,7 @@ Windows: tải như trên vào `$HOME\momentry-rel`, rồi `$env:MOMENTRY_RELEAS
 CI (push và PR chỉ chạy Linux + một job Windows; ma trận đầy đủ có macOS chạy khi có tag hoặc chạy tay):
 
 ```sh
-gh workflow run ci.yml --ref main                    # ma trận đầy đủ 3 OS × 3 Node
+gh workflow run ci.yml --ref main                    # Linux × Node 20/22/24 (tạm tắt Windows/macOS)
 gh workflow run windows-hook-probe.yml --ref main    # kiểm hook trên Windows thật; chỉ khi sửa phần hook Windows
 gh run list --limit 5                                # các lần chạy gần nhất
 gh run watch <run-id> --exit-status                  # theo dõi tới khi xong
