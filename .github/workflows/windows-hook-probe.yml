@@ -77,6 +77,31 @@ jobs:
           if (-not $p.WaitForExit(120000)) { $p.Kill() }
           Get-Content omp.out -ErrorAction SilentlyContinue | Select-Object -Last 3
           Start-Sleep -Seconds 8
+      - name: dry-run scripts/probe-agy-windows.ps1 with a fake agy that fires the hook like the real one
+        shell: powershell
+        run: |
+          $errs = $null; [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/probe-agy-windows.ps1), [ref]$null, [ref]$errs)
+          if ($errs.Count) { $errs | ForEach-Object { Write-Host "::error::$_" }; exit 1 }
+          $fake = Join-Path $env:RUNNER_TEMP 'fake-agy'
+          New-Item -ItemType Directory -Path $fake -Force | Out-Null
+          # fake agy: reads momentry's group from hooks.json and runs it with an Antigravity-shaped payload
+          Set-Content -LiteralPath (Join-Path $fake 'agy-fake.mjs') -Encoding ASCII -Value @'
+          const fs = require("fs"), path = require("path"), cp = require("child_process");
+          if (process.argv.includes("--version")) { console.log("agy fake 0.0.0"); process.exit(0); }
+          const hj = path.join(process.env.USERPROFILE, ".gemini", "config", "hooks.json");
+          const cmd = JSON.parse(fs.readFileSync(hj, "utf8")).momentry.SessionStart[0].command;
+          const payload = JSON.stringify({ conversationId: "0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f7777", transcriptPath: path.join(process.cwd(), "t.jsonl"), workspacePaths: [process.cwd()] });
+          cp.execSync(`cmd /c ${cmd}`, { input: payload, stdio: ["pipe", "ignore", "inherit"] });
+          console.log("ok");
+          '@.Replace("          ", "")
+          Rename-Item (Join-Path $fake 'agy-fake.mjs') 'agy-fake.cjs'
+          Set-Content -LiteralPath (Join-Path $fake 'agy.cmd') -Encoding ASCII -Value "@node `"%~dp0agy-fake.cjs`" %*"
+          New-Item -ItemType Directory -Path (Join-Path $env:USERPROFILE '.gemini\config') -Force | Out-Null
+          $env:PATH = "$fake;$env:PATH"
+          $out = (& powershell -NoProfile -ExecutionPolicy Bypass -File scripts/probe-agy-windows.ps1) -join "`n"
+          Write-Host $out
+          if ($out -notmatch 'hook fired: True') { Write-Host '::error::probe-agy-windows.ps1 did not see the hook'; exit 1 }
+          if ((Get-Content -Raw (Join-Path $env:USERPROFILE '.gemini\config\hooks.json')) -match '"momentry"') { Write-Host '::error::hook not removed after the probe'; exit 1 }
       - name: report hook.log
         shell: powershell
         run: |
