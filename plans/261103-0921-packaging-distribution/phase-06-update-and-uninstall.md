@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Update và uninstall"
-status: todo
+status: done
 priority: P1
 effort: "1d"
 dependencies: [3, 4, 5]

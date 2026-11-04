@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Hook runtime và tìm profile"
-status: todo
+status: done
 priority: P1
 effort: "0.5d"
 dependencies: [1]

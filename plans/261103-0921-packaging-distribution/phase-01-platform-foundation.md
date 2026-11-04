@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Nền tảng đa nền, phiên bản, mã thoát"
-status: todo
+status: done
 priority: P1
 effort: "1.5d"
 dependencies: []

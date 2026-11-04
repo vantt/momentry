@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Built v1 part 2</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,500..900&amp;family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&amp;family=Atkinson+Hyperlegible+Mono:wght@400;600&amp;display=swap">
+<style>
+body{margin:0}
+:root {
+  /* Layout concept: the page is one markdown story file. Headings hang their literal # marks in a left gutter, prose runs left-aligned in a 1120px column, and every command lives in a dark terminal with one highlighter band marking the moment. */
+  --bg: #EDF0EA;          /* listing-paper grey-green */
+  --surface: #F7F8F4;
+  --fg: #172030;          /* blue-black ink */
+  --muted: #536072;
+  --rule: #C8CFC4;
+  --hash: #A3AC9F;        /* hanging markdown marks */
+  --link: #2343B5;
+  --mark: #F2D24A;        /* highlighter */
+  --mark-ink: #172030;
+  --code-bg: #E0E5DC;
+  --btn-bg: #172030;
+  --btn-fg: #F7F8F4;
+  --focus: #2343B5;
+  --term-bg: #141A24;
+  --term-fg: #D8DFE9;
+  --term-dim: #7D899B;
+  --term-rule: #283143;
+  --term-key: #93B3FF;
+  --term-hot: rgba(242, 210, 74, .17);
+  --term-accent: #F2D24A;
+  --term-edge: transparent;
+  --font-display: "Anybody", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --maxw: 1120px;
+  color-scheme: light;
+}
+
+
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  overflow-x: clip;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--bg);
+}
+a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
+p { margin: 0 0 1em; }
+ul, ol { margin: 0; padding: 0; }
+code, pre, kbd { font-family: var(--font-mono); }
+:not(pre) > code {
+  font-size: .88em; background: var(--code-bg); padding: .08em .35em; border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.wrap {
+  max-width: calc(var(--maxw) + 2 * max(16px, env(safe-area-inset-left, 0px)));
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 760px) {
+  .wrap { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); }
+}
+.band > .wrap { padding-block: 88px; }
+.band + .band > .wrap { border-top: 1px solid var(--rule); }
+@media (max-width: 759px) { .band > .wrap { padding-block: 60px; } }
+
+/* ---------- headings: the one bold idea, literal markdown marks ---------- */
+h1, h2, h3 { font-family: var(--font-display); font-stretch: 74%; margin: 0; letter-spacing: -.01em; }
+.h2 {
+  font-size: clamp(1.9rem, 1.2rem + 2.4vw, 3rem); font-weight: 780; line-height: 1.04;
+  max-width: 22ch; margin-bottom: 28px; position: relative;
+}
+.hash {
+  font-family: var(--font-mono); font-weight: 400; font-stretch: 100%; color: var(--hash);
+  letter-spacing: 0; margin-right: .3em; font-size: .62em; vertical-align: .22em; user-select: none;
+}
+@media (min-width: 1250px) {
+  .h2 .hash, h1 .hash { position: absolute; right: 100%; top: 0; margin-right: .45em; }
+}
+h3 { font-size: 1.45rem; font-weight: 760; line-height: 1.15; margin-bottom: 8px; }
+.lede { font-size: 1.12rem; max-width: 62ch; color: var(--fg); }
+.prose { max-width: 66ch; }
+.small { font-size: .9rem; color: var(--muted); }
+.caption { font-size: .88rem; color: var(--muted); margin-top: 12px; max-width: 72ch; }
+
+/* ---------- nav ---------- */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--bg); border-bottom: 1px solid var(--rule);
+}
+.nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+.brand {
+  font-family: var(--font-display); font-stretch: 80%; font-weight: 820; font-size: 1.5rem;
+  color: var(--fg); text-decoration: none; letter-spacing: -.01em; margin-right: auto;
+}
+.brand span { color: var(--hash); font-family: var(--font-mono); font-weight: 400; font-size: .8em; margin-right: .2em; }
+.nav-links { display: flex; gap: 22px; list-style: none; align-items: center; }
+.nav-links a { color: var(--fg); text-decoration: none; font-size: .95rem; }
+.nav-links a:hover { text-decoration: underline; }
+.gh { display: inline-flex; align-items: center; gap: 6px; }
+.gh svg { width: 17px; height: 17px; fill: currentColor; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 600 .95rem/1 var(--font-body); padding: 12px 18px; border-radius: 6px;
+  text-decoration: none; cursor: pointer; border: 1px solid var(--btn-bg);
+  background: var(--btn-bg); color: var(--btn-fg); white-space: nowrap;
+}
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--muted); }
+.btn.ghost:hover { border-color: var(--fg); }
+.btn.sm { padding: 9px 14px; font-size: .9rem; }
+.menu-btn { display: none; background: none; border: 1px solid var(--rule); color: var(--fg); border-radius: 6px; width: 40px; height: 38px; padding: 0; cursor: pointer; }
+.menu-btn svg { width: 20px; height: 20px; stroke: currentColor; }
+@media (max-width: 899px) {
+  .nav .wrap { gap: 10px; height: 56px; }
+  .menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+  .nav-links {
+    display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0;
+    background: var(--surface); border-bottom: 1px solid var(--rule);
+    padding: 8px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { display: block; padding: 12px 0; font-size: 1.05rem; border-bottom: 1px solid var(--rule); }
+  .nav-links li:last-child a { border-bottom: 0; }
+}
+
+/* ---------- hero ---------- */
+.hero .wrap { padding-block: 64px 88px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); grid-template-areas: "head head" "left demo"; column-gap: 56px; row-gap: 40px; align-items: start; }
+.hero-head { grid-area: head; }
+.hero-left { grid-area: left; }
+.hero-demo { grid-area: demo; margin: 0; }
+.hero-demo .term pre { font-size: .8rem; }
+.hero .wrap > * { min-width: 0; }
+.eyebrow { font-weight: 600; color: var(--muted); margin-bottom: 18px; font-size: 1rem; }
+h1 {
+  font-size: clamp(2.5rem, 1rem + 5vw, 5.2rem); font-weight: 840; line-height: .96;
+  letter-spacing: -.015em; margin-bottom: 0; position: relative; max-width: 19ch;
+}
+h1 .hash { font-size: .5em; vertical-align: .55em; }
+.hero .lede { margin-bottom: 30px; }
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+.req { margin-top: 18px; font-size: .88rem; color: var(--muted); max-width: 54ch; }
+@media (max-width: 1099px) {
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "left" "demo"; row-gap: 26px; padding-block: 44px 60px; }
+  .hero-demo { margin-top: 14px; }
+  .cta-row .btn { width: 100%; }
+}
+
+/* ---------- install block ---------- */
+.install { max-width: 560px; }
+.tabs { display: inline-flex; border: 1px solid var(--muted); border-radius: 7px; padding: 3px; gap: 3px; margin-bottom: 14px; background: var(--surface); }
+.tabs button:hover { color: var(--fg); }
+.tabs button {
+  font: 600 .88rem/1 var(--font-body); color: var(--muted); background: none; border: 0;
+  padding: 9px 13px; border-radius: 5px; cursor: pointer;
+}
+.tabs button[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-fg); }
+@media (max-width: 899px) { .tabs { display: flex; } .tabs button:hover { color: var(--fg); }
+.tabs button { flex: 1; } }
+.lbl { font-size: .9rem; font-weight: 600; margin: 0 0 8px; }
+.code {
+  display: flex; align-items: stretch; background: var(--term-bg); color: var(--term-fg);
+  border-radius: 8px; overflow: hidden; min-width: 0;
+}
+.code pre {
+  margin: 0; padding: 15px 16px; flex: 1 1 auto; min-width: 0; overflow-x: auto;
+  font-size: .88rem; line-height: 1.65; white-space: pre; scrollbar-width: thin; scrollbar-color: var(--term-rule) transparent;
+}
+.code pre .p { color: var(--term-dim); user-select: none; }
+.copy {
+  flex: 0 0 auto; align-self: stretch; min-width: 8.5ch; padding: 0 14px;
+  font: 600 .85rem/1 var(--font-body); color: var(--term-fg); background: var(--term-bg);
+  border: 0; border-left: 1px solid var(--term-rule); cursor: pointer;
+}
+.copy:hover { color: var(--term-accent); }
+.copy[data-state="ok"] { color: var(--term-accent); }
+.copy[data-state="fail"] { color: var(--term-bg); background: var(--term-accent); }
+.copy:focus-visible { outline-offset: -3px; outline-color: var(--term-accent); }
+.panel .small { margin: 10px 0 0; }
+
+/* ---------- terminal ---------- */
+.term { background: var(--term-bg); color: var(--term-fg); border-radius: 10px; overflow: hidden; min-width: 0; }
+.term-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--term-rule); font: .8rem/1.2 var(--font-mono); color: var(--term-dim);
+}
+.term pre {
+  margin: 0; padding: 16px 18px 18px; overflow-x: auto; font-size: .8rem; line-height: 1.75;
+  white-space: pre; scrollbar-width: thin; scrollbar-color: var(--term-rule) transparent;
+}
+.term .prompt { color: var(--term-key); }
+.term .head { color: var(--term-dim); }
+.term .hot { background: var(--term-hot); border-left: 3px solid var(--term-accent); margin-left: -3px; }
+.term .n3 { color: var(--term-accent); font-weight: 600; }
+.term .dim { color: var(--term-dim); }
+.row { display: inline; }
+.r1 { --i: 1; } .r2 { --i: 2; } .r3 { --i: 3; } .r4 { --i: 4; }
+@media (prefers-reduced-motion: no-preference) {
+  .typed .row { animation: rowin .01s linear both; animation-delay: calc(var(--i) * 110ms + 120ms); }
+}
+@keyframes rowin { from { visibility: hidden; } to { visibility: visible; } }
+.hero .term { margin-top: 4px; }
+.hero .caption { font-size: .84rem; }
+
+/* ---------- pain ---------- */
+.pain-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 44px; border-top: 1px solid var(--fg); }
+.pain-cards li { list-style: none; padding: 18px 24px 4px 0; }
+.pain-cards li + li { padding-left: 24px; border-left: 1px solid var(--rule); }
+.pain-cards b { display: block; font-family: var(--font-display); font-stretch: 78%; font-size: 1.25rem; font-weight: 760; line-height: 1.15; margin-bottom: 4px; }
+.pain-cards span { color: var(--muted); }
+@media (max-width: 759px) {
+  .pain-cards { grid-template-columns: minmax(0, 1fr); }
+  .pain-cards li, .pain-cards li + li { padding: 16px 0; border-left: 0; border-bottom: 1px solid var(--rule); }
+}
+
+/* ---------- steps ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; list-style: none; counter-reset: step; margin-bottom: 20px; }
+.steps > li { min-width: 0; display: flex; flex-direction: column; }
+.step-n {
+  font-family: var(--font-display); font-stretch: 70%; font-weight: 860; font-size: 3.4rem; line-height: .9;
+  color: var(--fg); margin-bottom: 14px; display: block;
+}
+.steps p { color: var(--fg); }
+.steps .code { margin-top: 12px; }
+.steps .code pre { font-size: .82rem; }
+.full-demo { margin-top: 56px; }
+.full-demo pre { font-size: .8rem; }
+@media (max-width: 899px) {
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .steps > li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 8px; }
+  .steps > li > * { grid-column: 2; }
+  .steps .step-n { grid-column: 1; grid-row: 1 / span 3; font-size: 2.6rem; }
+  .full-demo { display: none; }
+}
+
+/* ---------- example ---------- */
+.ex-grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 44px; align-items: start; margin-top: 36px; }
+.ex-grid > * { min-width: 0; }
+.file .term-bar { justify-content: flex-start; padding: 0; }
+.file .tab { padding: 10px 16px; color: var(--term-fg); background: var(--term-rule); border-right: 1px solid var(--term-rule); }
+.file pre { font-size: .8rem; line-height: 1.7; }
+.md-fm { color: var(--term-dim); }
+.md-k { color: var(--term-key); }
+.md-h { color: var(--term-fg); font-weight: 600; }
+.md-b { color: var(--term-fg); font-weight: 600; }
+.side h3 { font-size: 1.25rem; }
+.side .code pre { font-size: .8rem; }
+.side .c { color: var(--term-dim); }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; list-style: none; margin-top: 10px; }
+.chips li { font: .82rem/1 var(--font-mono); padding: 6px 9px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
+.chips li.sep { border: 0; background: none; padding: 0; color: var(--muted); }
+.chips li.drop { border-style: dashed; color: var(--muted); }
+@media (max-width: 899px) { .ex-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; } }
+
+/* ---------- ranking ---------- */
+.rank { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; list-style: none; margin: 40px 0 28px; }
+.rank li { min-width: 0; border-top: 1px solid var(--fg); padding-top: 18px; }
+.rank .sample {
+  display: block; font: .82rem/1.5 var(--font-mono); color: var(--muted); margin-top: 14px;
+  padding-top: 10px; border-top: 1px dashed var(--rule);
+}
+.rank .sample mark { background: var(--mark); color: var(--mark-ink); padding: 0 .25em; }
+@media (max-width: 899px) { .rank { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+
+/* ---------- privacy ---------- */
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
+.two > * { min-width: 0; }
+@media (max-width: 899px) { .two { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+.flow { margin-top: 28px; display: grid; grid-template-columns: auto 28px auto 28px auto; grid-template-rows: auto 34px auto; align-items: center; justify-content: start; }
+.node { border: 1px solid var(--fg); border-radius: 5px; padding: 10px 12px; font-size: .92rem; background: var(--surface); line-height: 1.3; min-width: 0; }
+.node small { display: block; color: var(--muted); font-size: .8rem; font-family: var(--font-mono); overflow-wrap: anywhere; margin-top: 2px; }
+.node.q { border-style: dashed; grid-column: 3 / span 3; grid-row: 3; justify-self: start; }
+.arr { width: 28px; height: 14px; color: var(--muted); }
+.arr-down { grid-column: 3; grid-row: 2; justify-self: center; width: 14px; height: 34px; color: var(--muted); }
+.honesty { margin-top: 48px; border: 1px solid var(--fg); border-radius: 6px; padding: 20px 24px; max-width: 900px; background: var(--surface); }
+.honesty p { margin: 0; }
+@media (max-width: 559px) {
+  .flow { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; justify-items: start; }
+  .flow > * { grid-column: 1 !important; grid-row: auto !important; }
+  .flow .arr { transform: rotate(90deg); margin: 6px 0 6px 10px; }
+  .arr-down { display: none; }
+  .node.q::before { content: "or, if a name matches: "; color: var(--muted); font-size: .8rem; display: block; }
+}
+
+/* ---------- bip ---------- */
+.bip-term pre { font-size: .9rem; padding: 22px 20px; }
+.bip-term .prompt { color: var(--term-accent); }
+
+/* ---------- cost ---------- */
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+.cols > div { min-width: 0; }
+.cols h3 { border-bottom: 1px solid var(--fg); padding-bottom: 10px; margin-bottom: 14px; }
+.list { list-style: none; }
+.list li { padding: 9px 0 9px 22px; position: relative; border-bottom: 1px solid var(--rule); }
+.list li::before { content: "-"; position: absolute; left: 2px; color: var(--muted); font-family: var(--font-mono); }
+.strip { margin-top: 36px; padding: 18px 0 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
+.strip b { font-family: var(--font-display); font-stretch: 78%; font-size: 1.2rem; }
+.strip p { margin: 0; color: var(--muted); }
+@media (max-width: 759px) { .cols, .strip { grid-template-columns: minmax(0, 1fr); gap: 32px; } .strip { gap: 6px; } }
+
+/* ---------- status ---------- */
+.status-panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 28px 32px; max-width: 900px; }
+.status-panel .list li:last-child { border-bottom: 0; }
+@media (max-width: 559px) { .status-panel { padding: 20px 18px; } }
+
+/* ---------- faq ---------- */
+.faq { max-width: 820px; border-top: 1px solid var(--fg); }
+.faq details { border-bottom: 1px solid var(--rule); }
+.faq summary {
+  list-style: none; cursor: pointer; padding: 18px 40px 18px 0; position: relative;
+  font-weight: 600; font-size: 1.08rem;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary svg { position: absolute; right: 4px; top: 22px; width: 16px; height: 16px; stroke: var(--muted); transition: transform .15s ease; }
+.faq details[open] summary svg { transform: rotate(45deg); }
+.faq details > p { margin: 0 0 20px; max-width: 66ch; color: var(--fg); }
+@media (prefers-reduced-motion: reduce) { .faq summary svg { transition: none; } }
+
+/* ---------- final ---------- */
+.final .wrap > .inner { max-width: 720px; }
+.final .install { max-width: none; }
+.final .then { margin: 26px 0 8px; font-weight: 600; }
+.final .h2 { font-size: clamp(2.2rem, 1.2rem + 3.4vw, 3.8rem); }
+
+/* ---------- footer ---------- */
+footer .wrap { padding-block: 28px 40px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; font-size: .92rem; color: var(--muted); }
+footer .brand { font-size: 1.15rem; margin-right: 8px; }
+footer ul { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; }
+footer a { color: var(--muted); }
+footer .top { margin-left: auto; display: none; }
+@media (max-width: 759px) { footer .top { display: inline-flex; } }
+
+/* ---------- v2 additions ---------- */
+::selection { background: var(--mark); color: var(--mark-ink); }
+.term pre ::selection, .code pre ::selection { background: var(--term-accent); color: var(--term-bg); }
+.term, .code { box-shadow: 0 0 0 1px var(--term-edge); }
+.install .code pre, .steps .code pre, .two .code pre, .final .code pre, .again .code pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.mt-s { margin-top: 12px; } .mt-m { margin-top: 20px; } .mt-l { margin-top: 28px; } .mb-0 { margin-bottom: 0; }
+.side h3, .pain-cards b, .strip b { font-size: 1.25rem; }
+.steps .bip { margin-top: 18px; }
+.steps .bip .term pre { padding: 12px 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.steps .bip .prompt { color: var(--term-accent); }
+.pushes { margin-top: 56px; }
+.pushes h3 { margin-bottom: 14px; }
+.pushes .list li b { font-family: var(--font-display); font-stretch: 78%; font-size: 1.15rem; margin-right: .35em; }
+.under { margin-top: 22px; max-width: 66ch; border-top: 1px solid var(--rule); }
+.under summary { cursor: pointer; padding: 14px 0; font-weight: 600; min-height: 44px; }
+.under p { color: var(--fg); }
+.again { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule); max-width: 720px; }
+.again .lbl { font-size: 1rem; }
+.status-panel .links { margin: 18px 0 0; }
+@media (max-width: 899px) {
+  .tabs button { min-height: 44px; }
+  .menu-btn { width: 44px; height: 44px; }
+  .nav .btn.sm { min-height: 44px; }
+  footer ul a, .status-panel a, footer .brand { display: inline-flex; align-items: center; min-height: 44px; }
+  .copy { min-height: 44px; }
+}
+.typed .row{animation:none!important;opacity:1!important}
+.nav{position:relative!important}
+
+</style>
+</helmet>
+<div style="width: 1440px; min-height: 4420px; background: var(--bg); color: var(--fg); font-family: var(--font-body)">
+<main>
+<!-- 5. PRIVACY -->
+<section class="band" id="privacy" aria-labelledby="priv-h">
+  <div class="wrap">
+    <div class="two">
+      <div>
+        <h2 class="h2" id="priv-h"><span class="hash" aria-hidden="true">##</span>Private names stay out of your repo</h2>
+        <p>You list the names that must never reach the repo: people, clients, project codenames.</p>
+        <p>Every story is checked before it's written: every field, the filename, and every line appended to an older story. Matching also catches the name with accents stripped and typed in Telex, because that's how one leaked in the author's own repo, through a test fixture.</p>
+        <p>A story that matches goes to quarantine in <code>~/.cache/momentry/quarantine/</code>, outside the repo, where you can read it and decide. If you haven't set a block list yet, stories go to quarantine too. They don't go into the repo unchecked.</p>
+        <p>Run <code>momentry check --staged</code> as a git pre-commit hook for a last check.</p>
+      </div>
+      <div>
+        <div class="code"><pre><code>momentry config privacy-add "Jane Doe" "secret-project"</code></pre><button class="copy" type="button">Copy</button></div>
+        <div class="flow" role="img" aria-label="A story goes through the privacy check. Clean stories go to the box in your repo. Stories that match a blocked name go to quarantine in ~/.cache, outside the repo.">
+          <div class="node">story</div>
+          <svg class="arr" viewBox="0 0 28 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7h22M19 2l5 5-5 5"></path></svg>
+          <div class="node">privacy check</div>
+          <svg class="arr" viewBox="0 0 28 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7h22M19 2l5 5-5 5"></path></svg>
+          <div class="node">box<small>in your repo</small></div>
+          <svg class="arr-down" viewBox="0 0 14 34" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M7 2v28M2 25l5 5 5-5"></path></svg>
+          <div class="node q">quarantine<small>~/.cache/momentry/quarantine/</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="honesty">
+      <p>momentry sends the transcript to Anthropic's Claude through your own <code>claude -p</code>, with your settings, tools and MCP servers switched off for that call. For Claude Code sessions that is the provider that already saw it. For Codex and the other hosts it is a second provider. The block list controls what gets written into your repo, not what Claude reads.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. COST -->
+<section class="band" id="cost" aria-labelledby="cost-h">
+  <div class="wrap">
+    <h2 class="h2" id="cost-h"><span class="hash" aria-hidden="true">##</span>Free tool. You pay for the model calls.</h2>
+    <div class="cols">
+      <div>
+        <h3>Cost</h3>
+        <ul class="list">
+          <li>momentry is free and in the public domain (Unlicense).</li>
+          <li>Harvesting runs through your own logged-in <code>claude</code> CLI. A session of about 150k tokens costs about 1 USD. The one real run so far cost 0.95 USD.</li>
+          <li>The biggest piece is the "outsider" pass (about 0.65 USD per window), which rewrites a story from the angle of what others would want to learn. Turn it off with <code>outsider.enabled = false</code>.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Requirements</h3>
+        <ul class="list">
+          <li>Node 20 or newer</li>
+          <li>git</li>
+          <li>A logged-in <code>claude</code> CLI (Codex, pi, omp and Antigravity users need it too)</li>
+          <li>Linux, macOS, WSL or Windows</li>
+        </ul>
+      </div>
+    </div>
+    <div class="strip">
+      <b>Hooks don't slow you down</b>
+      <p>The hooks exit right away, print nothing and start the harvest as a background process. No model is called inside your session. Hooks only run in repos where you ran <code>momentry init</code>.</p>
+    </div>
+    <div class="again install" data-install>
+      <p class="lbl">Install it now</p>
+      <div class="tabs" role="group" aria-label="Operating system">
+        <button type="button" data-os="unix" aria-pressed="true">macOS / Linux / WSL</button>
+        <button type="button" data-os="win" aria-pressed="false">Windows</button>
+      </div>
+      <div class="panel" data-panel="unix">
+        <div class="code"><pre><code>curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh | sh</code></pre><button class="copy" type="button">Copy</button></div>
+      </div>
+      <div class="panel" data-panel="win" hidden="">
+        <div class="code"><pre><code>irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex</code></pre><button class="copy" type="button">Copy</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. STATUS -->
+<section class="band" aria-labelledby="status-h">
+  <div class="wrap">
+    <h2 class="h2" id="status-h"><span class="hash" aria-hidden="true">##</span>Where it stands</h2>
+    <div class="status-panel">
+      <ul class="list">
+        <li><b>Version 0.2.0</b>, released 2026-11-03. Hooks have run for real with Claude Code (Windows), Codex (Linux and Windows), and pi, omp and Antigravity (Linux).</li>
+        <li>The harvest-and-score pipeline is tested with fake data and has been run for real once: <b>28/28 hotspots answered, 8/8 human-labelled stories found, 0.95 USD.</b></li>
+        <li>Not verified yet: pi, omp and Antigravity on Windows, and the ranking scores on sessions other than the ones they were designed on.</li>
+        <li><b>The CLI, the docs and the stories are in Vietnamese for now.</b> The English README covers install and use.</li>
+      </ul>
+      <p class="small links">What changed in each release: <a href="https://github.com/vantt/momentry/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG on GitHub</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. FAQ -->
+<section class="band" id="faq" aria-labelledby="faq-h">
+  <div class="wrap">
+    <h2 class="h2" id="faq-h"><span class="hash" aria-hidden="true">##</span>Questions</h2>
+    <div class="faq">
+      <details open=""><summary>Does it write my blog posts?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>No. It finds and ranks the material. You pick the stories and write the post. Outlines and drafts are out of scope for now.</p></details>
+      <details><summary>Will it slow down my Claude Code or Codex sessions?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>No. The hooks exit immediately and start the harvest in the background. No model call happens inside your session.</p></details>
+      <details><summary>What does a harvest cost?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>About 1 USD for a session of around 150k tokens, billed through your own <code>claude</code> CLI. Turning off the outsider pass cuts most of that.</p></details>
+      <details><summary>Does my transcript leave my machine?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>Yes. momentry sends the transcript to Anthropic's Claude through your own <code>claude -p</code>. For Claude Code sessions that is the provider that already saw it. For Codex and the other hosts it is a second provider. The block list controls what gets written into your repo, not what Claude reads.</p></details>
+      <details><summary>I only use Codex. Can I use it?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>Yes, but you still need a logged-in <code>claude</code> CLI, since that's what reads the sessions. Codex hooks work in v0.2.0 and have run for real on Linux and Windows. If a hook doesn't fire, <code>momentry scan --codex</code> harvests by hand.</p></details>
+      <details><summary>Does it work with pi, omp or Antigravity?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>Yes, since v0.2.0. <code>init</code> installs their hooks and <code>/bip</code> too, and <code>momentry scan --pi</code>, <code>--omp</code> or <code>--agy</code> harvests by hand. They have run for real on Linux, not yet on Windows.</p></details>
+      <details><summary>Why is the output in Vietnamese?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>momentry was built inside a Vietnamese-language project, so its CLI messages and prompts were written in Vietnamese, and the stories come out in Vietnamese too. That's the state today. The README is in English.</p></details>
+      <details><summary>What does it change on my machine?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p><code>init</code> adds hooks and a <code>/bip</code> command to your agent config, backs up each file first, and only touches its own entries. <code>momentry uninstall --dry-run</code> shows what removal would do; <code>momentry uninstall --yes</code> removes it and keeps your stories.</p></details>
+      <details><summary>Something isn't working. Now what?<svg viewBox="0 0 16 16" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M8 2v12M2 8h12"></path></svg></summary>
+        <p>Run <code>momentry doctor</code>. Every failing check prints a command that fixes it. Hooks log to <code>~/.cache/momentry/hook.log</code>.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- 9. FINAL CTA -->
+<section class="band final" aria-labelledby="final-h">
+  <div class="wrap">
+    <div class="inner">
+      <h2 class="h2" id="final-h"><span class="hash" aria-hidden="true">##</span>Try it on your last session</h2>
+      <p class="lede">Install, run <code>momentry init</code> in a repo, then harvest your most recent session.</p>
+      <div class="install" data-install>
+        <div class="tabs" role="group" aria-label="Operating system">
+          <button type="button" data-os="unix" aria-pressed="true">macOS / Linux / WSL</button>
+          <button type="button" data-os="win" aria-pressed="false">Windows</button>
+        </div>
+        <div class="panel" data-panel="unix">
+          <div class="code"><pre><code>curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh | sh</code></pre><button class="copy" type="button">Copy</button></div>
+        </div>
+        <div class="panel" data-panel="win" hidden="">
+          <p class="lbl">Windows (PowerShell)</p>
+          <div class="code"><pre><code>irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex</code></pre><button class="copy" type="button">Copy</button></div>
+        </div>
+      </div>
+      <p class="then">Then:</p>
+      <div class="code"><pre><code>momentry init
+momentry scan --max-sessions 1 --quiet-minutes 0
+momentry list --rank</code></pre><button class="copy" type="button">Copy</button></div>
+      <div class="cta-row mt-l">
+        <a class="btn ghost" href="https://github.com/vantt/momentry" target="_blank" rel="noopener">Read the source and docs on GitHub</a>
+      </div>
+      <p class="req">Free, public domain. Harvesting costs about 1 USD per long session, billed through your own <code>claude</code>. Uninstall any time with <code>momentry uninstall --yes</code>.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top"><span aria-hidden="true">#</span>momentry</a>
+    <span>Public domain (Unlicense)</span>
+    <ul>
+      <li><a href="https://github.com/vantt/momentry" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://github.com/vantt/momentry/blob/main/docs/cli-reference.md" target="_blank" rel="noopener">CLI reference</a></li>
+      <li><a href="https://github.com/vantt/momentry/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+      <li><a href="https://github.com/vantt/momentry/issues" target="_blank" rel="noopener">Report an issue</a></li>
+    </ul>
+    <a class="btn ghost sm top" href="#top">Top</a>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4420}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

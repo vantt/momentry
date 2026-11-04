@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "README, docs, PRD"
-status: todo
+status: done
 priority: P1
 effort: "0.5d"
 dependencies: [3, 4, 5, 6]

@@ -32,14 +32,20 @@ User thêm vào goal (2026-11-03): hỗ trợ `antigravity / pi / omp`. Thiết 
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Bộ đọc transcript pi/omp/agy](./phase-01-transcript-readers.md) | Pending |
-| 2 | [Hook runtime và tìm profile](./phase-02-hooks-and-profiles.md) | Pending |
-| 3 | [Cài extension, hooks.json, /bip](./phase-03-host-integration.md) | Pending |
-| 4 | [Test, tài liệu, CI](./phase-04-tests-docs-ci.md) | Pending |
+| 1 | [Bộ đọc transcript pi/omp/agy](./phase-01-transcript-readers.md) | Done |
+| 2 | [Hook runtime và tìm profile](./phase-02-hooks-and-profiles.md) | Done |
+| 3 | [Cài extension, hooks.json, /bip](./phase-03-host-integration.md) | Done |
+| 4 | [Test, tài liệu, CI](./phase-04-tests-docs-ci.md) | Done |
 
 ## Success Criteria
 
-- [ ] `momentry scan --pi|--omp|--agy` tìm và đọc được phiên của repo (fixture theo đúng schema; thử trên dữ liệu thật trong máy, chỉ đếm, không in nội dung).
-- [ ] `momentry init --yes` cài extension `momentry.ts` cho pi/omp, hook `SessionStart` cho agy, `/bip` cho cả ba, vào mọi profile tìm thấy; chạy lại không đổi gì; `uninstall` gỡ sạch.
-- [ ] Extension pi/omp gọi `momentry hook … --pi|--omp` với payload chuẩn; hook agy in `{}` và ghi chỉ mục.
-- [ ] Test, lifecycle installer, CI 9/9 xanh.
+- [x] `momentry scan --pi|--omp|--agy` tìm và đọc được phiên của repo (fixture theo đúng schema; thử trên dữ liệu thật trong máy, chỉ đếm, không in nội dung).
+- [x] `momentry init --yes` cài extension `momentry.ts` cho pi/omp, hook `SessionStart` cho agy, `/bip` cho cả ba, vào mọi profile tìm thấy; chạy lại không đổi gì; `uninstall` gỡ sạch.
+- [x] Extension pi/omp gọi `momentry hook … --pi|--omp` với payload chuẩn; hook agy in `{}` và ghi chỉ mục.
+- [x] Test, lifecycle installer, CI 9/9 xanh.
+
+Bằng chứng: phát hành trong v0.2.0 (CHANGELOG, release.yml 14/14 xanh); hook chạy thật với pi, omp trên Linux và Windows, Antigravity trên Linux ([journal](../journals/2026-11-03-kim-hook-tht-cho-mi-host-v-pht-hnh-v020.md), `docs/installation.md` mục Windows).
+
+## Còn mở
+
+- [ ] Antigravity chạy thật trên Windows ([issue #2](https://github.com/vantt/momentry/issues/2)): người có máy Windows đã đăng nhập agy chạy `scripts/probe-agy-windows.ps1`, đạt khi `hook fired: True`. Xong thì đặt plan `completed`.

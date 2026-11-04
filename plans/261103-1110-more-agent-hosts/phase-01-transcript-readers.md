@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Bộ đọc transcript pi/omp/agy"
-status: todo
+status: done
 priority: P1
 effort: "1d"
 dependencies: []

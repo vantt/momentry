@@ -36,14 +36,14 @@ Nguồn: [audit](../reports/packaging-audit-261103-1557-cs-packaging-distributio
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Nền tảng đa nền, phiên bản, mã thoát](./phase-01-platform-foundation.md) | Pending |
-| 2 | [Bề mặt lệnh agent-native](./phase-02-command-surface.md) | Pending |
-| 3 | [Doctor engine và init](./phase-03-doctor-and-init.md) | Pending |
-| 4 | [Tự cài hook và /bip](./phase-04-host-integration.md) | Pending |
-| 5 | [Đóng gói release và installer](./phase-05-release-packaging-and-installers.md) | Pending |
-| 6 | [Update và uninstall](./phase-06-update-and-uninstall.md) | Pending |
-| 7 | [CI và test phân phối](./phase-07-ci-and-distribution-tests.md) | Pending |
-| 8 | [README, docs, PRD](./phase-08-docs-and-first-contact.md) | Pending |
+| 1 | [Nền tảng đa nền, phiên bản, mã thoát](./phase-01-platform-foundation.md) | Done |
+| 2 | [Bề mặt lệnh agent-native](./phase-02-command-surface.md) | Done |
+| 3 | [Doctor engine và init](./phase-03-doctor-and-init.md) | Done |
+| 4 | [Tự cài hook và /bip](./phase-04-host-integration.md) | Done |
+| 5 | [Đóng gói release và installer](./phase-05-release-packaging-and-installers.md) | Done |
+| 6 | [Update và uninstall](./phase-06-update-and-uninstall.md) | Done |
+| 7 | [CI và test phân phối](./phase-07-ci-and-distribution-tests.md) | Done |
+| 8 | [README, docs, PRD](./phase-08-docs-and-first-contact.md) | Done |
 
 Thứ tự phụ thuộc: 1 → 2 → 3 → 4; 5 cần 1 (version, paths); 6 cần 3, 4, 5; 7 cần 5, 6; 8 viết sau cùng nhưng nội dung quick start chốt ngay ở phase 3.
 

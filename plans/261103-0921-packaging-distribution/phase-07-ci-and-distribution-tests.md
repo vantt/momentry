@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "CI và test phân phối"
-status: todo
+status: done
 priority: P2
 effort: "1.5d"
 dependencies: [5, 6]
