@@ -1,11 +1,11 @@
-// Wraps website/index.html (artifact-style fragment, no doctype/head/body)
+// Wraps website/src/index.html (artifact-style fragment, no doctype/head/body)
 // into a standalone page at website/dist/index.html for static hosting.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const src = readFileSync(join(here, 'index.html'), 'utf8');
+const src = readFileSync(join(here, 'src', 'index.html'), 'utf8');
 const split = src.indexOf('</style>') + '</style>'.length;
 const head = src.slice(0, split).replace(/<meta name="claude:viewport-fit-sides"[^>]*>\n?/, '');
 const body = src.slice(split);
