@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Bề mặt lệnh agent-native"
-status: todo
+status: done
 priority: P1
 effort: "1d"
 dependencies: [1]

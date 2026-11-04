@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Test, tài liệu, CI"
-status: todo
+status: done
 priority: P2
 effort: "0.5d"
 dependencies: [3]

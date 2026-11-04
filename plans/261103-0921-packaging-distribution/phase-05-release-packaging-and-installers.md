@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Đóng gói release và installer"
-status: todo
+status: done
 priority: P1
 effort: "1.5d"
 dependencies: [1]

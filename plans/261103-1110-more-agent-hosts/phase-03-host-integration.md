@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Cài extension, hooks.json, /bip"
-status: todo
+status: done
 priority: P1
 effort: "1d"
 dependencies: [2]

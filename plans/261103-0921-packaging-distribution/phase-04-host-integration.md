@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Tự cài hook và /bip"
-status: todo
+status: done
 priority: P1
 effort: "1.5d"
 dependencies: [3]
