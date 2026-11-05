@@ -487,8 +487,36 @@
       <section class="panel"><div class="panel-head"><div><h2>By session</h2><p>Latest first.</p></div></div>
         ${c.sessions.length ? `<div class="table-wrap"><table><thead><tr><th>Session</th><th>Project</th><th class="num">Cost</th></tr></thead><tbody>${c.sessions.map((s) => `<tr><td><span class="mono">${esc(s.host)} ${esc(s.sid.split(':')[1] ?? s.sid)}</span><div class="hint">${esc(fmtWhen(s.last))}</div></td><td>${esc(s.projectName)}</td><td class="num">${usd(s.usd)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">No sessions read yet.</p>'}
       </section>
-    </div>`;
+    </div>
+    ${c.measures ? measuresHtml(c.measures) : ''}`;
     applySizes();
+  }
+
+  /** Seconds as a rough duration: minutes, hours and minutes, or days. */
+  function duration(sec) {
+    const m = Math.round(sec / 60);
+    if (m < 1) return 'Under a minute';
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60);
+    if (h < 48) return `${h} h${m % 60 ? ` ${m % 60} min` : ''}`;
+    return plural(Math.round(h / 24), 'day', 'days');
+  }
+
+  /** The two local measures: time from install to the first story, and how many top-5 stories were used. */
+  function measuresHtml(m) {
+    const f = m.firstStory, t = m.top5;
+    const first = f.state === 'measured' ? [duration(f.seconds), 'From installing momentry to the first story it found.']
+      : f.state === 'waiting' ? ['Not yet', 'Counting from install until momentry finds its first story.']
+        : ['Unknown', 'momentry was already in use here before it began measuring this, so the install time is not on record.'];
+    const top = t.enough ? [`${Math.round(t.rate * 100)}%`, `Of ${t.decided} stories you decided on while they were in the top 5: ${t.use} used, ${t.later} for later, ${t.drop} dropped.`]
+      : ['Not enough data', `Shown once you have decided on ${t.needed} stories while they were in the top 5 (${t.decided} so far).`];
+    return `<section class="panel measures">
+      <div class="panel-head"><div><h2>How it is going</h2><p>Measured on this machine only. Nothing is sent anywhere.</p></div></div>
+      <div class="stat-row">
+        <div class="stat"><div class="label">Time to first story</div><div class="val">${esc(first[0])}</div><p class="hint">${esc(first[1])}</p></div>
+        <div class="stat"><div class="label">Top 5 stories used</div><div class="val">${esc(top[0])}</div><p class="hint">${esc(top[1])}</p></div>
+      </div>
+    </section>`;
   }
 
   // ---------- Health ----------

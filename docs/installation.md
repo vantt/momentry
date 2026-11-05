@@ -23,12 +23,14 @@ Cần sẵn: Node ≥ 20 trên PATH, git, và `claude` CLI đã đăng nhập. I
 | Dấu bản cài (ghi cả thư mục shim) | `~/.local/share/momentry/.momentry-managed` | `%LOCALAPPDATA%\momentry\app\.momentry-managed` |
 | Cấu hình người dùng | `~/.config/momentry/config.json` | `%APPDATA%\momentry\config.json` |
 | Danh sách dự án trên máy | `~/.config/momentry/projects.json` (quyền 0600) | `%APPDATA%\momentry\projects.json` |
-| Cache (sổ, khoá, quarantine, `hook.log`) | `~/.cache/momentry` (quyền 0700) | `%LOCALAPPDATA%\momentry\cache` |
+| Cache (sổ, khoá, quarantine, `hook.log`, số đo `metrics.json`) | `~/.cache/momentry` (quyền 0700) | `%LOCALAPPDATA%\momentry\cache` |
 | Hook, extension, lệnh và skill của các agent | xem [Host được hỗ trợ](#host-được-hỗ-trợ) | như cột bên trái, dưới `%USERPROFILE%` |
 
 Linux tôn trọng `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` khi là đường dẫn tuyệt đối. macOS dùng cùng bố cục `~/.config`, `~/.cache` như Linux (có chủ ý, giống đa số CLI dành cho dev).
 
 Danh sách dự án (`projects.json`, khoá là git root) là nơi `momentry ui` tìm dự án. `init`, nút bật dự án trong giao diện và mọi lệnh hook gọi (`scan`, `harvest`) thêm repo đang quan sát vào đó; máy cài từ bản cũ được điền một lần từ sổ phiên và `MOMENTRY_REPOS`. Repo vẫn được quan sát nhờ `.momentry.json` hoặc `MOMENTRY_REPOS`, như trước. Thư mục dự án bị chuyển hay xoá vẫn nằm trong danh sách, được đánh dấu mất, cho tới khi bạn xoá dự án đó trong giao diện.
+
+Số đo (`metrics.json` trong cache, quyền 0600) chỉ nằm trên máy, không gửi đi đâu: thời điểm cài, lúc có chuyện đầu tiên ở mỗi dự án, và mỗi lần bạn chọn Use, Later, Drop kèm hạng của chuyện lúc đó. File không chứa tên chuyện, id hay đường dẫn (dự án và chuyện chỉ là mã băm) và giữ tối đa 1000 quyết định gần nhất. Máy đã dùng momentry trước khi có số đo thì thời điểm cài ghi là không rõ, không đoán. Màn Cost của `momentry ui` và `momentry status --json` hiện hai số: thời gian từ cài tới chuyện đầu, và tỉ lệ chuyện được Use trong số chuyện bạn đã quyết khi chúng nằm trong top 5 (hiện từ 10 chuyện trở lên).
 
 Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `current`, nên nâng Node hay `momentry update` không làm hook hỏng. Hook trong `settings.json` gọi shim bằng đường dẫn tuyệt đối, nên vẫn chạy kể cả khi `~/.local/bin` chưa có trong PATH của Claude Code.
 
