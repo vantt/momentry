@@ -65,3 +65,24 @@ Raw hits: `nonzeroExit` 212 to 143 (68 of the removed 69 moved to `blocked`, the
 
 - No label set: this counts hotspots and moments, not story quality. Precision of the new kinds is judged by reading, not measured. Cost per session is unchanged apart from the hotspot count harvest must answer (547 to 500 here).
 - `ownerVoice` and the rejected-call flag are Claude-only; Codex transcripts have no equivalent field.
+
+## Đo có trả phí
+
+Bộ eval thứ hai: 8 cửa sổ từ 4 phiên Claude thật của một dự án khác (một plan tài liệu chạy nhiều tuần), nhãn nháp do agent viết trước khi xem đầu ra, rồi người thứ hai soát (88 dòng, 31 `t`). Dữ liệu và nhãn trong `docs/_private/eval-forgentx/`, không commit. Một lần chụp mỗi bên, cấu hình mặc định của `main` lúc đo (outsider haiku). Cửa sổ có một điểm nóng hỏng ở nhánh vì lỗi id lạ (đã sửa, M.1c), nên so trên 7 cửa sổ.
+
+| | `main` | nhánh |
+|---|---|---|
+| USD | 3,006 | 2,913 |
+| Giây | 1608 | 1510 |
+| Chuyện | 208 | 197 |
+| Điểm nóng | 189 | 167 |
+| Recall (harness) | 95% | 86% |
+| p@5 / p@10 | 0,71 / 0,63 | 0,51 / 0,54 |
+| Hạng `t` trung bình | 9,35 | 7,84 |
+| `t` nửa trên | 23/30 | 20/30 |
+| `t` soát tay (đủ / một phần / trượt) | 25 / 5 / 0 | 22 / 6 / 2 |
+| Chuyện có người dùng trong tiêu đề | 14 | 24 |
+
+Điểm nóng theo loại (nhánh): `metricPair` 82 → 16, `gitReversal` 39 → 9, `ownerVoice` 64 (26 là câu ngắn sau chạy dài), `lessonWrite` 21, `blocked` 19.
+
+Đọc: với một lần chụp mỗi bên, chênh p@k, `t` nửa trên và hai lần trượt nằm trong độ lệch giữa hai lần chạy đã biết (cùng phiên ra 14 hay 31 chuyện). Hai điều đáng tin: điểm nóng bớt nhiễu, và harvest nêu tên quyết định của người dùng nhiều hơn (quyết định chốt của dự án lên #1 và được gọi đúng là quyết định). Chuyện quyết định của người dùng vẫn xếp thấp ở cả hai bên, vì `hook-tension` chấm chúng `none` và tầng tension đặt mọi `none` dưới mọi chuyện có tension (M.5, M.6). Chạy lại tất định ở cả hai bên.

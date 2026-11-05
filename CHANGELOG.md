@@ -21,6 +21,10 @@
   - Không trả phí ghi cache prompt nữa: mỗi prompt chỉ gửi một lần, nên mọi lời gọi model chạy với cache tắt (khoá mới `llm.promptCache`, mặc định `off`; `auto` để Claude Code tự chọn như trước).
 - `--dry-run` ước tính chi phí theo giá đo được của từng model (kể cả giá cao hơn của `haiku` khi prompt quá 100k token) và theo từng khúc; trước đây ước tính thấp khoảng 1,5 lần.
 
+### Fixed
+
+- Harvest không còn mất mọi chuyện của một cửa sổ khi model trả lời một điểm nóng bằng id lạ: câu trả lời đó bị bỏ và điểm nóng được hỏi lại ở vòng gọi bù.
+
 ## [0.3.0] - 2026-11-05
 
 ### Changed (cần làm khi nâng cấp)
