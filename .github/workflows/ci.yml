@@ -1,8 +1,7 @@
 # Tests, packaging and the install/update/uninstall lifecycle on Linux, macOS and Windows.
 # Also called by release.yml before anything is published.
-# Linux only for now: GitHub-hosted minutes ran out and there is no Windows or macOS runner of our own yet.
-# To bring them back, add {os: windows-2025, label: windows} and {os: macos-15, label: macos} entries
-# (the steps already handle both); the full matrix is in git history before this change.
+# Windows runs on a GitHub-hosted runner (free while the repo is public). macOS is off: add
+# {os: macos-15, label: macos, node: "22"} to bring it back (the steps already handle it).
 # Repo variable MOMENTRY_SELF_HOSTED lists the OSes that run on our own runners (e.g. "linux" or "linux,windows,macos");
 # see docs/development.md. Unset, every job runs on GitHub-hosted runners.
 name: ci
@@ -31,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: [{os: ubuntu-24.04, label: linux, node: "20"}, {os: ubuntu-24.04, label: linux, node: "22"}, {os: ubuntu-24.04, label: linux, node: "24"}]
+        include: [{os: ubuntu-24.04, label: linux, node: "20"}, {os: ubuntu-24.04, label: linux, node: "22"}, {os: ubuntu-24.04, label: linux, node: "24"}, {os: windows-2025, label: windows, node: "22"}]
     steps:
       - name: isolate HOME on a self-hosted runner (Unix)
         if: runner.environment == 'self-hosted' && runner.os != 'Windows'
