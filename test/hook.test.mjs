@@ -62,6 +62,13 @@ test('pre-compact spawns a detached harvest with process.execPath and STORY_HARV
   assert.doesNotMatch(logOf(s.env), /0a1b2c3d\.jsonl/, 'no transcript path in the log');
 });
 
+test('a payload that starts with a byte order mark (Windows PowerShell) is read', () => {
+  const s = sandbox();
+  const r = handleHook('session-start', `\uFEFF${JSON.stringify({ cwd: s.repo, session_id: 'abcdef12-x' })}\r\n`, {}, { env: s.env, spawn: s.spawn, binPath: '/b' });
+  assert.equal(r.spawned, true);
+  assert.doesNotMatch(logOf(s.env), /bad-stdin/);
+});
+
 test('session-start spawns scan for the runtime; codex without transcript path falls back to --session', () => {
   const s = sandbox();
   handleHook('session-start', JSON.stringify({ cwd: s.repo, session_id: 'abcdef12-x' }), {}, { env: s.env, spawn: s.spawn, binPath: '/b' });
