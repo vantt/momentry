@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Thứ tự của `list --rank` và tường chuyện: chuyện chỉ bước người ngoài tìm ra (không lần harvest nào bắt được) xếp cuối; stakes và strength được cộng thay vì nhân, nên một trục bằng 0 không còn xoá trục kia (chuyện không có giằng xé nhưng stakes cao giờ đứng trên các chuyện không giằng xé khác). Trên 8 phiên chạy lại: chuyện đáng kể ở nửa trên 21/30 → 23/30, hạng trung bình 6,41 → 5,79 ([bản ghi](docs/experiments/2026-11-05-ranking/README.md)).
+
 ## [0.3.0] - 2026-11-05
 
 ### Changed (cần làm khi nâng cấp)
