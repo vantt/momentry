@@ -1,6 +1,7 @@
 #!/bin/sh
 # Offline lifecycle of install.sh + the installed CLI, in a throwaway HOME:
-# package two versions -> install -> re-install (no-op) -> init (hooks, /bip) -> doctor -> update --check (10)
+# package two versions -> install -> re-install (no-op) -> init (hooks, agent commands, skill) -> session-start
+# reminder -> doctor -> update --check (10)
 # -> update -> tampered release refused -> uninstall (data kept) -> command gone.
 # Usage: sh scripts/test-installer.sh
 set -eu
@@ -11,7 +12,7 @@ trap 'rm -rf "$WORK"' EXIT INT TERM
 unset XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME CLAUDE_CONFIG_DIR CODEX_HOME MOMENTRY_HOME MOMENTRY_INSTALL_DIR \
   MOMENTRY_CONFIG MOMENTRY_CACHE MOMENTRY_RELEASE_BASE MOMENTRY_VERSION MOMENTRY_REPOS MOMENTRY_PRIVACY_SOURCES 2>/dev/null || true
 export HOME="$WORK/home"
-mkdir -p "$HOME/.claude" "$HOME/.pi/agent" "$HOME/.pi/accounts/work" "$HOME/.omp/agent" "$HOME/.gemini/config"
+mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.pi/agent" "$HOME/.pi/accounts/work" "$HOME/.omp/agent" "$HOME/.gemini/config"
 PATH="$ROOT/test/fixtures/fake-claude:$PATH"   # doctor needs a `claude` that answers --version
 export PATH
 BIN="$HOME/.local/bin/momentry"
@@ -47,7 +48,31 @@ for f in .pi/agent/extensions/momentry.ts .pi/accounts/work/extensions/momentry.
   [ -f "$HOME/$f" ] || fail "init did not install $f"
 done
 grep -q '"momentry"' "$HOME/.gemini/config/hooks.json" || fail "Antigravity hook group missing"
+for f in .claude/commands/momentry-bip.md .claude/commands/momentry-ui.md .claude/skills/momentry/SKILL.md \
+  .codex/skills/momentry-bip/SKILL.md .codex/skills/momentry-bip/agents/openai.yaml .codex/skills/momentry-ui/SKILL.md .codex/skills/momentry/SKILL.md \
+  .pi/agent/prompts/momentry-bip.md .pi/agent/prompts/momentry-ui.md .pi/agent/skills/momentry/SKILL.md \
+  .omp/agent/commands/momentry-bip.md .omp/agent/commands/momentry-ui.md .omp/agent/skills/momentry/SKILL.md \
+  .gemini/config/skills/momentry-bip/SKILL.md .gemini/config/skills/momentry-ui/SKILL.md .gemini/config/skills/momentry/SKILL.md; do
+  [ -f "$HOME/$f" ] || fail "init did not install $f"
+done
+grep -q "hook session-start\"" "$HOME/.claude/settings.json" || fail "Claude SessionStart hook missing"
+grep -q "hook session-start --codex" "$HOME/.codex/hooks.json" || fail "Codex SessionStart hook missing"
+grep -q "hook session-start --agy" "$HOME/.gemini/config/hooks.json" || fail "Antigravity SessionStart hook missing"
+grep -q "ui?.notify" "$HOME/.pi/agent/extensions/momentry.ts" || fail "pi extension does not show the reminder"
 (cd "$WORK/repo" && "$BIN" init --yes) | grep -q "không có gì phải làm" || fail "init is idempotent"
+
+step "session-start reminder"
+BOX="$WORK/repo/docs/storytelling-material"
+printf -- '---\nid: 2026-11-05-thu\nstatus: raw\n---\n\n# thu\n' > "$BOX/2026-11-05-thu.md"
+OUT=$(printf '{"cwd":"%s","source":"startup"}' "$WORK/repo" | "$BIN" hook session-start)
+printf '%s' "$OUT" | node -e 'const j=JSON.parse(require("fs").readFileSync(0,"utf8")); if(!j.hookSpecificOutput.additionalContext.startsWith("momentry: 1 chuyện mới (/momentry-ui)")) process.exit(1)' \
+  || fail "Claude reminder: $OUT"
+OUT=$(printf '{"cwd":"%s"}' "$WORK/repo" | "$BIN" hook session-start --codex)
+printf '%s' "$OUT" | node -e 'const j=JSON.parse(require("fs").readFileSync(0,"utf8")); if(!j.systemMessage.includes("($momentry-ui)")) process.exit(1)' \
+  || fail "Codex reminder: $OUT"
+OUT=$(printf '{"cwd":"%s","source":"compact"}' "$WORK/repo" | "$BIN" hook session-start)
+[ -z "$OUT" ] || fail "reminder repeated after compaction: $OUT"
+rm "$BOX/2026-11-05-thu.md"
 
 step "doctor"
 (cd "$WORK/repo" && "$BIN" doctor --json) | json_ok || fail "doctor"
@@ -94,6 +119,9 @@ set +e; "$BIN" uninstall </dev/null >/dev/null 2>&1; code=$?; set -e
 ! grep -q "momentry" "$HOME/.claude/settings.json" || fail "hooks left in settings.json"
 [ ! -e "$HOME/.pi/agent/extensions/momentry.ts" ] && [ ! -e "$HOME/.omp/agent/extensions/momentry.ts" ] || fail "pi/omp extension left"
 ! grep -q '"momentry"' "$HOME/.gemini/config/hooks.json" || fail "Antigravity hook group left"
+! grep -q "momentry" "$HOME/.codex/hooks.json" || fail "Codex hooks left"
+LEFT=$(find "$HOME/.claude" "$HOME/.codex" "$HOME/.pi" "$HOME/.omp" "$HOME/.gemini" \( -name 'momentry*' -o -name 'bip.md' -o -path '*/skills/bip' \) ! -name '*.momentry-bak-*' -print)
+[ -z "$LEFT" ] || fail "agent commands or skills left: $LEFT"
 [ -f "$HOME/.config/momentry/config.json" ] || fail "config was removed without --purge"
 [ -f "$WORK/repo/.momentry.json" ] || fail "repo file was removed"
 if command -v momentry >/dev/null 2>&1 && [ "$(command -v momentry)" = "$BIN" ]; then fail "command still resolves"; fi

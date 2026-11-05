@@ -60,6 +60,29 @@ Mỗi host có hai lệnh: `momentry-bip` (đánh dấu khoảnh khắc vừa r�
 
 Codex từ 0.117 bỏ hẳn custom prompt (`~/.codex/prompts`, `/prompts:bip`), nên ở Codex hai lệnh là skill, gọi bằng `$tên`; `momentry connect` (và `momentry update`, qua `doctor --fix`) xoá `prompts/bip.md` cũ do momentry ghi. Skill Codex nằm ở `$CODEX_HOME/skills` (Codex vẫn đọc chỗ này bên cạnh `~/.agents/skills`), để mỗi profile `~/.codex-*` có bản riêng như hook. Máy đã cài bản cũ: `momentry update` (hoặc `momentry doctor --fix`) thêm các tên mới ở profile đã kết nối mà không hỏi lại; profile chưa kết nối vẫn cần `momentry connect --yes`.
 
+### Dòng nhắc lúc mở phiên
+
+Khi bạn mở một phiên agent trong repo đang được quan sát, hook `SessionStart` (pi, omp: sự kiện `session_start` của extension) in một dòng, ví dụ:
+
+```text
+momentry: 3 chuyện mới (/momentry-ui) · 2 phiên chờ ngân sách ngày (momentry scan) · 1 lỗi cần sửa (momentry doctor)
+```
+
+- **chuyện mới**: chuyện trạng thái `raw` trong hộp của repo đó mà bạn chưa mở trong `momentry ui`.
+- **phiên chờ ngân sách**: phiên của repo đó mà lần quét tự động hôm nay chưa gom vì hết ngân sách ngày.
+- **lỗi cần sửa**: kiểm nhanh, chỉ đọc file: cấu hình, nguồn chặn riêng tư, hộp chuyện, quyền cache, và kết nối của chính host đó (hook, lệnh, skill). Chỉ đếm cái có cách sửa; `momentry doctor` cho biết chi tiết.
+
+Mỗi phần chỉ hiện khi khác 0. Khi không có gì để nói, hook không in gì (Antigravity nhận `{}`). Dòng nhắc chỉ nói về repo của phiên, không gọi mạng hay model, và chạy trong khoảng 50 ms. Mọi lỗi được nuốt (ghi vào `hook.log`), nên phiên luôn mở được. Sau compact (Claude, Codex) hay `/reload` (pi, omp), hook không nhắc lại.
+
+| Host | Cách dòng nhắc tới | Ai thấy |
+|---|---|---|
+| Claude Code | JSON: `systemMessage` và `hookSpecificOutput.additionalContext` | bạn, và agent (một dòng trong context) |
+| Codex | như Claude Code; tên lệnh là `$momentry-ui` | bạn, và agent |
+| pi, omp | extension đọc dòng in ra và gọi `ctx.ui.notify` | chỉ bạn (không vào context) |
+| Antigravity | `injectSteps` với `systemMessage` và `metadata.user_markdown` | bạn, và agent |
+
+Máy đã cài bản cũ không cần làm gì thêm cho Claude Code, Codex và Antigravity: hook `SessionStart` đã có sẵn. Extension pi/omp được viết lại khi chạy `momentry update` (hoặc `momentry doctor --fix`).
+
 Antigravity không có sự kiện kết thúc phiên hay trước compact, chỉ có `SessionStart` và `Stop` (chạy sau mỗi lượt và chặn agent). Theo quyết định 2026-11-03, momentry chỉ dùng `SessionStart`: một phiên agy được gom khi bạn mở phiên agy kế tiếp trong repo đó, hoặc khi chạy `momentry scan --agy`. Transcript của agy không có thư mục làm việc, nên momentry ghi chỉ mục `<cache>/agy-sessions.jsonl` lúc phiên mở; phiên mở trước khi cài momentry không được gom.
 
 Profile Antigravity chạy agy với `HOME` riêng (`~/.agy-homes/<tài khoản>`), nên lệnh hook ở đó mang thêm `--user-home "<home thật>"`: momentry dùng cấu hình, nguồn chặn, cache và đăng nhập `claude` của home thật.
