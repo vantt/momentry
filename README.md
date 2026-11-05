@@ -34,7 +34,7 @@ irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex
 The installer adds `%LOCALAPPDATA%\momentry\bin` to your user PATH; open a new terminal after installing.
 </details>
 
-**2. Enable it for your repo.** `init` creates `.momentry.json` and the story box, installs the hooks (or extension) and the `/bip` command for Claude Code, Codex, pi, omp and Antigravity, in every profile it finds (with backups), then checks everything. On first run it asks you to declare the private names to block (people, project names…) so nothing leaks into the repo, using `momentry config privacy-add "<name>"`:
+**2. Enable it for your repo.** `init` creates `.momentry.json` and the story box, installs the hooks (or extension), the `momentry-bip` and `momentry-ui` agent commands and the `momentry` skill for Claude Code, Codex, pi, omp and Antigravity, in every profile it finds (with backups), then checks everything. On first run it asks you to declare the private names to block (people, project names…) so nothing leaks into the repo, using `momentry config privacy-add "<name>"`:
 
 ```sh
 cd <your repo>
@@ -48,7 +48,7 @@ momentry scan --max-sessions 1
 momentry list --rank
 ```
 
-From now on the hooks harvest after every session. To mark a moment yourself while you work, type `/bip <note>` in your agent.
+From now on the hooks harvest after every session. To mark a moment yourself while you work, type `/momentry-bip <note>` in your agent (`$momentry-bip` in Codex; the old `/bip` still works for now). `/momentry-ui` opens the web UI. Or just ask your agent "any good stories this week?": the `momentry` skill lets it read and label your stories through the CLI, and draft a post with the model you already pay for.
 
 To read, pick and edit stories in the browser instead, run `momentry ui`: a local page on 127.0.0.1 with your story wall, privacy, cost, health and settings. It stops by itself once no tab is open.
 
@@ -65,7 +65,7 @@ Then say: "harvest the last session with momentry and show me the 3 strongest st
 ## What it does
 
 - **Harvests after each session.** `SessionEnd`, `PreCompact` and `SessionStart` hooks (Claude Code, Codex), a `momentry.ts` extension (pi, omp) and a `SessionStart` hook (Antigravity, harvested when the next session opens) run in the background, never slow the session down, and only run in repos that have been `init`ed.
-- **Manual marking with `/bip`.** The agent writes 2–4 sentences about what just happened and saves it to the box.
+- **Manual marking with `/momentry-bip`.** The agent writes 2–4 sentences about what just happened and saves it to the box.
 - **Privacy is a hard gate.** Stories that contain a blocked name are kept out of the repo (`momentry quarantine`). `momentry check --staged` works as a git pre-commit hook.
 - **Capture everything, filter later.** Nothing is deleted; you change a story's `status` (`raw`, `picked`, `drafted`, `published`, `dropped`).
 
@@ -94,7 +94,7 @@ Precedence: flag > environment variable > `<repo>/.momentry.json` > user config 
 
 ```sh
 momentry uninstall --dry-run   # show what would be removed
-momentry uninstall --yes       # remove hooks, /bip, the command and the install; keep config, cache, story box
+momentry uninstall --yes       # remove hooks, agent commands, skill, the command and the install; keep config, cache, story box
 momentry uninstall --purge --yes   # also remove config and cache
 ```
 

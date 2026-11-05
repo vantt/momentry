@@ -30,7 +30,7 @@ irm https://github.com/vantt/momentry/releases/latest/download/install.ps1 | iex
 Installer thêm `%LOCALAPPDATA%\momentry\bin` vào PATH của user; mở terminal mới sau khi cài.
 </details>
 
-**2. Bật cho repo của bạn.** `init` tạo `.momentry.json` và hộp chuyện, cài hook (hoặc extension) và lệnh `/bip` cho Claude Code, Codex, pi, omp và Antigravity, ở mọi profile tìm thấy (có sao lưu), rồi kiểm mọi thứ. Lần đầu nó sẽ nhắc bạn khai báo những tên riêng tư cần chặn (tên người, tên dự án…) để không có gì lọt vào repo, bằng `momentry config privacy-add "<tên>"`:
+**2. Bật cho repo của bạn.** `init` tạo `.momentry.json` và hộp chuyện, cài hook (hoặc extension), hai lệnh agent `momentry-bip`, `momentry-ui` và skill `momentry` cho Claude Code, Codex, pi, omp và Antigravity, ở mọi profile tìm thấy (có sao lưu), rồi kiểm mọi thứ. Lần đầu nó sẽ nhắc bạn khai báo những tên riêng tư cần chặn (tên người, tên dự án…) để không có gì lọt vào repo, bằng `momentry config privacy-add "<tên>"`:
 
 ```sh
 cd <repo của bạn>
@@ -44,7 +44,7 @@ momentry scan --max-sessions 1
 momentry list --rank
 ```
 
-Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/bip <ghi chú>` trong agent của bạn.
+Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/momentry-bip <ghi chú>` trong agent của bạn (`$momentry-bip` trong Codex; `/bip` cũ vẫn dùng được một thời gian). `/momentry-ui` mở giao diện web. Hoặc cứ hỏi agent “tuần này có chuyện gì hay?”: skill `momentry` cho nó đọc và đánh dấu chuyện qua CLI, và viết nháp bài bằng model bạn đã trả.
 
 Muốn đọc, chọn và sửa chuyện trên trình duyệt thì chạy `momentry ui`: một trang trên máy (127.0.0.1) có tường chuyện, riêng tư, chi phí, sức khoẻ và thiết lập. Không còn tab nào mở thì nó tự tắt.
 
@@ -61,7 +61,7 @@ Sau đó nói: "gom phiên vừa rồi bằng momentry và cho tôi xem 3 chuy�
 ## Làm được gì
 
 - **Tự gom sau phiên.** Hook `SessionEnd`, `PreCompact`, `SessionStart` (Claude Code, Codex), extension `momentry.ts` (pi, omp) và hook `SessionStart` (Antigravity, gom khi mở phiên kế tiếp) chạy nền, không làm chậm phiên, chỉ chạy trong repo đã `init`.
-- **Đánh dấu tay bằng `/bip`.** Agent viết 2–4 câu về chuyện vừa xảy ra và ghi vào hộp.
+- **Đánh dấu tay bằng `/momentry-bip`.** Agent viết 2–4 câu về chuyện vừa xảy ra và ghi vào hộp.
 - **Riêng tư là chốt chặn.** Chuyện có tên trong danh sách chặn bị giữ ngoài repo (`momentry quarantine`). `momentry check --staged` dùng được làm git pre-commit hook.
 - **Ghi nhiều, lọc sau.** Không xoá gì; bạn đổi `status` của chuyện (`raw`, `picked`, `drafted`, `published`, `dropped`).
 
@@ -90,7 +90,7 @@ Thứ tự ưu tiên: cờ > biến môi trường > `<repo>/.momentry.json` > c
 
 ```sh
 momentry uninstall --dry-run   # xem sẽ gỡ gì
-momentry uninstall --yes       # gỡ hook, /bip, lệnh và bản cài; giữ cấu hình, cache, hộp chuyện
+momentry uninstall --yes       # gỡ hook, lệnh agent, skill, lệnh momentry và bản cài; giữ cấu hình, cache, hộp chuyện
 momentry uninstall --purge --yes   # gỡ cả cấu hình và cache
 ```
 
