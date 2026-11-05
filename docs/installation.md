@@ -187,7 +187,8 @@ momentry config unset box --project --dry-run
 | `harvest.runs` / `.model` / `.fillRetries` / `.maxInputTokens` / `.timeoutSec` | 1 / `haiku` / 1 / 150000 / 600 | |
 | `rank.model` | `sonnet` | |
 | `outsider.enabled` / `.model` | true / `haiku` | `sonnet` đọc kỹ hơn nhưng tốn gấp ~8 lần ở bước này, không thấy hơn trên bộ đo ([số đo](experiments/2026-11-05-cost-cuts/README.md)) |
-| `angle.enabled` / `.model` / `.topN` | true / `haiku` / 10 | Góc kể cho N chuyện đầu bảng của mỗi phiên sau khi xếp hạng, mỗi chuyện một lần gọi (~0,002 USD với `haiku`). `sonnet` tốn ~13 lần, chưa thấy hơn ([số đo](experiments/2026-11-05-angle/README.md)). `momentry angle` làm bù cho chuyện cũ |
+| `angle.enabled` / `.model` / `.topN` | true / `haiku` / 10 | Xương chuyện và góc kể cho N chuyện đầu bảng của mỗi phiên sau khi xếp hạng, mỗi chuyện một lần gọi (~0,003 USD với `haiku`). `sonnet` tốn ~13 lần, chưa thấy hơn ([số đo](experiments/2026-11-05-angle/README.md), [xương chuyện](experiments/2026-11-05-story-spine/README.md)). `momentry angle` làm bù cho chuyện cũ |
+| `angle.profileModel` | `haiku` | Viết hồ sơ dự án 3–5 câu từ README và `docs/` (mỗi dự án một lần, ~0,002 USD), để góc kể mở bằng bối cảnh. File ở `<cache>/profiles/`, sửa tay được: momentry giữ bản bạn sửa. Xoá file để viết lại |
 | `llm.promptCache` | `off` | `off`: mỗi prompt tính một lần như input thường (prompt không bao giờ được đọc lại); `5m` / `1h`: trả thêm để cache; `auto`: để Claude Code tự chọn (1 giờ với gói thuê bao) |
 | `scan.quietMinutes` | 30 | Bỏ qua phiên vừa ghi trong N phút |
 | `scan.maxSessions` | 3 | Số phiên tối đa mỗi lần quét tự động |

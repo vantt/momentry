@@ -108,6 +108,7 @@ Mỗi lời gọi model đọc `DIR/<key>.json`, đúng dạng đầu ra `claude
 | `hook-tension-<a>` | bước 7 |
 | `stakes-<a>` | bước 8 |
 | `angle-<k>` | bước 13 (góc kể), chuyện thứ k được chọn theo hạng; thiếu file trong `harvest` chỉ để chuyện đó chưa có góc kể, không đổi mã thoát |
+| `profile-<n>` | bước 13, hồ sơ dự án thứ n của lần chạy (chỉ khi chưa có hoặc README/docs đã đổi); thiếu file thì góc kể viết không có hồ sơ, không đổi mã thoát |
 
 Gọi lại vì JSON hỏng hay sai khuôn: thêm hậu tố `-retry` (ví dụ `harvest-c1-r1-retry`).
 

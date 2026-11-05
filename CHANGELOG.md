@@ -6,8 +6,12 @@
 
 ### Added
 
-- **Góc kể** cho chuyện: sau khi xếp hạng, 10 chuyện đầu bảng của phiên (chưa có góc kể) được viết một đến ba câu nói điều người ta tưởng, điều hoá ra đúng và vì sao người nghe nên quan tâm, kèm ai muốn nghe. Model đọc file chuyện và vài dòng transcript quanh các dòng của chuyện (không đọc cả phiên), phải dẫn số dòng làm bằng chứng, không được bịa; không có chỗ ngoặt thật thì ghi `angle: none`. Ghi vào frontmatter (`angle`, `audience`) và dòng `**Góc kể:**` dưới tiêu đề, qua cùng cổng riêng tư như mọi chữ khác của chuyện; lần gom sau gộp vào chuyện không đổi góc kể đã có. Tường chuyện và trang đọc lấy góc kể làm dòng chính, tiêu đề sự kiện thành dòng phụ. Khoảng 0,02 USD mỗi phiên với `haiku` ([số đo](docs/experiments/2026-11-05-angle/README.md)). Khoá mới `angle.enabled`, `angle.model` (mặc định `haiku`), `angle.topN` (mặc định 10).
+- **Góc kể** cho chuyện: sau khi xếp hạng, 10 chuyện đầu bảng của phiên (chưa có góc kể) được viết một đến ba câu nói điều người ta tưởng, điều hoá ra đúng và vì sao người nghe nên quan tâm, kèm ai muốn nghe. Model đọc file chuyện và vài dòng transcript quanh các dòng của chuyện (không đọc cả phiên), phải dẫn số dòng làm bằng chứng, không được bịa; không có chỗ ngoặt thật thì ghi `angle: none`. Ghi vào frontmatter (`angle`, `audience`) và dòng `**Góc kể:**` dưới tiêu đề, qua cùng cổng riêng tư như mọi chữ khác của chuyện; lần gom sau gộp vào chuyện không đổi góc kể đã có. Tường chuyện và trang đọc lấy góc kể làm dòng chính, tiêu đề sự kiện thành dòng phụ. Khoảng 0,03 USD mỗi phiên với `haiku`, kể cả xương chuyện bên dưới ([số đo](docs/experiments/2026-11-05-angle/README.md), [xương chuyện](docs/experiments/2026-11-05-story-spine/README.md)). Khoá mới `angle.enabled`, `angle.model` (mặc định `haiku`), `angle.topN` (mặc định 10).
 - Lệnh `momentry angle [--top N] [--story ID] [--force]` viết góc kể cho chuyện đã có trong hộp (`--dry-run` xem trước và ước tính chi phí).
+- **Xương chuyện** cho góc kể: model điền bảy ô (bối cảnh, muốn gì, vướng gì, tưởng là… hoá ra…, làm gì, giờ thì sao, người nghe dùng được gì), mỗi ô kèm số dòng làm bằng chứng hoặc để trống khi không có gì đỡ được. Ghi vào frontmatter (`spine_<ô>`, `spine_<ô>_lines`) cùng `completeness` (số ô đã điền, 0–7); dòng `**Góc kể:**` giữ như cũ. Góc kể giờ dài 2–4 câu và câu đầu luôn là bối cảnh, để người chưa biết dự án hiểu ngay ([số đo](docs/experiments/2026-11-05-story-spine/README.md)).
+- **Hồ sơ dự án**: mỗi dự án một lần gọi model rẻ (khoá mới `angle.profileModel`, mặc định `haiku`) đọc README, PRD, vision, requirements, AGENTS.md, CLAUDE.md, GEMINI.md, ANTIGRAVITY.md ở gốc repo và `docs/`, viết 3–5 câu: dự án là gì, cho ai, ràng buộc chính, mục tiêu hiện tại. Lưu ở `<cache>/profiles/`, sửa tay được: momentry chỉ viết lại khi các tài liệu đó đổi và bạn chưa sửa file. Không có tài liệu thì không có hồ sơ. Hồ sơ chứa tên riêng tư thì không được dùng.
+- Góc kể đọc thêm **yêu cầu của chủ phiên**: yêu cầu đầu phiên và các yêu cầu gần nhất trước chuyện (bỏ câu kiểu "tiếp tục", "ok", "commit push"), dẫn số dòng được như trích đoạn.
+- Trang duyệt của bộ đo hiện xương chuyện, góc kể cũ cạnh góc kể mới, và thêm câu hỏi "Đọc xong hiểu được, không cần hỏi thêm?" (có / không) lưu cạnh nhãn kiểm góc kể. Bộ đo có `--rank-by completeness` để đo thứ tự theo số ô đã điền; thứ tự mặc định của sản phẩm không đổi.
 - Giao diện web nghe cả địa chỉ Tailscale của máy (mặc định bật), để điện thoại hoặc máy khác trong tailnet mở được; `momentry ui --remote` in link có mã truy cập. Vẫn cần mã truy cập; chỉ nhận tên `*.ts.net`, tên máy và IP Tailscale. Tắt: `momentry config set ui.tailscale false` (chỉ đặt trong cấu hình người dùng).
 
 ### Changed
@@ -26,6 +30,7 @@
 ### Fixed
 
 - Harvest không còn mất mọi chuyện của một cửa sổ khi model trả lời một điểm nóng bằng id lạ: câu trả lời đó bị bỏ và điểm nóng được hỏi lại ở vòng gọi bù.
+- `momentry angle` ghi chi phí (góc kể và hồ sơ dự án) vào sổ, nên ngân sách ngày (`budget.dailyUsd`) và trang chi phí tính cả nó; trước đây chỉ bước góc kể chạy trong lúc gom mới được tính. Lệnh cũng giữ khoá của phiên như các lệnh ghi khác: phiên đang được gom thì chuyện của nó được bỏ qua và báo mã 5.
 
 ## [0.3.0] - 2026-11-05
 
