@@ -106,7 +106,7 @@ test('CLI hook --user-home: momentry uses the real home (cache, config) when the
   delete env.MOMENTRY_CACHE;
   const payload = JSON.stringify({ conversationId: '0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f7777', transcriptPath: '/g/t.jsonl', workspacePaths: [s.repo] });
   const r = spawnSync(process.execPath, [BIN, 'hook', 'session-start', '--agy', '--user-home', real], { cwd: s.repo, env: { ...env, STORY_HARVEST: '' }, input: payload, encoding: 'utf8' });
-  assert.equal(r.stdout.trim(), '{}');
+  assert.equal(typeof JSON.parse(r.stdout), 'object', 'Antigravity always gets a JSON object');
   assert.ok(fs.existsSync(path.join(paths({ HOME: real, USERPROFILE: real }).cache, 'agy-sessions.jsonl')), 'index under the real home');
   assert.ok(!fs.existsSync(path.join(s.base, 'agy-account', '.cache')), 'nothing under the account HOME');
 });
@@ -114,7 +114,7 @@ test('CLI hook --user-home: momentry uses the real home (cache, config) when the
 test('a throwing spawn never escapes', () => {
   const s = sandbox();
   const r = handleHook('session-end', JSON.stringify({ cwd: s.repo, transcript_path: '/t' }), {}, { env: s.env, spawn: () => { throw new Error('boom'); } });
-  assert.deepEqual(r, { spawned: false, reason: 'error' });
+  assert.deepEqual(r, { spawned: false, reason: 'error', root: s.repo, runtime: 'claude', source: null }, 'the repo is still known, for the session-start reminder');
 });
 
 test('printHookConfig uses absolute node and bin paths; includes /bip template', () => {
@@ -129,6 +129,21 @@ test('printHookConfig uses absolute node and bin paths; includes /bip template',
   assert.match(codex, /hook pre-compact --codex/);
   assert.match(codex, /scan --codex/);
   assert.match(codex, /hooks\.state/);
+});
+
+test('printHookConfig shows the current command names: momentry-bip and momentry-ui, Codex as skills', () => {
+  const claude = printHookConfig('claude', { prefix: '"/home/u/.local/bin/momentry"' });
+  assert.match(claude, /~\/\.claude\/commands\/momentry-bip\.md/);
+  assert.match(claude, /~\/\.claude\/commands\/momentry-ui\.md/);
+  assert.match(claude, /^ {3}"\/home\/u\/\.local\/bin\/momentry" ui$/m, 'the ui command text');
+  assert.match(claude, /dòng nhắc/, 'mentions the session-start reminder');
+  const codex = printHookConfig('codex', { prefix: '"/home/u/.local/bin/momentry"' });
+  assert.doesNotMatch(codex, /prompts\/bip\.md|\/bip\b/, 'Codex has no custom prompts any more');
+  assert.match(codex, /~\/\.codex\/skills\/momentry-bip\/SKILL\.md/);
+  assert.match(codex, /~\/\.codex\/skills\/momentry-ui\/agents\/openai\.yaml/);
+  assert.match(codex, /\$momentry-bip/);
+  assert.match(codex, /^name: momentry-ui$/m);
+  assert.match(codex, /allow_implicit_invocation: false/);
 });
 
 test('CLI hooks --print prints process.execPath; hook on an observed repo with bad stdin exits 0 silently', () => {
