@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-05
+
 ### Changed (cần làm khi nâng cấp)
 
 - Bỏ `/bip`. Lệnh mới ở mọi host: `/momentry-bip` (ghi khoảnh khắc) và `/momentry-ui` (mở giao diện); trên Codex gõ `$momentry-bip`, `$momentry-ui`. `momentry update` tự xoá file `/bip` cũ, trừ file bạn đã sửa.
