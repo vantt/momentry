@@ -242,7 +242,7 @@ Mã thoát: 0 sạch; 1 có lỗi khuôn hoặc vi phạm riêng tư; 2 sai cú 
 
 ### `momentry pause`
 
-Tạm dừng gom chuyện cho repo này trên máy này: hook không tự gom, scan --auto bỏ qua, đầu phiên không nhắc. Giữ .momentry.json, hộp và chuyện cũ.
+Tạm dừng gom chuyện cho repo này trên máy này: hook không tự gom, scan --auto bỏ qua, đầu phiên không nhắc. Giữ .momentry.json, hộp và chuyện cũ. Lối tắt của momentry config set paused true --project.
 
 **Thay đổi:** <config>/projects.json (dấu tạm dừng của repo; chỉ nằm trên máy, repo không tự đặt hay gỡ được).
 
@@ -264,7 +264,7 @@ Tiếp theo: momentry status
 
 ### `momentry resume`
 
-Bật lại gom chuyện cho repo đã tạm dừng. Phiên trong lúc dừng không tự gom; muốn gom thì chạy tay momentry scan.
+Bật lại gom chuyện cho repo đã tạm dừng. Phiên trong lúc dừng không tự gom; muốn gom thì chạy tay momentry scan. Lối tắt của momentry config set paused false --project.
 
 **Thay đổi:** <config>/projects.json (bỏ dấu tạm dừng, ghi lúc bật lại).
 
@@ -417,22 +417,28 @@ Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc c
 
 ### `momentry config <path|show|get|set|unset|default|privacy-add> [KEY] [VALUE | TÊN…]`
 
-Xem và sửa cấu hình người dùng: path | show | get KEY | set KEY VALUE | unset KEY | default | privacy-add TÊN….
+Lệnh duy nhất để xem và đổi mọi cài đặt: path | show | get KEY | set KEY VALUE | unset KEY | default | privacy-add TÊN…. Không có --project: cấu hình người dùng, chung mọi dự án. Có --project: cài đặt riêng của repo đang đứng (hoặc --repo DIR): box (thư mục chuyện; trong repo ghi vào .momentry.json, ngoài repo chỉ ghi trên máy này), repo (tên dự án trên chuyện), budget.dailyUsd (ngân sách mỗi ngày riêng của dự án), private (chế độ riêng tư), paused (tạm dừng gom chuyện; pause/resume là lối tắt). show --project in từng khoá kèm nơi đặt: repo, dự án trên máy này, người dùng, mặc định hoặc env. Giao diện web ghi qua đúng các hàm này.
 
-**Thay đổi:** set/unset: file cấu hình người dùng (ghi atomic, giữ quyền file). privacy-add: thêm tên vào <config>/names.txt (0600) và khai báo file đó trong privacy.sources.
+**Thay đổi:** set/unset: file cấu hình người dùng (ghi atomic, giữ quyền file). Với --project: box/repo vào <repo>/.momentry.json (box ngoài repo vào <config>/projects.json), budget.dailyUsd và private vào cấu hình người dùng theo đường dẫn repo, paused vào <config>/projects.json; khoá chỉ của máy này không bao giờ ghi vào repo. privacy-add: thêm tên vào <config>/names.txt (0600) và khai báo file đó trong privacy.sources.
+
+**Cần:** với --project: ở trong git repo (hoặc --repo DIR); đặt box trong repo, repo hay paused true cần repo đã init.
 
 | Cờ | Ý nghĩa |
 |---|---|
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
+| `--project` | cài đặt riêng của repo (box, repo, budget.dailyUsd, private, paused) thay cho cấu hình người dùng; dùng với show, get, set, unset |
 
 ```sh
 momentry config show
-momentry config privacy-add "Trần Văn A" "du-an-bi-mat"   # tên cần chặn khỏi repo
 momentry config set harvest.runs 2
-momentry config default
+momentry config privacy-add "Trần Văn A" "du-an-bi-mat"   # tên cần chặn khỏi repo
+momentry config show --project --json
+momentry config set box ~/Documents/momentry-chuyen --project   # thư mục chuyện ngoài repo, chỉ trên máy này
+momentry config set budget.dailyUsd 1 --project --repo ~/code/du-an
+momentry config unset box --project --dry-run
 ```
 
-Mã thoát: 0 xong; 1 khoá lạ, giá trị sai hoặc file hỏng; 2 sai cú pháp.
+Mã thoát: 0 xong; 1 khoá lạ, giá trị sai, khoá không đặt riêng được cho dự án, repo chưa init, không ở trong git repo hoặc file hỏng; 2 sai cú pháp.
 
 ### `momentry paths`
 

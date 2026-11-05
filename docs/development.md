@@ -112,6 +112,10 @@ Gọi lại vì JSON hỏng hay sai khuôn: thêm hậu tố `-retry` (ví dụ 
 
 `--save-prompts DIR` giữ prompt (`<key>.prompt.txt`) và đầu ra thô của model (`<key>.json`) ở DIR thay cho `<cache>/runs/<phiên>/<ts>/`; với `--dry-run` không kèm `--fake-llm` chỉ ghi prompt harvest.
 
+## Cài đặt
+
+Mọi cài đặt đổi qua `momentry config` (CLI), kể cả cài đặt riêng từng dự án (`--project`). Không thêm cờ lẻ kiểu `init --box`; khoá mới đi vào `lib/config-schema.mjs` (chung) hoặc `PROJECT_KEYS` trong `lib/config-cmd.mjs` (riêng dự án). Giao diện web (`lib/ui-api.mjs`) gọi đúng các hàm ghi của `lib/config-cmd.mjs` (`write`, `setProjectBox`, `setProjectBudget`, `setPrivateProject`) và `Projects.setPaused`, không có bản ghi thứ hai, nên quy tắc như "khoá chỉ của máy không vào file repo" chỉ nằm một chỗ.
+
 ## Hợp đồng giữa các module
 
 Mỗi module trong `lib/` có JSDoc là hợp đồng. Lỗi mang mã thoát gắn `err.exitCode` (bảng mã ở `EXIT` trong `lib/config.mjs`). Lệnh trong `pipeline.mjs` trả `{exitCode, message?}`; `lib/cli.mjs` in `message` và thoát theo `exitCode`, hoặc gói vào phong bì `--json`.
