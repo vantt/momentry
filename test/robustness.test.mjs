@@ -185,6 +185,37 @@ test('scan --auto: first run only marks the start; later auto scans skip older t
   assert.match(r.out, /còn 2 phiên chưa gom/);
 });
 
+test('scan --auto stops at the daily budget; sessions wait and a manual scan still reads them', () => {
+  const s = setup();
+  const dir = path.join(s.env.HOME, '.claude', 'projects', encodeProjectDir(s.repo));
+  fs.mkdirSync(dir, { recursive: true });
+  const old = new Date(Date.now() - 3 * 3600e3);
+  const f = path.join(dir, `${UUID}.jsonl`);
+  s.write(8, f);
+  fs.utimesSync(f, old, old);
+  fs.mkdirSync(s.cache, { recursive: true });
+  // 3.5 USD already spent today in another repo; the default budget is 3 USD
+  fs.writeFileSync(path.join(s.cache, 'ledger.json'), JSON.stringify({ version: 1, repos: { [s.repo]: { autoSince: new Date(Date.now() - 4 * 3600e3).toISOString() } },
+    sessions: { 'claude:00000000': { repoRoot: '/elsewhere', harvests: [rec({ at: new Date().toISOString(), usd: 3.5 })] } } }));
+  const fake = { MOMENTRY_FAKE_LLM: path.join(FIX, 'llm-ok') };
+  let r = s.run(['scan', '--claude', '--auto'], fake);
+  assert.equal(r.code, 0, r.err + r.out);
+  assert.match(r.out, /gom 0/);
+  assert.match(r.out, /1 phiên chờ ngân sách ngày \(chung 3 USD\)/);
+  assert.deepEqual(L.waiting(s.cache), { [s.repo]: 1 });
+  r = s.run(['scan', '--claude'], fake);
+  assert.match(r.out, /gom 1/);
+  assert.ok(L.spentOn(L.load(s.cache), L.today()) >= 3.5);
+  assert.ok(L.spentOn(L.load(s.cache), L.today(), '/elsewhere') === 3.5);
+  // no general limit, but this repo's own limit is already used up by the manual read
+  fs.writeFileSync(s.env.MOMENTRY_CONFIG, JSON.stringify({ budget: { dailyUsd: 0, projects: { [s.repo]: 0.001 } } }));
+  const f2 = path.join(dir, '6e5510aa-0000-4000-8000-000000000001.jsonl');
+  s.write(8, f2);
+  fs.utimesSync(f2, old, old);
+  r = s.run(['scan', '--claude', '--auto'], fake);
+  assert.match(r.out, /1 phiên chờ ngân sách ngày \(repo này 0.001 USD\)/);
+});
+
 // ---------- hook stdin ----------
 
 test('readStdin: TTY gives empty; an open stream returns after the timeout', async () => {
