@@ -99,6 +99,9 @@
     return overview;
   }
   const onProjects = () => (overview?.projects ?? []).filter((p) => p.observed && !p.error);
+  // a project paused on this machine: named in project pickers so an empty wall is not a surprise
+  const projectLabel = (p) => `${p.name}${p.paused ? ' · Paused' : ''}`;
+  const PAUSED_TAG = '<span class="tag">Paused</span>';
 
   const stars = (n) => `<span class="stars" role="img" aria-label="${n} of 3 stars">${[1, 2, 3].map((i) => `<span class="${i <= n ? '' : 'off'}">${ICON.star}</span>`).join('')}</span>`;
   const spinner = '<span class="spin" aria-hidden="true"></span>';
@@ -232,15 +235,18 @@
       main.innerHTML = `<div class="empty"><div class="note"><span class="hand">your wall is empty</span><h2>Turn on a project to start</h2><p>momentry reads your agent sessions after they end and pins the moments worth telling here. Setup takes about a minute.</p><a class="btn btn-primary btn-lg" href="#/setup">Set up momentry</a></div></div>`;
       return;
     }
+    const paused = projects.filter((p) => p.paused && (!proj || p.id === proj));
+    const pausedNote = paused.length ? `<p class="hint paused-note">${PAUSED_TAG} No new stories are gathered from ${esc(paused.map((p) => p.name).join(', '))} on this machine. <a href="#/settings">Turn gathering back on</a></p>` : '';
     const head = `<div class="page-head">
       <div><span class="hand">best ones on top</span><h1>Your story wall</h1>
       <p class="lede">${storiesCache.length ? `${plural(pool.filter((s) => s.status !== 'dropped').length, 'story', 'stories')}${projects.length > 1 && !proj ? ` across ${plural(projects.length, 'project', 'projects')}` : ''}. Use the ones worth telling, keep some for later, drop the rest.` : 'Nothing pinned yet. Find stories in your recent sessions, or jot one down yourself.'}</p></div>
+      ${pausedNote}</div>
       <button class="btn btn-marker" type="button" data-action="find">${ICON.search}Find new stories</button>
     </div>`;
     const toolbar = `<div class="toolbar">
       <div class="seg" role="group" aria-label="Show">${FILTERS.map(([k, label]) => `<button type="button" data-action="filter" data-view="${k}" aria-pressed="${k === view}">${label}<span class="n">${count(k)}</span></button>`).join('')}</div>
       <div class="row">
-        ${projects.length > 1 ? `<label class="sr-only" for="proj-filter">Project</label><select class="select" id="proj-filter" data-action="project-filter"><option value="">All projects</option>${projects.map((p) => `<option value="${esc(p.id)}"${p.id === proj ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>` : ''}
+        ${projects.length > 1 ? `<label class="sr-only" for="proj-filter">Project</label><select class="select" id="proj-filter" data-action="project-filter"><option value="">All projects</option>${projects.map((p) => `<option value="${esc(p.id)}"${p.id === proj ? ' selected' : ''}>${esc(projectLabel(p))}</option>`).join('')}</select>` : ''}
         ${droppedN ? `<label class="switch"><input type="checkbox" data-action="show-dropped"${dropped ? ' checked' : ''}><span class="track" aria-hidden="true"></span><span class="hint">Show dropped (${droppedN})</span></label>` : ''}
       </div>
     </div>`;
@@ -531,16 +537,17 @@
   function drawHealth(h) {
     const bad = [...h.checks.filter((c) => c.status === 'fail' || c.status === 'warn'), ...(h.agents.some((x) => x.ok) ? [] : h.agents.slice(0, 1))];
     $('[data-health-dot]').hidden = h.ok && !bad.length;
+    const paused = !!h.project?.paused;
     const projects = overview.projects.filter((p) => !p.error);
     main.innerHTML = `<div class="page-head"><div><span class="hand">quick check-up</span><h1>Health</h1></div>
-      ${projects.length > 1 ? `<div><label class="sr-only" for="health-proj">Project</label><select class="select" id="health-proj" data-action="health-project">${projects.map((p) => `<option value="${esc(p.id)}"${p.id === h.project?.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>` : ''}</div>
-    <div class="banner ${bad.length ? 'bad' : 'ok'}"><span class="light" aria-hidden="true"></span><div class="grow"><strong>${bad.length ? `${plural(bad.length, 'thing needs', 'things need')} attention` : 'All good'}</strong><p>${bad.length ? (h.agents.some((x) => x.ok) ? 'Each line below says what is wrong and how to fix it.' : 'No agent is connected yet, so sessions are not read automatically. Connect one on the right.') : `momentry is ready${h.project ? ` for ${esc(h.project.name)}` : ''}. Stories are found after each session ends.`}</p></div>
+      ${projects.length > 1 ? `<div><label class="sr-only" for="health-proj">Project</label><select class="select" id="health-proj" data-action="health-project">${projects.map((p) => `<option value="${esc(p.id)}"${p.id === h.project?.id ? ' selected' : ''}>${esc(projectLabel(p))}</option>`).join('')}</select></div>` : ''}</div>
+    <div class="banner ${bad.length ? 'bad' : 'ok'}"><span class="light" aria-hidden="true"></span><div class="grow"><strong>${bad.length ? `${plural(bad.length, 'thing needs', 'things need')} attention` : 'All good'}</strong><p>${bad.length ? (h.agents.some((x) => x.ok) ? 'Each line below says what is wrong and how to fix it.' : 'No agent is connected yet, so sessions are not read automatically. Connect one on the right.') : paused ? `Gathering is paused for ${esc(h.project.name)} on this machine, so no new stories arrive. Its stories stay on your wall.` : `momentry is ready${h.project ? ` for ${esc(h.project.name)}` : ''}. Stories are found after each session ends.`}</p></div>
       ${bad.some((c) => c.canFix) ? '<button class="btn btn-primary" type="button" data-action="fix-all">Fix it</button>' : ''}</div>
     <div class="grid-2">
-      <section class="panel"><div class="panel-head"><div><h2>Checks</h2>${h.project ? `<p>For ${esc(h.project.name)}.</p>` : ''}</div></div>
-        <div>${h.checks.map((c) => `<div class="check-row"><span class="light-sm ${esc(c.status)}" aria-label="${{ ok: 'OK', warn: 'Warning', fail: 'Problem', skip: 'Skipped' }[c.status]}"></span>
+      <section class="panel"><div class="panel-head"><div><h2>Checks</h2>${h.project ? `<p>For ${esc(h.project.name)}.${paused ? ` ${PAUSED_TAG}` : ''}</p>` : ''}</div></div>
+        <div>${h.checks.map((c) => `<div class="check-row"><span class="light-sm ${esc(c.status)}" aria-label="${{ ok: 'OK', warn: 'Warning', fail: 'Problem', skip: 'Skipped', info: 'Note' }[c.status]}"></span>
           <div><div class="title">${esc(c.title)}</div>${c.why ? `<p class="why">${esc(c.why)}</p>` : ''}<details class="tech"><summary>Technical detail</summary><pre>${esc(c.detail)}</pre></details></div>
-          ${c.canFix ? '<button class="btn btn-quiet btn-sm" type="button" data-action="fix-all">Fix it</button>' : c.code === 'privacy.sources' && c.status !== 'ok' ? '<a class="btn btn-quiet btn-sm" href="#/privacy">Add names</a>' : '<span></span>'}</div>`).join('')}</div>
+          ${c.canFix ? '<button class="btn btn-quiet btn-sm" type="button" data-action="fix-all">Fix it</button>' : c.code === 'privacy.sources' && c.status !== 'ok' ? '<a class="btn btn-quiet btn-sm" href="#/privacy">Add names</a>' : c.code === 'project.paused' && c.status === 'info' ? '<a class="btn btn-quiet btn-sm" href="#/settings">Settings</a>' : '<span></span>'}</div>`).join('')}</div>
       </section>
       <section class="panel"><div class="panel-head"><div><h2>Agents</h2><p>Where momentry listens for finished sessions.</p></div></div>
         ${h.agents.length ? `<ul class="list">${h.agents.map((a) => `<li><div class="grow"><div class="title">${esc(a.label)}</div><div class="sub">${esc(a.words)}</div></div>${a.ok ? `<span class="ok-text">${ICON.check}Connected</span>` : `<button class="btn btn-quiet btn-sm" type="button" data-action="connect" data-name="${esc(a.name)}">Connect</button>`}</li>`).join('')}</ul>` : '<p class="hint">No supported agent found on this machine. momentry works with Claude Code, Codex, pi, omp and Antigravity.</p>'}
@@ -592,7 +599,8 @@
       <div class="set-row"><div><div class="label">Updates</div><p class="hint">You have momentry v${esc(v.version)}.</p><p class="hint" data-update-msg></p></div><div class="set-ctrl"><button class="btn btn-quiet" type="button" data-action="check-update">Check for updates</button></div></div>
     </section>
     <section class="panel"><div class="panel-head"><div><h2>Projects</h2><p>Each project keeps its own stories and settings.</p></div></div>
-      ${v.projects.length ? v.projects.map((p) => `<div class="project-card"><h3>${esc(p.name)}</h3><p class="path">${esc(p.root)}</p>
+      ${v.projects.length ? v.projects.map((p) => `<div class="project-card"><h3>${esc(p.name)}${p.paused ? ` ${PAUSED_TAG}` : ''}</h3><p class="path">${esc(p.root)}</p>
+        <div class="set-row"><div><label class="label" for="ga-${esc(p.id)}">Gather stories</label><p class="hint">Off pauses this project on this machine: its sessions are not read and no new stories arrive. Its stories stay readable.</p></div><div class="set-ctrl"><label class="switch"><input type="checkbox" id="ga-${esc(p.id)}" data-action="gather" data-project="${esc(p.id)}"${p.paused ? '' : ' checked'}><span class="track" aria-hidden="true"></span><span class="sr-only">Gather stories</span></label></div></div>
         ${proj.map((f) => controlHtml(f, p.values[f.key], 'project', p.id)).join('')}
         ${p.boxInRepo ? `<div class="set-row"><div><label class="label" for="gi-${esc(p.id)}">Keep stories out of git</label><p class="hint">Adds the story folder to .gitignore so stories never get pushed.${p.remote ? ' This repo has a remote.' : ''}</p></div><div class="set-ctrl"><label class="switch"><input type="checkbox" id="gi-${esc(p.id)}" data-action="gitignore" data-project="${esc(p.id)}"${p.ignored ? ' checked' : ''}><span class="track" aria-hidden="true"></span><span class="sr-only">Keep stories out of git</span></label></div></div>` : ''}
         <div class="set-row"><div><label class="label" for="pm-${esc(p.id)}">Private mode</label><p class="hint">Stories of this project are never used for post drafts and never counted in shared labels. Nothing leaves your machine today; this keeps it that way when those features arrive.</p></div><div class="set-ctrl"><label class="switch"><input type="checkbox" id="pm-${esc(p.id)}" data-action="private-mode" data-project="${esc(p.id)}"${p.privateMode ? ' checked' : ''}><span class="track" aria-hidden="true"></span><span class="sr-only">Private mode</span></label></div></div>
@@ -985,6 +993,12 @@
         drawSettings(v);
         document.getElementById(el.id)?.focus();
         toast(el.checked ? 'Private mode on for this project.' : 'Private mode off.');
+      } else if (a === 'gather') {
+        const v = await api('PUT', '/api/projects/gather', { project: el.dataset.project, on: el.checked });
+        drawSettings(v);
+        document.getElementById(el.id)?.focus();
+        overview = null;
+        toast(el.checked ? 'Gathering stories again for this project.' : 'Paused. No new stories from this project until you turn it back on.');
       } else if (a === 'project-budget') {
         const row = el.closest('.set-row');
         const usd = el.value === '' ? null : Number(el.value);
@@ -1067,7 +1081,7 @@
 
   // health dot in the nav, checked once in the background
   async function healthDot() {
-    try { const h = await api('GET', '/api/health'); $('[data-health-dot]').hidden = h.checks.every((c) => c.status === 'ok' || c.status === 'skip'); } catch { /* shown on the page itself */ }
+    try { const h = await api('GET', '/api/health'); $('[data-health-dot]').hidden = h.checks.every((c) => ['ok', 'skip', 'info'].includes(c.status)); } catch { /* shown on the page itself */ }
   }
 
   render().then(() => { if (token) setTimeout(healthDot, 800); });

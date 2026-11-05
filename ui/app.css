@@ -232,6 +232,7 @@ main { max-width: var(--page-max); margin: 0 auto; padding: var(--s-8) var(--gut
 main:focus { outline: none; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-6); flex-wrap: wrap; margin-bottom: var(--s-6); }
 .page-head .lede { margin: var(--s-2) 0 0; color: var(--ink-2); max-width: 62ch; }
+.page-head .paused-note { margin: var(--s-2) 0 0; max-width: 70ch; }
 .hand { font-family: var(--font-hand); color: var(--marker); font-size: 1.25rem; display: inline-block; transform: rotate(-2deg); line-height: 1.2; }
 h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; margin: 0; line-height: 1.05; }
 h1 { font-size: var(--text-3xl); }
@@ -413,6 +414,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
 .light-sm.warn { background: var(--warn-dot); }
 .light-sm.fail { background: var(--bad); }
 .light-sm.skip { background: var(--rule-strong); }
+.light-sm.info { background: var(--marker); }
 .check-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s-4); padding: var(--s-4) 0; border-top: 1px solid var(--rule); align-items: start; }
 .check-row:first-child { border-top: 0; }
 .check-row .why { color: var(--ink-2); font-size: var(--text-sm); margin-top: 2px; }
