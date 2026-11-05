@@ -1,6 +1,6 @@
 # Offline lifecycle of install.ps1 on Windows in a throwaway profile:
-# package two versions -> install -> init --yes --json (hooks, agent commands, skill) -> session-start reminder -> doctor
-# -> update --check (10) -> update -> uninstall.
+# package two versions -> install -> init --yes --json (hooks, agent commands, skill) -> session-start reminder (and a missing
+# shim counted) -> doctor -> update --check (10) -> update (removes what older versions installed, keeps edited files) -> uninstall.
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-installer.ps1
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -56,18 +56,22 @@ try {
     if (-not $init.ok) { Fail ('init: ' + ($init | ConvertTo-Json -Depth 6)) }
     $settings = Get-Content -Raw (Join-Path $userHome '.claude\settings.json')
     if ($settings -notmatch 'momentry\.cmd\\" hook session-end') { Fail 'hook registered through momentry.cmd' }
-    foreach ($f in '.pi\agent\extensions\momentry.ts', '.omp\agent\extensions\momentry.ts', '.gemini\config\skills\bip\SKILL.md') {
-        if (-not (Test-Path (Join-Path $userHome $f))) { Fail "init did not install $f" }
-    }
     if ((Get-Content -Raw (Join-Path $userHome '.pi\agent\extensions\momentry.ts')) -notmatch 'SHIM_CMD = ".*momentry\.cmd"') { Fail 'pi extension does not use the cmd shim' }
+    # Codex and pi read the shared ~/.agents/skills: their skills sit there once, for every profile
     $agentFiles = @(
+        '.pi\agent\extensions\momentry.ts', '.omp\agent\extensions\momentry.ts',
         '.claude\commands\momentry-bip.md', '.claude\commands\momentry-ui.md', '.claude\skills\momentry\SKILL.md',
-        '.codex\skills\momentry-bip\SKILL.md', '.codex\skills\momentry-bip\agents\openai.yaml', '.codex\skills\momentry-ui\SKILL.md', '.codex\skills\momentry\SKILL.md',
-        '.pi\agent\prompts\momentry-bip.md', '.pi\agent\prompts\momentry-ui.md', '.pi\agent\skills\momentry\SKILL.md',
+        '.agents\skills\momentry-bip\SKILL.md', '.agents\skills\momentry-bip\agents\openai.yaml', '.agents\skills\momentry-ui\SKILL.md', '.agents\skills\momentry\SKILL.md',
+        '.pi\agent\prompts\momentry-bip.md', '.pi\agent\prompts\momentry-ui.md',
         '.omp\agent\commands\momentry-bip.md', '.omp\agent\commands\momentry-ui.md', '.omp\agent\skills\momentry\SKILL.md',
         '.gemini\config\skills\momentry-bip\SKILL.md', '.gemini\config\skills\momentry-ui\SKILL.md', '.gemini\config\skills\momentry\SKILL.md')
     foreach ($f in $agentFiles) {
         if (-not (Test-Path (Join-Path $userHome $f))) { Fail "init did not install $f" }
+    }
+    $aliasFiles = @('.claude\commands\bip.md', '.pi\agent\prompts\bip.md', '.omp\agent\commands\bip.md', '.gemini\config\skills\bip')
+    $oldFiles = $aliasFiles + @('.codex\skills', '.pi\agent\skills')
+    foreach ($f in $oldFiles) {
+        if (Test-Path (Join-Path $userHome $f)) { Fail "init installed $f (the /bip alias is gone; Codex and pi skills live in ~/.agents/skills)" }
     }
     if ($settings -notmatch 'hook session-start"') { Fail 'Claude SessionStart hook missing' }
     if ((Get-Content -Raw (Join-Path $userHome '.codex\hooks.json')) -notmatch 'hook session-start --codex') { Fail 'Codex SessionStart hook missing' }
@@ -96,16 +100,38 @@ try {
     if ($out) { Fail "reminder repeated after compaction: $out" }
     Remove-Item -LiteralPath $story
 
+    # a missing shim is a problem to fix (the installed copy still runs the hook here, as pi's extension falls back to it)
+    $app = Join-Path $env:LOCALAPPDATA "momentry\app\versions\v$v1\bin\momentry.mjs"
+    Move-Item -LiteralPath $bin -Destination (Join-Path $work 'shim.bak')
+    $out = (@{ cwd = $repo; source = 'startup' } | ConvertTo-Json -Compress) | & node $app hook session-start
+    if (-not $out -or ((($out -join "`n") | ConvertFrom-Json).systemMessage -ne "momentry: 1 l$([char]0x1ED7)i c$([char]0x1EA7)n s$([char]0x1EED)a (momentry doctor)")) { Fail "missing shim not counted: $out" }
+    & node $app doctor --fix | Out-Null
+    if (-not (Test-Path $bin)) { Fail 'doctor --fix did not write the shim back' }
+
     $doc =(& $bin doctor --json) -join "`n" | ConvertFrom-Json
     if (-not $doc.ok) { Fail 'doctor' }
 
-    Step 'update'
+    Step 'update (cleans what older versions installed, keeps edited files)'
+    $h = { param($f) Join-Path $userHome $f }
+    Copy-Item (& $h '.claude\commands\momentry-bip.md') (& $h '.claude\commands\bip.md')
+    Copy-Item (& $h '.pi\agent\prompts\momentry-bip.md') (& $h '.pi\agent\prompts\bip.md')
+    New-Item -ItemType Directory -Path (& $h '.codex\skills'), (& $h '.pi\agent\skills') -Force | Out-Null
+    Copy-Item (& $h '.agents\skills\momentry-bip'), (& $h '.agents\skills\momentry') (& $h '.codex\skills') -Recurse
+    Copy-Item (& $h '.agents\skills\momentry') (& $h '.pi\agent\skills') -Recurse
+    # an old file the user edited (body changed, marker kept): read and written as UTF-8 bytes, no BOM
+    $edited = [IO.File]::ReadAllText((& $h '.omp\agent\commands\momentry-bip.md')).Replace('User ', 'EDITED User ')
+    [IO.File]::WriteAllText((& $h '.omp\agent\commands\bip.md'), $edited, (New-Object Text.UTF8Encoding $false))
     $env:MOMENTRY_RELEASE_BASE = $r2
     & $bin update --check | Out-Null
     if ($LASTEXITCODE -ne 10) { Fail "update --check exit $LASTEXITCODE" }
     & $bin update --yes
     if ($LASTEXITCODE -ne 0) { Fail 'update' }
     if ((& $bin --version) -ne "momentry $v2") { Fail 'updated version' }
+    foreach ($f in '.claude\commands\bip.md', '.pi\agent\prompts\bip.md', '.codex\skills\momentry-bip', '.codex\skills\momentry', '.pi\agent\skills\momentry') {
+        if (Test-Path (& $h $f)) { Fail "update left $f" }
+    }
+    if ([IO.File]::ReadAllText((& $h '.omp\agent\commands\bip.md')) -notmatch 'EDITED') { Fail 'update removed an edited file' }
+    Remove-Item -LiteralPath (& $h '.omp\agent\commands\bip.md')
 
     Step 'uninstall'
     & $bin uninstall --yes
@@ -116,7 +142,7 @@ try {
     if (Test-Path (Join-Path $env:LOCALAPPDATA 'momentry\bin\momentry.cmd')) { Fail 'shim left' }
     if ((Get-Content -Raw (Join-Path $userHome '.claude\settings.json')) -match 'momentry') { Fail 'hooks left' }
     if ((Get-Content -Raw (Join-Path $userHome '.codex\hooks.json')) -match 'momentry') { Fail 'Codex hooks left' }
-    foreach ($f in $agentFiles + '.claude\commands\bip.md') {
+    foreach ($f in $agentFiles + $aliasFiles) {
         if (Test-Path (Join-Path $userHome $f)) { Fail "uninstall left $f" }
     }
     if (-not (Test-Path (Join-Path $env:APPDATA 'momentry\config.json'))) { Fail 'config removed without --purge' }

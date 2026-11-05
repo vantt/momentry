@@ -121,7 +121,7 @@ Mỗi module trong `lib/` có JSDoc là hợp đồng. Lỗi mang mã thoát g�
 | `lib/commands.mjs` | Bảng lệnh duy nhất; sinh parser, `--help`, `help --json`, `docs/cli-reference.md` |
 | `lib/cli.mjs` | Parse, gọi handler, in văn bản hoặc phong bì `{schema, ok, data, error, next}` |
 | `lib/doctor.mjs`, `lib/checks.mjs` | Engine kiểm và sửa; `init` = các check `creates` + `doctor --fix` |
-| `lib/hosts.mjs`, `lib/safe-edit.mjs` | Cài/gỡ hook và `/bip`; sửa JSON của host có sao lưu và kiểm đổi giữa chừng |
+| `lib/hosts.mjs`, `lib/safe-edit.mjs` | Cài/gỡ hook, lệnh agent và skill; sửa JSON của host có sao lưu và kiểm đổi giữa chừng |
 | `lib/projects.mjs` | Danh sách dự án trên máy (`projects.json`): UI đọc, `init` và lệnh hook thêm vào, hộp ngoài repo theo dự án, dấu tạm dừng gom chuyện |
 | `lib/metrics.mjs` | Số đo trên máy (`metrics.json`): thời gian từ cài tới chuyện đầu, tỉ lệ chuyện top 5 được Use; không gửi đi đâu |
 | `lib/paths.mjs` | Mọi đường dẫn theo OS (nguồn duy nhất cho installer, update, uninstall, doctor) |

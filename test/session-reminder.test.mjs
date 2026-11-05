@@ -16,6 +16,7 @@ import { buildChecks } from '../lib/checks.mjs';
 import { run as runChecks } from '../lib/doctor.mjs';
 import { sha256 } from '../lib/safe-edit.mjs';
 import { today } from '../lib/ledger.mjs';
+import { MARKER, CURRENT, shimSh } from '../lib/install.mjs';
 
 const BIN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../bin/momentry.mjs');
 const PREFIX = '"/home/u/.local/bin/momentry"';
@@ -94,6 +95,23 @@ test('a host that needs repair counts as a problem (an older install without the
   assert.equal(line(w), 'momentry: 1 lỗi cần sửa (momentry doctor)', 'host present, not connected: connect is the fix');
   hosts.apply('claude', { prefix: PREFIX, env: w.env });
   assert.equal(line(w), '');
+});
+
+test('an installed copy whose shim is gone counts as a problem; a PATH without the shim dir does not', () => {
+  const w = world();
+  const app = path.join(w.base, 'app');
+  const running = path.join(app, 'versions', 'v9.9.9');
+  fs.mkdirSync(running, { recursive: true });
+  fs.writeFileSync(path.join(app, MARKER), '{"version":"9.9.9"}\n');
+  fs.writeFileSync(path.join(app, CURRENT), 'v9.9.9\n');
+  const env = { ...w.env, MOMENTRY_HOME: app, MOMENTRY_INSTALL_DIR: path.join(w.base, 'bin') };
+  const at = (install) => reminderLine({ root: w.repo, runtime: 'claude', env, prefix: PREFIX, install });
+  assert.equal(at({ root: running, platform: 'linux' }), 'momentry: 1 lỗi cần sửa (momentry doctor)', 'the hooks call a shim that is not there');
+  fs.mkdirSync(path.join(w.base, 'bin'));
+  fs.writeFileSync(path.join(w.base, 'bin', 'momentry'), shimSh(app));
+  assert.equal(at({ root: running, platform: 'linux' }), '', 'shim back; PATH (empty here) is not checked');
+  fs.rmSync(path.join(w.base, 'bin'), { recursive: true });
+  assert.equal(at(undefined), '', 'a source checkout has no shim to miss');
 });
 
 // ---------- how each host gets it ----------
