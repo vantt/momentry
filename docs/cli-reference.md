@@ -88,7 +88,7 @@ Tiếp theo: chạy lệnh ở cột "sửa" của từng check chưa đạt, r�
 
 ### `momentry status`
 
-Tóm tắt nhanh (không gọi claude) và đúng một lệnh nên chạy tiếp; --json kèm số đo trên máy (thời gian từ cài tới chuyện đầu, tỉ lệ Use trong top 5).
+Tóm tắt nhanh (không gọi claude) và đúng một lệnh nên chạy tiếp, kèm repo có đang tạm dừng gom chuyện không; --json kèm số đo trên máy (thời gian từ cài tới chuyện đầu, tỉ lệ Use trong top 5).
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -239,6 +239,47 @@ momentry check --staged            # trong .git/hooks/pre-commit
 ```
 
 Mã thoát: 0 sạch; 1 có lỗi khuôn hoặc vi phạm riêng tư; 2 sai cú pháp; 3 khuôn sạch nhưng chưa kiểm được riêng tư (không có nguồn chặn).
+
+### `momentry pause`
+
+Tạm dừng gom chuyện cho repo này trên máy này: hook không tự gom, scan --auto bỏ qua, đầu phiên không nhắc. Giữ .momentry.json, hộp và chuyện cũ.
+
+**Thay đổi:** <config>/projects.json (dấu tạm dừng của repo; chỉ nằm trên máy, repo không tự đặt hay gỡ được).
+
+**Cần:** repo đã init (hoặc nằm trong MOMENTRY_REPOS).
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
+
+```sh
+momentry pause
+momentry pause --repo ~/code/du-an --json
+momentry pause --dry-run
+```
+
+Mã thoát: 0 đã tạm dừng (hoặc đã dừng sẵn); 1 không ở trong repo được quan sát, hoặc danh sách dự án hỏng; 2 sai cú pháp.
+
+Tiếp theo: momentry status
+
+### `momentry resume`
+
+Bật lại gom chuyện cho repo đã tạm dừng. Phiên trong lúc dừng không tự gom; muốn gom thì chạy tay momentry scan.
+
+**Thay đổi:** <config>/projects.json (bỏ dấu tạm dừng, ghi lúc bật lại).
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
+
+```sh
+momentry resume
+momentry resume --repo ~/code/du-an --json
+```
+
+Mã thoát: 0 đã bật lại (hoặc vốn không tạm dừng); 1 không ở trong git repo, hoặc danh sách dự án hỏng; 2 sai cú pháp.
+
+Tiếp theo: momentry status
 
 ### `momentry harvest`
 
