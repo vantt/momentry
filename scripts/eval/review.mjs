@@ -160,6 +160,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const data = path.resolve(a.data ?? path.join(base, 'new-defaults'));
   const key = crypto.randomBytes(18).toString('base64url');
   const server = createReviewServer({ labels, data, key });
+  server.on('error', (e) => {
+    console.error(e.code === 'EADDRINUSE' ? `Cổng ${a.port ?? 4826} đang bận (có thể trang duyệt đã chạy ở terminal khác). Tắt nó, hoặc chọn cổng khác: --port 4827` : e.message);
+    process.exit(1);
+  });
   server.listen(Number(a.port ?? 4826), '127.0.0.1', () => {
     console.log(`Duyệt nhãn: http://127.0.0.1:${server.address().port}/#k=${key}\nNhãn: ${labels}\nCtrl+C để tắt.`);
   });
