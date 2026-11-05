@@ -23,7 +23,7 @@ test('connect keeps the user\'s hooks, adds ours once, backs up, keeps mode; rem
   assert.equal(hosts.inspectHooks('claude', PREFIX, env).status, 'missing');
 
   const dry = hosts.apply('claude', { prefix: PREFIX, dryRun: true, env });
-  assert.equal(dry.changes.length, 2);
+  assert.equal(dry.changes.length, 5, 'hooks, momentry-bip, momentry-ui, the /bip alias, the momentry skill');
   assert.deepEqual(JSON.parse(fs.readFileSync(settings, 'utf8')), user, 'dry run writes nothing');
 
   const r = hosts.apply('claude', { prefix: PREFIX, env });
@@ -136,14 +136,15 @@ test('codex: old snake_case entries (ignored by Codex) are replaced by PascalCas
   hosts.apply('codex', { prefix: PREFIX, env });
   assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(f, 'utf8')).hooks), ['PreCompact', 'SessionEnd', 'SessionStart']);
   assert.equal(hosts.inspectHooks('codex', PREFIX, env).status, 'ok');
-  assert.ok(fs.existsSync(path.join(h, '.codex', 'prompts', 'bip.md')));
+  assert.ok(fs.existsSync(path.join(h, '.codex', 'skills', 'momentry-bip', 'SKILL.md')));
+  assert.ok(!fs.existsSync(path.join(h, '.codex', 'prompts', 'bip.md')), 'Codex has no custom prompts any more');
 });
 
 test('pi and omp: extension + /bip in every profile; idempotent; edited files kept; remove deletes ours', () => {
   const { h, env } = home();
   for (const d of ['.pi/agent', '.pi/accounts/work', '.omp/agent', '.omp/profiles/p1/agent']) fs.mkdirSync(path.join(h, d), { recursive: true });
   const r = hosts.apply('pi', { prefix: PREFIX, env });
-  assert.equal(r.changes.length, 4, r.changes.join('\n'));
+  assert.equal(r.changes.length, 10, r.changes.join('\n'));
   const ext = path.join(h, '.pi', 'accounts', 'work', 'extensions', 'momentry.ts');
   const text = fs.readFileSync(ext, 'utf8');
   assert.match(text, /pi\.on\("session_shutdown"/);
