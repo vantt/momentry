@@ -14,6 +14,8 @@ created: 2026-11-04
 
 Mã S0.x, S1.x, S2.x là bước trong [sales plan](../261104-sales/plan.md); Q.x, R.x, U.x là bước của các plan [story-quality](../261104-story-quality/plan.md), [rust-port](../261104-rust-port/plan.md), [ui-ux](../261104-ui-ux/plan.md). Board: [board.md](../board.md).
 
+**Quyết định 2026-11-05:** chất lượng được nâng bằng dữ liệu của chính đội (bộ test tự gán nhãn, số đo trên máy của đội). Không dùng dữ liệu người dùng; nhãn chia sẻ là plan riêng [shared-labels](../261105-shared-labels/plan.md) (E19), backlog.
+
 ## Mục tiêu
 
 Người mua trả tiền cho danh sách chuyện xếp hạng. Plan này làm cho danh sách đó **đáng tin và rẻ**, có số đo chứng minh:

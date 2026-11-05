@@ -4,16 +4,17 @@ This board is high-level: one row = one epic = one plan. Step status and evidenc
 
 **Context:** momentry is the experimental first slice of CIS (Creator Intelligence System, `vantt/cis`). Current focus: **selling it**. Every sales step (E8, E10–E15) lives in one plan: [sales](261104-sales/plan.md). What sells tells CIS which audience to build for next ([audiences](../website/content/audiences.md)).
 
-**Last updated:** 2026-11-04 (sales plan: buyer-side gaps S0.12–S0.19, S1.0, S1.10–S1.19; E16 UI/UX, E17 story quality, E18 Rust, each in its own plan; IDs renumbered before first commit) · **Released version:** v0.2.0 (2026-11-03)
+**Last updated:** 2026-11-05 (E16 done and released in v0.3.0; E19 shared labels split out as backlog; quality work uses only our own data) · **Released version:** v0.3.0 (2026-11-05)
 
 ## Overview
 
-18 epics:
-- 1 done: E2.
+19 epics:
+- 2 done: E2, E16.
 - 3 in progress: E1, E3, E8.
-- 3 not started: E10, E16, E17.
+- 2 not started: E10, E17.
 - 6 in the sales plan, backlog: E11–E15, E18.
 - 5 backlog, no plan: E4, E5, E6, E7, E9.
+- 1 backlog with plan: E19.
 
 Main path: E1 and E3 close (record real runs, Antigravity on Windows) → E4 validate the mechanism → E5 real use → E6 story assembly.
 Sales path (focus): E10 close the source → E12 host the page → E11 sell to devs. Landing page v2 for the paid product is in progress on branch `website-v2` (E8).
@@ -77,9 +78,10 @@ All epics, from idea to done. One plan per epic. The board shows no progress; re
 | E12 | Host the landing page on Cloudflare Pages | [sales](261104-sales/plan.md) | 📥 Backlog | P2 | E10 | Replaces `.github/workflows/website.yml` (GitHub Pages; fails on a private repo). Copy must match E10 and E11: license, price, download link |
 | E13 | Pro features: post drafts (X, LinkedIn, Threads, newsletter, weekly report), personal voice, cheaper LLM pass | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E11 | Overlaps E6 (draft post); decide which epic owns drafting when either opens |
 | E14 | Validate with vibe coders and creators: separate landing page, waitlist at 15–20 USD/month | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E11 | Lead line "Anh không thiếu ý tưởng, anh quên mất mình đã làm gì." Go on at a few hundred signups |
-| E16 | UI and UX without commands: one app for every project (data split per project), English UI, setup wizard, ranked story cards with Use/Later/Drop, privacy, cost, health; agent commands `momentry-ui`, `momentry-bip`; a `momentry` skill for plain-language questions (no MCP: token cost per session); Settings screen; one on-demand web process | [ui-ux](261104-ui-ux/plan.md) ✅, [ui-ux-followup](261104-ui-ux-followup/plan.md) | 🟨 UI done; follow-up todo | P1 | — | Decisions 2026-11-04 in the plan. Box stays in the repo by default, optional outside; auto-gather with a budget. Frontend is static so E18 reuses it |
+| E16 | UI and UX without commands: one app for every project (data split per project), English UI, setup wizard, ranked story cards with Use/Later/Drop, privacy, cost, health; agent commands `momentry-ui`, `momentry-bip`; a `momentry` skill for plain-language questions (no MCP: token cost per session); Settings screen; one on-demand web process | [ui-ux](261104-ui-ux/plan.md) ✅, [ui-ux-followup](261104-ui-ux-followup/plan.md) ✅ | ✅ Done (v0.3.0) | P1 | — | Decisions 2026-11-04 in the plan. Box stays in the repo by default, optional outside; auto-gather with a budget. Frontend is static so E18 reuses it |
 | E17 | Story selection quality and cost per session: labelled test set (5–10 sessions), replay harness with `--save-llm`/`--fake-llm`, per-step cost, ranking tuning, e5 embedding experiment for cluster/merge | [story-quality](261104-story-quality/plan.md) | ⬜ Todo | P1 | E1 | Overlaps E4 (DM.9, DM.10) and E5 metrics. e5 not in the first paid build unless Q.3/Q.6 show cluster cost matters: adds native `onnxruntime-node` and a ~117 MB download to a zero-dependency tool |
 | E18 | Port to Rust: core crate, CLI that also serves the E16 web UI from one binary; same box, ledger and config formats | [rust-port](261104-rust-port/plan.md) | 📥 Backlog | P2 | E17 | User allows a full Rust rewrite when needed (2026-11-04). ~6.2k lines JS, ~3.3k lines tests. Proposal: after the first sales signal, before A2 (E14/E15). Pulls in S0.19 (readable JS), S1.3 (license check), Q.6 (e5, embedded and run in-process via `candle`, R.7, only if a small model fits: ≤ ~50 MB added, quality not below e5-small), E9 (signing) |
+| E19 | Shared labels: users opt in to send anonymous Use/Later/Drop labels to a momentry server to improve default ranking; explicit consent screen listing every field sent, private projects never send | [shared-labels](261105-shared-labels/plan.md) | 📥 Backlog | P3 | E17 | Split from E16 (U.7b) 2026-11-05. Not now: quality work uses only our own data. Changes the "no momentry server" promise |
 | E15 | Hosted product: desktop or web app, more sources (Cursor, Lovable, Bolt, ChatGPT/Claude exports), accounts, subscription billing | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E14 | Privacy gate on the sales page, data policy, onboarding under 2 minutes |
 
 Status: 📥 Backlog, ⬜ Todo, 🔄 Doing, ⏸ Waiting, ✅ Done, ❌ Dropped.
