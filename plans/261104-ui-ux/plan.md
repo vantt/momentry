@@ -1,13 +1,14 @@
 ---
 title: "UI và UX: dùng momentry không cần nhớ lệnh (E16)"
 description: "Một app web nhẹ cho mọi dự án: wizard, hộp chuyện, settings, skill trong agent."
-status: todo
+status: done
 priority: P1
 branch: website-v2
 tags: [ui, ux]
 blockedBy: []
 blocks: []
 created: 2026-11-04
+completed: 2026-11-04
 ---
 
 # UI và UX: dùng momentry không cần nhớ lệnh (E16)
@@ -46,16 +47,20 @@ Người dùng, kể cả người không kỹ thuật, dùng momentry tốt nh�
 
 | ID | Việc | Ai | Trạng thái |
 |---|---|---|---|
-| U.1 | Danh sách dự án toàn cục và đường dẫn hộp theo dự án; `init`, `scan`, hook đọc từ đó; giữ tương thích máy đã cài | Agent | ⬜ |
-| U.2 | Đổi lệnh agent sang `momentry-ui`, `momentry-bip` ở cả 5 host; giữ `/bip` làm bí danh một thời gian. Kiểm trên máy thật tên hiện ra ở từng host (Codex `/prompts:`, Antigravity skill) | Agent; anh kiểm Windows | ⬜ |
-| U.3 | Dòng nhắc lúc mở phiên (hook SessionStart): số chuyện mới, phiên đang chờ vì ngân sách, lỗi cần sửa, kèm tên lệnh đúng theo host | Agent | ⬜ |
-| U.4 | Tiến trình web: `node:http` trên localhost, không dependency, tự tắt khi rảnh, một instance (cổng và khoá); JSON API đọc/ghi hộp; giao diện HTML/JS/CSS tĩnh dùng lại được khi sang Rust | Agent | ⬜ |
-| U.5 | Màn hình theo danh sách trên; thiết kế theo bảng màu landing v2 | Team agent; anh duyệt | ⬜ |
-| U.6 | Ngân sách và hàng chờ gom (config chung và theo dự án, `dry-run` đúng hơn từ S0.13) | Agent | ⬜ |
-| U.7 | Use / Later / Drop lưu thành nhãn trên máy; chỉnh xếp hạng theo người dùng; gửi nhãn ẩn danh chỉ khi đồng ý (nối E17) | Agent | ⬜ |
-| U.8 | Đo: thời gian từ cài tới chuyện đầu (S1.10), tỉ lệ chuyện top 5 được Use | Agent | ⬜ |
-| U.9 | **Skill `momentry`** (thay MCP, quyết định 2026-11-04 vì MCP tốn token mỗi phiên): một skill duy nhất, cài vào cả 5 host như `momentry-bip`. Lúc thường chỉ tên và mô tả nằm trong context (vài chục token); thân skill chỉ nạp khi người dùng hỏi ("tuần này có chuyện gì hay?", "viết chuyện X thành thread"). Skill chỉ agent gọi CLI `--json`; thêm lệnh `show <id> --json`, `mark <id> use\|later\|drop`. Soạn nháp bài do agent của người dùng viết bằng model họ đã trả, không tốn LLM phía momentry (đường ngắn tới E13). Kiểm host nào hỗ trợ skill (Antigravity đã dùng skill cho bip; Claude Code có; Codex, pi, omp cần kiểm) | Agent | ⬜ U0 hoặc ngay sau |
-| U.10 | Màn Settings, ba tầng: chung (agent, ngân sách, tên cần che, ngôn ngữ chuyện, cập nhật); từng dự án (bật/tắt gom, nơi lưu hộp và gitignore, tên che riêng, chế độ kín, ngân sách riêng, xuất/xoá); nâng cao, gập sẵn (model, số lần chạy, `quietMinutes`, `maxSessions`). UI ghi vào đúng file JSON qua `lib/config.mjs`, CLI và sửa tay vẫn dùng được. Cách làm: API trong tiến trình web (`GET /api/settings` gọi `show`, `PUT` gọi `write`/`privacyAdd` của `lib/config-cmd.mjs`), không có logic config thứ hai; thêm schema cho từng key (kiểu, giá trị được phép, min/max, tầng, mô tả tiếng Anh), `config set` kiểm theo schema và form UI sinh từ schema; ghi atomic qua đường sẵn có. Bảo mật: chỉ nghe `127.0.0.1`, token ngẫu nhiên trong URL mỗi lần mở UI, kiểm header `Host` (chặn DNS rebinding). Key mới: ngân sách, danh sách dự án, chế độ kín, gitignore. Giữ luật `USER_ONLY`: tên che riêng của dự án lưu trong config người dùng theo dự án, không ghi vào `.momentry.json` (repo lạ không được tắt lưới riêng tư) | Agent | ⬜ U0 |
+| U.1 | Danh sách dự án toàn cục và đường dẫn hộp theo dự án; `init`, `scan`, hook đọc từ đó; giữ tương thích máy đã cài | Agent | ➡️ chuyển sang [ui-ux-followup](../261104-ui-ux-followup/plan.md) |
+| U.2 | Đổi lệnh agent sang `momentry-ui`, `momentry-bip` ở cả 5 host; giữ `/bip` làm bí danh một thời gian. Kiểm trên máy thật tên hiện ra ở từng host (Codex `/prompts:`, Antigravity skill) | Agent; anh kiểm Windows | ➡️ chuyển sang [ui-ux-followup](../261104-ui-ux-followup/plan.md) |
+| U.3 | Dòng nhắc lúc mở phiên (hook SessionStart): số chuyện mới, phiên đang chờ vì ngân sách, lỗi cần sửa, kèm tên lệnh đúng theo host | Agent | ➡️ chuyển sang [ui-ux-followup](../261104-ui-ux-followup/plan.md) |
+| U.4 | Tiến trình web: `node:http` trên localhost, không dependency, tự tắt khi rảnh, một instance (cổng và khoá); JSON API đọc/ghi hộp; giao diện HTML/JS/CSS tĩnh dùng lại được khi sang Rust | Agent | ✅ `lib/ui-server.mjs`, lệnh `momentry ui` |
+| U.5 | Màn hình theo danh sách trên; thiết kế theo bảng màu landing v2 | Team agent; anh duyệt | ✅ đủ màn hình trong `ui/` (kể cả bước Budget của wizard); anh đã duyệt 2026-11-04 |
+| U.6 | Ngân sách và hàng chờ gom (config chung và theo dự án, `dry-run` đúng hơn từ S0.13) | Agent | ✅ ngân sách chung `budget.dailyUsd` (mặc định 3 USD/ngày) và riêng từng dự án (`budget.projects` trong config người dùng, repo không tự đặt được) chặn `scan --auto`; phiên vượt chờ ngày sau, hiện trên Cost và Settings. Phần `dry-run` chính xác hơn theo S0.13 bên sales plan |
+| U.7 | Use / Later / Drop lưu thành nhãn trên máy; chỉnh xếp hạng theo người dùng; gửi nhãn ẩn danh chỉ khi đồng ý (nối E17) | Agent | ✅ phần trên máy: Use/Later/Drop lưu trên máy; tường chuyện tự xếp theo lựa chọn của người dùng (sau ít nhất 3 nhãn, chỉ dịch vài bậc, nhãn "Your kind"). Gửi nhãn ẩn danh chuyển sang U.7b ở [ui-ux-followup](../261104-ui-ux-followup/plan.md) |
+| U.8 | Đo: thời gian từ cài tới chuyện đầu (S1.10), tỉ lệ chuyện top 5 được Use | Agent | ➡️ chuyển sang [ui-ux-followup](../261104-ui-ux-followup/plan.md) |
+| U.9 | **Skill `momentry`** (thay MCP, quyết định 2026-11-04 vì MCP tốn token mỗi phiên): một skill duy nhất, cài vào cả 5 host như `momentry-bip`. Lúc thường chỉ tên và mô tả nằm trong context (vài chục token); thân skill chỉ nạp khi người dùng hỏi ("tuần này có chuyện gì hay?", "viết chuyện X thành thread"). Skill chỉ agent gọi CLI `--json`; thêm lệnh `show <id> --json`, `mark <id> use\|later\|drop`. Soạn nháp bài do agent của người dùng viết bằng model họ đã trả, không tốn LLM phía momentry (đường ngắn tới E13). Kiểm host nào hỗ trợ skill (Antigravity đã dùng skill cho bip; Claude Code có; Codex, pi, omp cần kiểm) | Agent | ➡️ chuyển sang [ui-ux-followup](../261104-ui-ux-followup/plan.md) |
+| U.10 | Màn Settings, ba tầng: chung (agent, ngân sách, tên cần che, ngôn ngữ chuyện, cập nhật); từng dự án (bật/tắt gom, nơi lưu hộp và gitignore, tên che riêng, chế độ kín, ngân sách riêng, xuất/xoá); nâng cao, gập sẵn (model, số lần chạy, `quietMinutes`, `maxSessions`). UI ghi vào đúng file JSON qua `lib/config.mjs`, CLI và sửa tay vẫn dùng được. Cách làm: API trong tiến trình web (`GET /api/settings` gọi `show`, `PUT` gọi `write`/`privacyAdd` của `lib/config-cmd.mjs`), không có logic config thứ hai; thêm schema cho từng key (kiểu, giá trị được phép, min/max, tầng, mô tả tiếng Anh), `config set` kiểm theo schema và form UI sinh từ schema; ghi atomic qua đường sẵn có. Bảo mật: chỉ nghe `127.0.0.1`, token ngẫu nhiên trong URL mỗi lần mở UI, kiểm header `Host` (chặn DNS rebinding). Key mới: ngân sách, danh sách dự án, chế độ kín, gitignore. Giữ luật `USER_ONLY`: tên che riêng của dự án lưu trong config người dùng theo dự án, không ghi vào `.momentry.json` (repo lạ không được tắt lưới riêng tư) | Agent | ✅ ba tầng, schema, ngân sách chung và riêng, chế độ kín theo dự án (`privacy.privateProjects` trong config người dùng; E13/E17 phải đọc `cfg.privateMode`), gitignore, xuất/xoá |
+
+**Đóng plan (2026-11-04):** phần UI xong và anh đã duyệt. Font giữ đủ 4 họ như C2 (Bricolage, Be Vietnam Pro thay Figtree vì cần dấu tiếng Việt, Permanent Marker, JetBrains Mono); bảng tự chấm của ak-frontend-design để mục chữ 1/2 vì giới hạn 2 họ, theo quyết định của anh. Việc không phải UI chuyển sang [ui-ux-followup](../261104-ui-ux-followup/plan.md).
+
+**Phần UI đã xong (2026-11-04): U.4, U.5, U.6, U.10; anh đã duyệt thiết kế. Quyết định: khi chưa có danh sách tên riêng tư thì UI không cho sửa chuyện, giống pipeline.** `momentry ui` mở một tiến trình `node:http` trên 127.0.0.1 (cổng 4825, token ngẫu nhiên nằm trong file mở riêng `<cache>/ui-open.html` quyền 0600 nên không lộ qua tham số tiến trình hay transcript, kiểm `Host` và `Origin`, một instance qua `<cache>/ui.json`, tự tắt sau 10 phút không còn tab). Giao diện tĩnh trong `ui/` (HTML/CSS/JS, font đóng gói sẵn, không gọi mạng), theo phong cách Paper wall (C2). Có: wizard 4 bước (Agents, Projects + gitignore, tên cần che, tìm chuyện lần đầu có tiến độ), Stories (lọc tuần này/chưa đọc/để sau/đã chọn, theo dự án; Use/Later/Drop có Undo), Story (sửa tại chỗ ghi thẳng markdown, kiểm tên riêng tư trước khi ghi; Show source; Copy), Series, Privacy, Cost, Health (Fix it), Quick note, Settings ba tầng sinh từ `lib/config-schema.mjs` (`config set` cũng kiểm theo schema), xuất markdown và xoá dữ liệu một dự án. Ngân sách chung và riêng từng dự án chạy thật (U.6). Chế độ kín theo dự án đã có trong Settings và Privacy, lưu trong config người dùng; hiện chưa có gì để chặn vì nháp (E13) và nhãn (E17) chưa làm. Chưa có: "Draft a post" (E13). Danh sách dự án hiện lấy từ sổ phiên, `MOMENTRY_REPOS` và repo đang đứng; U.1 sẽ thay bằng danh sách toàn cục.
 
 **Giới hạn cần nói thật:** UI giúp dev A1 dùng dễ hơn, nhưng người không kỹ thuật thật vẫn vướng hai rào: cần Node (E18 gỡ) và cần `claude` CLI đã đăng nhập (chỉ E15 hoặc backend API gỡ).
 
