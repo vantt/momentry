@@ -4,17 +4,18 @@ This board is high-level: one row = one epic = one plan. Step status and evidenc
 
 **Context:** momentry is the experimental first slice of CIS (Creator Intelligence System, `vantt/cis`). Current focus: **selling it**. Every sales step (E8, E10–E15) lives in one plan: [sales](261104-sales/plan.md). What sells tells CIS which audience to build for next ([audiences](../website/content/audiences.md)).
 
-**Last updated:** 2026-11-05 (E16 done and released in v0.3.0; E19 shared labels split out as backlog; quality work uses only our own data) · **Released version:** v0.3.0 (2026-11-05)
+**Last updated:** 2026-11-05 (E16 done and released in v0.3.0; E19 shared labels split out as backlog; quality work uses only our own data; E20 story material signals opened, M.1 done) · **Released version:** v0.3.0 (2026-11-05)
 
 ## Overview
 
-19 epics:
+20 epics:
 - 2 done: E2, E16.
 - 3 in progress: E1, E3, E8.
 - 1 not started: E10. In progress: E17.
 - 6 in the sales plan, backlog: E11–E15, E18.
 - 5 backlog, no plan: E4, E5, E6, E7, E9.
 - 1 backlog with plan: E19.
+- 1 in progress with plan: E20 (M.1 done; M.2–M.4 todo).
 
 Main path: E1 and E3 close (record real runs, Antigravity on Windows) → E4 validate the mechanism → E5 real use → E6 story assembly.
 Sales path (focus): E10 close the source → E12 host the page → E11 sell to devs. Landing page v2 for the paid product is in progress on branch `website-v2` (E8).
@@ -37,6 +38,7 @@ At most 1 step per plan.
 |---|---|---|---|
 | (none) | Agent steps of E1 are done; DM.6 and DM.7 wait on the human | | |
 | E3 | Set the plan `completed` | [more-agent-hosts](261103-1110-more-agent-hosts/plan.md) | After issue #2 passes |
+| E20 | M.2 Git as a second source inside the session time range, with SHA evidence | [story-material](261105-story-material/plan.md) | After M.1 merges to main |
 
 ### Next plans
 
@@ -82,6 +84,7 @@ All epics, from idea to done. One plan per epic. The board shows no progress; re
 | E17 | Story selection quality and cost per session: labelled test set (5–10 sessions), replay harness with `--save-llm`/`--fake-llm`, per-step cost, ranking tuning, e5 embedding experiment for cluster/merge | [story-quality](261104-story-quality/plan.md) | 🟡 In progress | P1 | E1 | Overlaps E4 (DM.9, DM.10) and E5 metrics. e5 not in the first paid build unless Q.3/Q.6 show cluster cost matters: adds native `onnxruntime-node` and a ~117 MB download to a zero-dependency tool |
 | E18 | Port to Rust: core crate, CLI that also serves the E16 web UI from one binary; same box, ledger and config formats | [rust-port](261104-rust-port/plan.md) | 📥 Backlog | P2 | E17 | User allows a full Rust rewrite when needed (2026-11-04). ~6.2k lines JS, ~3.3k lines tests. Proposal: after the first sales signal, before A2 (E14/E15). Pulls in S0.19 (readable JS), S1.3 (license check), Q.6 (e5, embedded and run in-process via `candle`, R.7, only if a small model fits: ≤ ~50 MB added, quality not below e5-small), E9 (signing) |
 | E19 | Shared labels: users opt in to send anonymous Use/Later/Drop labels to a momentry server to improve default ranking; explicit consent screen listing every field sent, private projects never send | [shared-labels](261105-shared-labels/plan.md) | 📥 Backlog | P3 | E17 | Split from E16 (U.7b) 2026-11-05. Not now: quality work uses only our own data. Changes the "no momentry server" promise |
+| E20 | Story material signals: owner-voice, lesson-write and blocked hotspot kinds with noise filters (M.1 done); next git as a second source (M.2), subagent and worker transcripts (M.3), cross-session arc and retrospective mode (M.4) | [story-material](261105-story-material/plan.md) | 🔄 Doing | P1 | E17 | Evidence: [material-signals](../docs/experiments/2026-11-05-material-signals/README.md). Ranking and outsider cost stay in E17 |
 | E15 | Hosted product: desktop or web app, more sources (Cursor, Lovable, Bolt, ChatGPT/Claude exports), accounts, subscription billing | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E14 | Privacy gate on the sales page, data policy, onboarding under 2 minutes |
 
 Status: 📥 Backlog, ⬜ Todo, 🔄 Doing, ⏸ Waiting, ✅ Done, ❌ Dropped.
