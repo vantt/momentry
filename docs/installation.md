@@ -22,10 +22,13 @@ Cần sẵn: Node ≥ 20 trên PATH, git, và `claude` CLI đã đăng nhập. I
 | Bản đang dùng | `~/.local/share/momentry/current` | `%LOCALAPPDATA%\momentry\app\current` |
 | Dấu bản cài (ghi cả thư mục shim) | `~/.local/share/momentry/.momentry-managed` | `%LOCALAPPDATA%\momentry\app\.momentry-managed` |
 | Cấu hình người dùng | `~/.config/momentry/config.json` | `%APPDATA%\momentry\config.json` |
+| Danh sách dự án trên máy | `~/.config/momentry/projects.json` (quyền 0600) | `%APPDATA%\momentry\projects.json` |
 | Cache (sổ, khoá, quarantine, `hook.log`) | `~/.cache/momentry` (quyền 0700) | `%LOCALAPPDATA%\momentry\cache` |
 | Hook, extension, `/bip` của các agent | xem [Host được hỗ trợ](#host-được-hỗ-trợ) | như cột bên trái, dưới `%USERPROFILE%` |
 
 Linux tôn trọng `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` khi là đường dẫn tuyệt đối. macOS dùng cùng bố cục `~/.config`, `~/.cache` như Linux (có chủ ý, giống đa số CLI dành cho dev).
+
+Danh sách dự án (`projects.json`, khoá là git root) là nơi `momentry ui` tìm dự án. `init`, nút bật dự án trong giao diện và mọi lệnh hook gọi (`scan`, `harvest`) thêm repo đang quan sát vào đó; máy cài từ bản cũ được điền một lần từ sổ phiên và `MOMENTRY_REPOS`. Repo vẫn được quan sát nhờ `.momentry.json` hoặc `MOMENTRY_REPOS`, như trước. Thư mục dự án bị chuyển hay xoá vẫn nằm trong danh sách, được đánh dấu mất, cho tới khi bạn xoá dự án đó trong giao diện.
 
 Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `current`, nên nâng Node hay `momentry update` không làm hook hỏng. Hook trong `settings.json` gọi shim bằng đường dẫn tuyệt đối, nên vẫn chạy kể cả khi `~/.local/bin` chưa có trong PATH của Claude Code.
 
@@ -103,7 +106,7 @@ Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên tr
 
 | Khoá | Mặc định | Ghi chú |
 |---|---|---|
-| `box` | `docs/storytelling-material` | Tương đối với git root |
+| `box` | `docs/storytelling-material` | Tương đối với git root. Hộp ngoài repo chọn cho một dự án (trong giao diện) chỉ nằm trong danh sách dự án, thắng `.momentry.json`; env và cờ vẫn thắng nó |
 | `repo` | tên thư mục git root | |
 | `harvest.runs` / `.model` / `.fillRetries` / `.maxInputTokens` / `.timeoutSec` | 1 / `haiku` / 1 / 150000 / 600 | |
 | `rank.model` | `sonnet` | |

@@ -45,7 +45,7 @@ Mọi lệnh nhận `--json` và in đúng một object ra stdout, kể cả khi
 
 Bật momentry cho repo này: tạo .momentry.json và hộp chuyện, cài hook + /bip cho Claude Code/Codex, rồi chạy doctor.
 
-**Thay đổi:** <repo>/.momentry.json, thư mục hộp <repo>/docs/storytelling-material; ~/.claude/settings.json (khoá hooks), ~/.claude/commands/bip.md, ~/.codex/hooks.json, ~/.codex/prompts/bip.md (có sao lưu *.momentry-bak-*). Chạy lại không đổi gì nếu đã đủ.
+**Thay đổi:** <repo>/.momentry.json, thư mục hộp <repo>/docs/storytelling-material, <config>/projects.json (danh sách dự án trên máy); ~/.claude/settings.json (khoá hooks), ~/.claude/commands/bip.md, ~/.codex/hooks.json, ~/.codex/prompts/bip.md (có sao lưu *.momentry-bak-*). Chạy lại không đổi gì nếu đã đủ.
 
 **Cần:** git repo; Node ≥ 20; `claude` CLI đã đăng nhập; privacy.sources trong cấu hình người dùng (init chỉ cách khai báo nếu thiếu).
 
@@ -105,7 +105,7 @@ Mã thoát: 0 ổn; 1 có việc cần làm (xem "tiếp"); 2 sai cú pháp.
 
 Gom mọi phiên Claude Code, Codex, pi, omp, Antigravity của repo chưa gom hết, ở mọi profile (bỏ qua phiên đang mở).
 
-**Thay đổi:** <box>/*.md (chuyện mới hoặc gộp), <cache>/ledger.json, <cache>/runs/.
+**Thay đổi:** <box>/*.md (chuyện mới hoặc gộp), <cache>/ledger.json, <cache>/runs/, <config>/projects.json (thêm repo vào danh sách dự án).
 
 **Cần:** repo đã init; `claude` CLI; tốn ~1 USD cho phiên cỡ 150k token.
 
