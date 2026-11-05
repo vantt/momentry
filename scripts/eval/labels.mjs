@@ -99,22 +99,32 @@ export function loadLabels(file) {
 /** Verdicts of the angle check on the review page, saved in `<data>/angle-labels/<session>.json`. */
 export const ANGLE_VERDICTS = Object.freeze({ tellable: 'kể được', 'no-story': 'không ra chuyện', invented: 'bịa' });
 
+/** The review page's second question on an angle, answered có / không, saved next to the verdict as `understood`. */
+export const UNDERSTOOD_QUESTION = 'Đọc xong hiểu được, không cần hỏi thêm?';
+export const UNDERSTOOD = Object.freeze({ yes: 'có', no: 'không' });
+
 /**
- * Counts per verdict of an angle-check file `{session, stories: {<story id>: {verdict, angle, at}}}`; null when the
- * file is missing or unreadable. @param {string} file @returns {Record<string, number>|null}
+ * Counts per verdict of an angle-check file `{session, stories: {<story id>: {verdict?, understood?, angle, at}}}`,
+ * plus `understood: {yes, no}`; null when the file is missing or unreadable.
+ * @param {string} file @returns {(Record<string, number> & {understood: {yes: number, no: number}})|null}
  */
 export function angleCheckCounts(file) {
   let j;
   try { j = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; }
   if (!j || typeof j !== 'object' || !j.stories || typeof j.stories !== 'object') return null;
   const n = Object.fromEntries(Object.keys(ANGLE_VERDICTS).map((k) => [k, 0]));
-  for (const v of Object.values(j.stories)) if (v && Object.hasOwn(n, v.verdict)) n[v.verdict]++;
-  return n;
+  const understood = { yes: 0, no: 0 };
+  for (const v of Object.values(j.stories)) {
+    if (v && Object.hasOwn(n, v.verdict)) n[v.verdict]++;
+    if (v && Object.hasOwn(understood, v.understood)) understood[v.understood]++;
+  }
+  return { ...n, understood };
 }
 
 /**
  * Story text the keywords are matched against, in slug form wrapped in `-`: hook and body (title, sections). The
- * story angle line is left out, so adding angles never changes which labels a story matches.
+ * story angle line is left out, and the spine lives in frontmatter only (never read here), so adding angles and
+ * spines never changes which labels a story matches.
  */
 export function storyText(story) {
   const d = story?.data || {};

@@ -54,13 +54,22 @@ test('estimateUsd: cache, models, runs and chunks move the estimate the right wa
   assert.equal(estimateUsd([], c), 0);
 });
 
-/** Angle calls measured on two sessions (40 calls): USD per session for 10 stories, per model. */
+/** Angle calls with the story spine measured on two sessions (haiku, 20 calls): USD per session for 10 stories. */
 test('estimateUsd: the story angle step adds topN calls, near the measured cost', () => {
   const off = estimateUsd([90000], cfgOf({ 'angle.enabled': false }));
-  for (const [model, real] of [['haiku', 0.0166], ['sonnet', 0.210]]) {
+  for (const [model, real] of [['haiku', 0.0311]]) {
     const cfg = cfgOf({ 'angle.model': model });
     assert.ok(Math.abs(angleCallUsd(cfg) * 10 / real - 1) <= 0.15, `${model}: ${(angleCallUsd(cfg) * 10).toFixed(4)} vs ${real}`);
     assert.ok(Math.abs(estimateUsd([90000], cfg) - off - 10 * angleCallUsd(cfg)) < 1e-9);
   }
+  const sonnet = cfgOf({ 'angle.model': 'sonnet' });
+  assert.ok(angleCallUsd(sonnet) > 5 * angleCallUsd(cfgOf({})), 'sonnet is priced well above haiku');
   assert.equal(estimateUsd([90000], cfgOf({ 'angle.topN': 0 })), off);
+});
+
+test('profileCallUsd: one cheap call per project, near the measured cost', async () => {
+  const { profileCallUsd } = await import('../lib/project-profile.mjs');
+  // measured on two projects: 0.0010-0.0016 USD with haiku
+  const usd = profileCallUsd(cfgOf({}));
+  assert.ok(usd > 0.0008 && usd < 0.002, String(usd));
 });

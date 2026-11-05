@@ -66,6 +66,18 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: v
 .verdict button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
 .verdict button[data-v="invented"][aria-pressed="true"] { border-color: var(--bad); color: var(--bad); }
 .verdict button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.verdict .q { font-size: 12px; color: var(--muted); align-self: center; margin-right: 2px; }
+.verdict + .verdict { margin-top: 4px; }
+.versus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 2px; }
+.versus .angle { margin: 0; }
+.versus .angle.old { border-left-color: var(--line); color: var(--muted); }
+.versus .tag, .spine .tag { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.spine { margin: 6px 0 2px; font-size: 12px; display: grid; grid-template-columns: 110px 1fr; gap: 2px 10px; }
+.spine dt { color: var(--muted); }
+.spine dd { margin: 0; }
+.spine dd.empty { color: var(--muted); font-style: italic; }
+.spine .ln { color: var(--muted); font-size: 11px; }
+@media (max-width: 760px) { .versus { grid-template-columns: 1fr; } .spine { grid-template-columns: 1fr; } }
 .btn { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--panel); color: inherit; padding: 7px 14px; border-radius: var(--r); cursor: pointer; }
 .btn:hover { border-color: var(--accent); }
 .btn.small { font-size: 12px; padding: 3px 10px; flex: none; }
@@ -155,24 +167,44 @@ function render() {
     <h3>Thêm chuyện còn thiếu</h3>
     <form class="add" id="add"><input name="title" placeholder="Tiêu đề, ví dụ: test bằng điểm làm CI đỏ" required><input name="keywords" placeholder="Từ khoá, ví dụ: snapshot, bằng điểm, flaky" required><button class="btn">Thêm</button></form>
     <h3>Momentry tìm ra (${cur.stories.length})</h3>
-    ${angled.length ? `<div class="help">Kiểm góc kể (${checked}/${angled.length} đã chấm): với mỗi chuyện có góc kể, chọn <b>kể được</b> nếu đó là chuyện bạn kể được, <b>không ra chuyện</b> nếu đúng nhưng không có gì để kể, <b>bịa</b> nếu có chi tiết không có trong phiên. Lưu ngay khi bấm.</div>` : ''}${found}`;
+    ${angled.length ? `<div class="help">Kiểm góc kể (${checked}/${angled.length} đã chấm): với mỗi chuyện có góc kể, chọn <b>kể được</b> nếu đó là chuyện bạn kể được, <b>không ra chuyện</b> nếu đúng nhưng không có gì để kể, <b>bịa</b> nếu có chi tiết không có trong phiên; rồi trả lời <b>Đọc xong hiểu được, không cần hỏi thêm?</b> (có / không). Có góc kể cũ thì hai bản đứng cạnh nhau. Lưu ngay khi bấm.</div>` : ''}${found}`;
 }
 
 const VERDICTS = [['tellable', 'kể được'], ['no-story', 'không ra chuyện'], ['invented', 'bịa']];
+const ANSWERS = [['yes', 'có'], ['no', 'không']];
+const SLOTS = [['context', 'Bối cảnh'], ['want', 'Muốn gì'], ['obstacle', 'Vướng gì'], ['turn', 'Tưởng… hoá ra'], ['action', 'Làm gì'], ['outcome', 'Giờ thì sao'], ['takeaway', 'Người nghe dùng được']];
+const short = (refs) => (refs || []).map((r) => String(r).replace(/^.*#/, '')).join(', ');
+function spineHtml(s) {
+  if (!s.spine) return '';
+  return `<dl class="spine" aria-label="Xương chuyện"><dt><span class="tag">xương chuyện</span></dt><dd>${s.completeness ?? 0}/7 ô</dd>${SLOTS.map(([k, w]) => {
+    const v = s.spine[k];
+    return `<dt>${w}</dt>${v ? `<dd>${esc(v.text)} <span class="ln">${esc(short(v.lines))}</span></dd>` : '<dd class="empty">trống</dd>'}`;
+  }).join('')}</dl>`;
+}
+function oneAngle(text, audience, cls = '') {
+  return `<div class="angle ${cls}">${esc(text)}${audience ? `<span class="aud">cho: ${esc(audience)}</span>` : ''}</div>`;
+}
 function angleHtml(s) {
   if (!s.angle) return '';
-  if (s.angle === 'none') return '<div class="angle none">không có góc kể</div>';
+  const old = s.prevAngle ? (s.prevAngle === 'none' ? '<div class="angle none old">không có góc kể</div>' : oneAngle(s.prevAngle, s.prevAudience, 'old')) : '';
+  const now = s.angle === 'none' ? '<div class="angle none">không có góc kể</div>' : oneAngle(s.angle, s.audience);
+  const shown = old ? `<div class="versus"><div><span class="tag">góc kể cũ</span>${old}</div><div><span class="tag">góc kể mới</span>${now}</div></div>` : now;
+  if (s.angle === 'none') return shown + spineHtml(s);
   const v = cur.angleChecks[s.id];
-  return `<div class="angle">${esc(s.angle)}${s.audience ? `<span class="aud">cho: ${esc(s.audience)}</span>` : ''}</div>
-    <div class="verdict" role="group" aria-label="Kiểm góc kể">${VERDICTS.map(([k, w]) => `<button type="button" data-angle="${esc(s.id)}" data-v="${k}" aria-pressed="${v === k}">${w}</button>`).join('')}</div>`;
+  const u = (cur.understood || {})[s.id];
+  return `${shown}${spineHtml(s)}
+    <div class="verdict" role="group" aria-label="Kiểm góc kể">${VERDICTS.map(([k, w]) => `<button type="button" data-angle="${esc(s.id)}" data-v="${k}" aria-pressed="${v === k}">${w}</button>`).join('')}</div>
+    <div class="verdict" role="group" aria-label="Đọc xong hiểu được, không cần hỏi thêm?"><span class="q">Đọc xong hiểu được, không cần hỏi thêm?</span>${ANSWERS.map(([k, w]) => `<button type="button" data-understood="${esc(s.id)}" data-v="${k}" aria-pressed="${u === k}">${w}</button>`).join('')}</div>`;
 }
 
-async function setVerdict(story, verdict) {
+async function saveCheck(story, body, what) {
   try {
-    const r = await api('/api/sessions/' + cur.id + '/angle', { method: 'PUT', body: JSON.stringify({ story, verdict }) });
-    cur.angleChecks = r.angleChecks; render(); msg('Đã lưu kiểm góc kể.');
+    const r = await api('/api/sessions/' + cur.id + '/angle', { method: 'PUT', body: JSON.stringify({ story, ...body }) });
+    cur.angleChecks = r.angleChecks; cur.understood = r.understood; render(); msg(what);
   } catch (err) { msg('Không lưu được: ' + err.message, true); }
 }
+const setVerdict = (story, verdict) => saveCheck(story, { verdict }, 'Đã lưu kiểm góc kể.');
+const setUnderstood = (story, understood) => saveCheck(story, { understood }, 'Đã lưu câu trả lời.');
 
 document.addEventListener('input', (e) => {
   const f = e.target.dataset.f; const row = e.target.closest('.row');
@@ -185,6 +217,8 @@ document.addEventListener('input', (e) => {
 document.addEventListener('click', (e) => {
   const v = e.target.closest('[data-angle]');
   if (v) return setVerdict(v.dataset.angle, v.getAttribute('aria-pressed') === 'true' ? null : v.dataset.v);
+  const q = e.target.closest('[data-understood]');
+  if (q) return setUnderstood(q.dataset.understood, q.getAttribute('aria-pressed') === 'true' ? null : q.dataset.v);
   const b = e.target.closest('[data-id]'); if (b) return open(b.dataset.id);
   const d = e.target.closest('[data-del]'); if (d) { cur.rows.splice(Number(d.dataset.del), 1); setDirty(true); return render(); }
   const a = e.target.closest('[data-addstory]');

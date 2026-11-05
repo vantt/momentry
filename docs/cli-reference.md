@@ -329,11 +329,11 @@ Mã thoát: 0 xong; 1 lỗi; 2 sai cú pháp; 3 chưa có nguồn chặn; 4 mode
 
 ### `momentry angle`
 
-Viết góc kể (điều người ta tưởng, điều hoá ra, vì sao người nghe nên quan tâm) cho chuyện đã có trong hộp mà chưa có góc kể: mặc định các chuyện đầu bảng xếp hạng. Cùng bước mà harvest chạy sau khi xếp hạng.
+Viết xương chuyện và góc kể cho chuyện đã có trong hộp mà chưa có góc kể: mặc định các chuyện đầu bảng xếp hạng. Góc kể mở bằng bối cảnh (dự án gì, người làm đang cố làm gì), rồi điều người ta tưởng, điều hoá ra, vì sao người nghe nên quan tâm. Cùng bước mà harvest chạy sau khi xếp hạng.
 
-**Thay đổi:** <box>/<id>.md (trường angle, audience và dòng **Góc kể:** trong thân; angle: none khi không có góc kể), hoặc <cache>/quarantine/ nếu vi phạm riêng tư hay chưa có nguồn chặn; <cache>/runs/angle/.
+**Thay đổi:** <box>/<id>.md (trường angle, audience, spine_*, completeness và dòng **Góc kể:** trong thân; angle: none khi không có góc kể), hoặc <cache>/quarantine/ nếu vi phạm riêng tư hay chưa có nguồn chặn; <cache>/profiles/ (hồ sơ dự án, sửa tay được); <cache>/ledger.json (chi phí, tính vào ngân sách ngày); <cache>/runs/angle/.
 
-**Cần:** repo đã init; `claude` CLI; transcript của phiên còn trên máy. Mỗi chuyện một lần gọi model (angle.model).
+**Cần:** repo đã init; `claude` CLI; transcript của phiên còn trên máy. Mỗi chuyện một lần gọi model (angle.model); mỗi dự án thêm một lần gọi (angle.profileModel) khi chưa có hồ sơ hoặc README/docs đã đổi.
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -348,7 +348,7 @@ momentry angle --top 5
 momentry angle --story 2026-11-04-cache-lru --force --json
 ```
 
-Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc lỗi; 2 sai cú pháp; 3 có góc kể giữ ngoài repo vì chưa có nguồn chặn; 4 model lỗi ở ít nhất một chuyện (chuyện đó chưa có góc kể).
+Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc lỗi; 2 sai cú pháp; 3 có góc kể giữ ngoài repo vì chưa có nguồn chặn; 4 model lỗi ở ít nhất một chuyện (chuyện đó chưa có góc kể); 5 phiên của ít nhất một chuyện đang được gom, chuyện đó bỏ qua (chạy lại sau).
 
 Tiếp theo: momentry list --rank
 

@@ -14,7 +14,8 @@ import { readBox } from '../../lib/box.mjs';
 import { sortRanked } from '../../lib/rank.mjs';
 import { heldDir } from '../../lib/quarantine.mjs';
 import { loadLabels, angleCheckCounts, ANGLE_VERDICTS } from './labels.mjs';
-import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS } from './metrics.mjs';
+import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS, RANK_BY, byCompleteness } from './metrics.mjs';
+import { spineOf } from '../../lib/angle.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const DEFAULT_OUT = path.join(ROOT, 'docs', '_private', 'eval');
@@ -130,11 +131,14 @@ function parseDry(message) {
   return { usd: num(/~([\d.]+) USD/), tokens: num(/~(\d+) token/), chunks: num(/(\d+) khúc/), hotspots: num(/(\d+) điểm nóng/), entries: num(/(\d+) Entry/) };
 }
 
-/** One ranked story in capture.json; `angle` is the text, `none` (looked at, no tellable turn) or null (not looked at). */
+/**
+ * One ranked story in capture.json; `angle` is the text, `none` (looked at, no tellable turn) or null (not looked at);
+ * `spine` the filled spine slots ({text, lines}) and `completeness` their count, null before the angle step.
+ */
 export const summary = (s) => ({
   id: s.id, title: titleOf(s), tension: s.data.tension ?? null, stakes: s.data.stakes ?? null, strength: s.data.strength ?? null,
   hits: s.data.hits ?? null, held: !!s.held, angle: typeof s.data.angle === 'string' ? s.data.angle : null,
-  audience: typeof s.data.audience === 'string' ? s.data.audience : null,
+  audience: typeof s.data.audience === 'string' ? s.data.audience : null, ...spineOf(s.data),
 });
 
 function nextRunDir(base) {
@@ -182,18 +186,20 @@ async function replay(session, c, labels, opts) {
   const ids = r.ranked.map((s) => noDate(s.id));
   const capIds = c.rec.ranked.map((s) => noDate(s.id));
   if (!opts.keep) fs.rmSync(path.join(c.dir, 'replay'), { recursive: true, force: true });
-  return row(session, c, r.ranked, labels, {
+  return row(session, c, r.ranked, labels, opts.rankBy, {
     replayStatus: r.report.status, replayExit: r.report.exitCode, windowChanged: sha !== c.rec.windowSha,
     sameAsCapture: ids.length === capIds.length && ids.every((x, i) => x === capIds[i]),
   });
 }
 
-function row(session, c, ranked, labels, extra = {}) {
+/** Measured row of one capture; `rankBy` 'completeness' measures the list re-ordered by story completeness. */
+function row(session, c, ranked, labels, rankBy = 'default', extra = {}) {
   const calls = readCalls(path.join(c.dir, 'llm'));
+  const order = rankBy === 'completeness' ? byCompleteness(ranked) : ranked;
   return {
     id: session.id, run: c.n, stories: ranked.length, usd: c.rec.report.usd ?? null, secs: c.rec.report.secs ?? null,
     modelSecs: calls.reduce((a, x) => a + x.secs, 0), status: c.rec.report.status, dryRunUsd: c.rec.dryRun?.usd ?? null,
-    steps: stepCosts(calls), rank: labels ? rankMetrics(ranked, labels) : null, ...extra,
+    steps: stepCosts(calls), rank: labels ? rankMetrics(order, labels) : null, ...extra,
   };
 }
 
@@ -240,8 +246,10 @@ export function formatReport(rows, diffs, overall) {
 /** Angle check counts per session (review page), plus the total. @param {Record<string, Record<string, number>>} checks */
 export function formatAngleChecks(checks) {
   const keys = Object.keys(ANGLE_VERDICTS);
-  const line = (name, n) => `${name.padEnd(10)} ${keys.map((k) => `${ANGLE_VERDICTS[k]} ${n[k]}`).join(', ')} (trên ${keys.reduce((a, k) => a + n[k], 0)})`;
+  const asked = (n) => (n.understood && n.understood.yes + n.understood.no ? `; hiểu được không cần hỏi: có ${n.understood.yes}, không ${n.understood.no}` : '');
+  const line = (name, n) => `${name.padEnd(10)} ${keys.map((k) => `${ANGLE_VERDICTS[k]} ${n[k]}`).join(', ')} (trên ${keys.reduce((a, k) => a + n[k], 0)})${asked(n)}`;
   const total = Object.fromEntries(keys.map((k) => [k, Object.values(checks).reduce((a, n) => a + (n[k] ?? 0), 0)]));
+  total.understood = { yes: Object.values(checks).reduce((a, n) => a + (n.understood?.yes ?? 0), 0), no: Object.values(checks).reduce((a, n) => a + (n.understood?.no ?? 0), 0) };
   return ['', 'kiểm góc kể (trang duyệt)', ...Object.entries(checks).map(([id, n]) => line(id, n)), line('tổng', total)].join('\n');
 }
 
@@ -265,13 +273,14 @@ function labelsOf(session, log) {
   return loadLabels(session.labels);
 }
 
-const USAGE = `node scripts/eval/run.mjs --manifest FILE [--capture] [--out DIR] [--only ID,ID] [--jobs N] [--budget USD] [--keep]
+const USAGE = `node scripts/eval/run.mjs --manifest FILE [--capture] [--out DIR] [--only ID,ID] [--jobs N] [--budget USD] [--keep] [--rank-by default|completeness]
   mặc định: chạy lại mọi lần chụp bằng --fake-llm (không tốn tiền) rồi đo
   --capture  gọi model thật, mỗi phiên một lần chụp mới (<out>/<id>/runs/<n>/)
   --out      thư mục dữ liệu (mặc định ${path.relative(process.cwd(), DEFAULT_OUT) || DEFAULT_OUT})
   --only     chỉ các phiên này   --jobs  số phiên chạy song song (mặc định 1)
   --budget   với --capture: không chụp phiên tiếp khi đã tiêu + ${ESTIMATE_FACTOR}×ước tính vượt mức này
-  --keep     giữ repo nháp của lần chạy lại (<out>/<id>/runs/<n>/replay/)`;
+  --keep     giữ repo nháp của lần chạy lại (<out>/<id>/runs/<n>/replay/)
+  --rank-by  thứ tự đo: default (như momentry list --rank) hoặc completeness (số ô xương chuyện đã điền, cao trước)`;
 
 /** CLI entry; returns the exit code. `env` is the real environment (model calls, privacy names). */
 export async function main(argv = process.argv.slice(2), io = { out: (s) => process.stdout.write(s + '\n'), err: (s) => process.stderr.write(s + '\n') }, env = process.env) {
@@ -279,7 +288,7 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   try {
     a = parseArgs({ args: argv, options: {
       manifest: { type: 'string' }, capture: { type: 'boolean' }, out: { type: 'string' }, only: { type: 'string' },
-      jobs: { type: 'string' }, budget: { type: 'string' }, keep: { type: 'boolean' }, help: { type: 'boolean', short: 'h' },
+      jobs: { type: 'string' }, budget: { type: 'string' }, keep: { type: 'boolean' }, 'rank-by': { type: 'string' }, help: { type: 'boolean', short: 'h' },
     } }).values;
   } catch (e) { io.err(`${e.message}\n${USAGE}`); return 2; }
   if (a.help) { io.out(USAGE); return 0; }
@@ -288,6 +297,8 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   const budget = a.budget === undefined ? null : Number(a.budget);
   if (!Number.isInteger(jobs) || jobs < 1) { io.err('--jobs phải là số nguyên ≥ 1'); return 2; }
   if (budget !== null && !(budget > 0)) { io.err('--budget phải là số > 0'); return 2; }
+  const rankBy = a['rank-by'] ?? 'default';
+  if (!RANK_BY.includes(rankBy)) { io.err(`--rank-by phải là một trong ${RANK_BY.join(', ')}`); return 2; }
   let sessions;
   try { sessions = loadManifest(a.manifest); } catch (e) { io.err(e.message); return 2; }
   if (a.only) {
@@ -325,13 +336,14 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
     if (!cs.length) { io.err(`${s.id}: chưa có lần chụp nào (chạy với --capture)`); return; }
     const mine = [];
     for (const c of cs) {
-      try { mine.push(await replay(s, c, labels, { keep: a.keep, env })); } catch (e) { io.err(`${s.id}#${c.n}: chạy lại hỏng: ${e.message}`); failed++; }
+      try { mine.push(await replay(s, c, labels, { keep: a.keep, env, rankBy })); } catch (e) { io.err(`${s.id}#${c.n}: chạy lại hỏng: ${e.message}`); failed++; }
     }
     rows.push(...mine);
     for (let i = 1; i < mine.length; i++) diffs.push({ id: s.id, a: mine[0].run, b: mine[i].run, diff: runDiff(mine[0], mine[i]) });
   });
   rows.sort((x, y) => x.id.localeCompare(y.id) || x.run - y.run);
   const overall = overallOf(rows);
+  if (rankBy !== 'default') io.out(`thứ tự đo: ${rankBy}`);
   io.out(formatReport(rows, diffs, overall));
   const angleChecks = {};
   for (const s of sessions) {
@@ -341,7 +353,7 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   if (Object.keys(angleChecks).length) io.out(formatAngleChecks(angleChecks));
   const resDir = ensurePrivateDir(path.join(out, 'results'));
   const file = path.join(resDir, `${new Date().toISOString().replace(/[:.]/g, '-')}${a.capture ? '-capture' : ''}.json`);
-  fs.writeFileSync(file, JSON.stringify({ at: new Date().toISOString(), manifest: path.resolve(a.manifest), rows, diffs, overall, angleChecks }, null, 2) + '\n', { mode: 0o600 });
+  fs.writeFileSync(file, JSON.stringify({ at: new Date().toISOString(), manifest: path.resolve(a.manifest), rankBy, rows, diffs, overall, angleChecks }, null, 2) + '\n', { mode: 0o600 });
   io.out(`\nđã ghi ${file}`);
   return failed ? 1 : 0;
 }

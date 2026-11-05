@@ -59,8 +59,21 @@ export function rankMetrics(ranked, labels) {
   };
 }
 
-/** Steps in pipeline order; `fill` is the harvest fill loop. */
-export const STEPS = ['harvest', 'fill', 'cluster', 'outsider', 'hook-tension', 'stakes', 'angle'];
+/** Steps in pipeline order; `fill` is the harvest fill loop, `profile` the project profile the angle step opens with. */
+export const STEPS = ['harvest', 'fill', 'cluster', 'outsider', 'hook-tension', 'stakes', 'profile', 'angle'];
+
+/** Orders of the ranked list the harness can measure: the default rank (lib/rank.mjs) or story completeness first. */
+export const RANK_BY = Object.freeze(['default', 'completeness']);
+
+/**
+ * The ranked list re-ordered by `completeness` (filled spine slots, 0–7) high to low, the default rank breaking ties;
+ * stories the angle step never looked at come last, in default order. Measures "rank by completeness" without
+ * changing the product's ranking key. @template {{data?: Record<string, any>}} T @param {T[]} ranked @returns {T[]}
+ */
+export function byCompleteness(ranked) {
+  const c = (s) => (Number.isInteger(s?.data?.completeness) ? s.data.completeness : -1);
+  return ranked.map((s, i) => ({ s, i })).sort((a, b) => c(b.s) - c(a.s) || a.i - b.i).map((x) => x.s);
+}
 
 /** Pipeline step of a fake-llm key (`harvest-fill-c1-r1-f1-retry` -> `fill`); unknown keys -> `other`. @param {string} key */
 export function stepOf(key) {

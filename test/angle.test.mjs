@@ -32,16 +32,18 @@ const tmp = (p) => fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 
 
 test('validateAngle: an angle, or none with a reason; evidence must be lines that were given', () => {
   const lines = [3, 4, 5];
-  assert.deepEqual(validateAngle({ angle: 'Tưởng A. Hoá ra B. Ai cũng có thể dính.', audience: 'dev viết test', evidence: [3, 'L4', '[L5]'] }, { lines }), []);
-  assert.deepEqual(validateAngle({ none: true, reason: 'chỉ là việc vặt' }, { lines }), []);
-  assert.match(validateAngle({ none: true }, { lines }).join(), /reason/);
+  const spine = {};
+  assert.deepEqual(validateAngle({ spine, angle: 'Tưởng A. Hoá ra B. Ai cũng có thể dính.', audience: 'dev viết test', evidence: [3, 'L4', '[L5]'] }, { lines }), []);
+  assert.deepEqual(validateAngle({ spine, none: true, reason: 'chỉ là việc vặt' }, { lines }), []);
+  assert.match(validateAngle({ spine, none: true }, { lines }).join(), /reason/);
+  assert.match(validateAngle({ none: true, reason: 'vặt' }, { lines }).join(), /thiếu spine/, 'the spine is asked for in both forms');
   assert.match(validateAngle({ angle: 'x', audience: 'y', evidence: [3, 9] }, { lines }).join(), /evidence ngoài các dòng đã đưa: 9/);
   assert.match(validateAngle({ angle: 'x', audience: 'y', evidence: ['L3-L5'] }, { lines }).join(), /evidence ngoài/, 'a range is not one line');
   assert.match(validateAngle({ angle: 'x', audience: 'y', evidence: [] }, { lines }).join(), /evidence phải là mảng/);
   assert.match(validateAngle({ angle: 'x', audience: 'y' }, { lines }).join(), /evidence phải là mảng/);
   assert.match(validateAngle({ audience: 'y', evidence: [3] }, { lines }).join(), /thiếu angle/);
   assert.match(validateAngle({ angle: 'x', evidence: [3] }, { lines }).join(), /thiếu audience/);
-  assert.match(validateAngle({ angle: 'x'.repeat(601), audience: 'y', evidence: [3] }, { lines }).join(), /angle dài quá/);
+  assert.match(validateAngle({ spine, angle: 'x'.repeat(901), audience: 'y', evidence: [3] }, { lines }).join(), /angle dài quá/);
   assert.match(validateAngle({ none: 'yes', angle: 'x', audience: 'y', evidence: [3] }, { lines }).join(), /none phải là true/);
   assert.match(validateAngle([], { lines }).join(), /không phải JSON object/);
   assert.equal(evidenceLine('L12'), 12); assert.equal(evidenceLine(0), null); assert.equal(evidenceLine('12a'), null);
@@ -187,11 +189,12 @@ function setup() {
   };
 }
 
-const A = (k) => ({ angle: `Góc ${k}: tưởng chậm vì máy, hoá ra vì một bước thừa.`, audience: 'người tối ưu quy trình', evidence: [3] });
+const SPINE = { context: { text: 'Một người đo máy pha cà phê.', evidence: [1] }, turn: { text: 'Tưởng chậm vì máy, hoá ra vì một bước thừa.', evidence: [3] }, want: null };
+const A = (k) => ({ spine: SPINE, angle: `Góc ${k}: tưởng chậm vì máy, hoá ra vì một bước thừa.`, audience: 'người tối ưu quy trình', evidence: [3] });
 
 test('harvest: angles for the ranked stories; none and a failed call never fail the window', () => {
   const s = setup();
-  const fake = s.fake('llm-ok', { 'angle-1': A(1), 'angle-2': { none: true, reason: 'chỉ là việc vặt' }, 'angle-3': { ...A(3), evidence: [99] }, 'angle-3-retry': { ...A(3), evidence: [99] } });
+  const fake = s.fake('llm-ok', { 'angle-1': A(1), 'angle-2': { spine: {}, none: true, reason: 'chỉ là việc vặt' }, 'angle-3': { ...A(3), evidence: [99] }, 'angle-3-retry': { ...A(3), evidence: [99] } });
   const r = s.run(['harvest', '--transcript', s.tr, '--fake-llm', fake]);
   assert.equal(r.code, 0, r.err + r.out);
   assert.match(r.out, /góc kể: 1 có, 1 không ra chuyện, 1 hỏng \(chạy lại: momentry angle\)/);
@@ -240,7 +243,7 @@ test('angle: a private name in the angle goes to quarantine like any story text,
   const s = setup();
   assert.equal(s.run(['harvest', '--transcript', s.tr, '--fake-llm', s.fake('llm-ok')]).code, 0);
   const id = s.stories()[0].f.slice(0, -3);
-  const leak = { angle: 'Tưởng ổn, hoá ra lộ tên Du an Ho Sen.', audience: 'dev', evidence: [3] };
+  const leak = { spine: {}, angle: 'Tưởng ổn, hoá ra lộ tên Du an Ho Sen.', audience: 'dev', evidence: [3] };
   const r = s.run(['angle', '--story', id, '--json'], { MOMENTRY_FAKE_LLM: s.fake('llm-ok', { 'angle-1': leak }) });
   assert.equal(r.code, 0, r.err + r.out);
   assert.equal(JSON.parse(r.out).data.stories[0].status, 'held');
@@ -255,7 +258,7 @@ test('angle command: flags, dry run, unknown story, a failed call exits 4', () =
   const ids = s.stories().map((x) => x.f.slice(0, -3));
   const dry = s.run(['angle', '--dry-run', '--top', '2']);
   assert.equal(dry.code, 0, dry.err);
-  assert.match(dry.out, /dry-run angle: 2 chuyện \(haiku\), chi phí ước tính ~0\.00 USD/);
+  assert.match(dry.out, /dry-run angle: 2 chuyện \(haiku\), chi phí ước tính ~0\.01 USD/);
   assert.equal(s.stories().filter((x) => x.data.angle).length, 0);
   assert.equal(s.run(['angle', '--story', 'not-an-id']).code, 2);
   assert.equal(s.run(['angle', '--story', '2026-01-10-khong-co']).code, 1);
@@ -308,7 +311,7 @@ test('harness: capture summary has angle and audience; angle line left out of la
   const f = path.join(dir, 's.json');
   assert.equal(angleCheckCounts(f), null);
   fs.writeFileSync(f, JSON.stringify({ session: 's', stories: { a: { verdict: 'tellable' }, b: { verdict: 'invented' }, c: { verdict: 'tellable' }, d: { verdict: 'odd' } } }));
-  assert.deepEqual(angleCheckCounts(f), { tellable: 2, 'no-story': 0, invented: 1 });
+  assert.deepEqual(angleCheckCounts(f), { tellable: 2, 'no-story': 0, invented: 1, understood: { yes: 0, no: 0 } });
 });
 
 test('review page: angles in the found list and on matching answer rows; the angle check is saved privately', async () => {
@@ -337,7 +340,7 @@ test('review page: angles in the found list and on matching answer rows; the ang
     assert.equal(fs.statSync(file).mode & 0o777, 0o600);
     assert.equal(fs.statSync(path.dirname(file)).mode & 0o777, 0o700);
     assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).stories['2026-01-10-may-pha-nhanh'].angle, 'Tưởng A, hoá ra B.');
-    assert.deepEqual(angleCheckCounts(file), { tellable: 0, 'no-story': 0, invented: 1 });
+    assert.deepEqual(angleCheckCounts(file), { tellable: 0, 'no-story': 0, invented: 1, understood: { yes: 0, no: 0 } });
     assert.deepEqual((await put('2026-01-10-may-pha-nhanh', null)).body.angleChecks, {});
   } finally { server.close(); }
 });
