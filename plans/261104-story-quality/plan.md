@@ -14,6 +14,8 @@ created: 2026-11-04
 
 Mã S0.x, S1.x, S2.x là bước trong [sales plan](../261104-sales/plan.md); Q.x, R.x, U.x là bước của các plan [story-quality](../261104-story-quality/plan.md), [rust-port](../261104-rust-port/plan.md), [ui-ux](../261104-ui-ux/plan.md). Board: [board.md](../board.md).
 
+**Số đo trên nhãn đã duyệt (2026-11-05):** mặc định mới 0,26 USD/phiên, recall 96%, p@5 0,88, `t` nửa trên 25/33, DM.5 đạt 3/8 phiên ([bản ghi](../../docs/experiments/2026-11-05-cost-cuts/README.md#chấm-lại-trên-nhãn-đã-duyệt-2026-11-05-tối)). Phiên yếu nhất: `2dfb5915` (harvest không ổn định, 3/6 `t`), `c4caee3c` (p@5 0,4).
+
 **Quyết định 2026-11-05:** chất lượng được nâng bằng dữ liệu của chính đội (bộ test tự gán nhãn, số đo trên máy của đội). Không dùng dữ liệu người dùng; nhãn chia sẻ là plan riêng [shared-labels](../261105-shared-labels/plan.md) (E19), backlog.
 
 ## Mục tiêu
@@ -27,7 +29,7 @@ Lý do: người mua trả tiền cho danh sách chuyện xếp hạng; chuyện
 
 | ID | Việc | Ai | Trạng thái |
 |---|---|---|---|
-| Q.1 | Bộ test chất lượng: 5–10 phiên gán nhãn, nhiều domain và host (ít nhất 2 Codex, 1 phiên tiếng Anh), mỗi phiên có đáp án "chuyện đáng kể" và nhãn `t`. Nhãn nằm trong `docs/_private/` | Anh gán nhãn; agent chọn phiên và soạn file nhãn nháp | 🟡 2026-11-05: 8 phiên nháp (7 Claude, 1 omp tiếng Anh), 60 đáp án, 30 `t`, trong `docs/_private/eval/labels/`; chờ anh duyệt; thiếu phiên Codex (máy không có) |
+| Q.1 | Bộ test chất lượng: 5–10 phiên gán nhãn, nhiều domain và host (ít nhất 2 Codex, 1 phiên tiếng Anh), mỗi phiên có đáp án "chuyện đáng kể" và nhãn `t`. Nhãn nằm trong `docs/_private/` | Anh gán nhãn; agent chọn phiên và soạn file nhãn nháp | ✅ 2026-11-05: 8 phiên anh đã duyệt (7 Claude, 1 omp tiếng Anh), 79 đáp án, 33 `t`, trong `docs/_private/eval/labels/`; duyệt bằng `scripts/eval/review.mjs`. Còn thiếu: ≥2 phiên Codex (máy chưa có) |
 | Q.2 | Harness đo: lưu đầu ra model bằng `--save-llm`, chạy lại bằng `--fake-llm` để đổi thuật toán xếp hạng mà không tốn tiền. Chỉ số: recall đáp án, precision@5/@10, hạng trung bình của nhãn `t`, độ lệch giữa 2 lần chạy, USD và giây mỗi phiên | Agent | ✅ 2026-11-05: `scripts/eval/` ([README](../../scripts/eval/README.md)) |
 | Q.3 | Đo chi phí từng bước (harvest, cluster, outsider, hook-tension, stakes) từ `stats`; ghi bảng vào `docs/experiments/`. Ước đoán: outsider (sonnet đọc nguyên khúc ~150k token) và harvest chiếm phần lớn | Agent | ✅ 2026-11-05: outsider 69%, harvest 20%, chấm 10%, cluster 0%; 0,83 USD/phiên ([bản ghi](../../docs/experiments/2026-11-05-step-cost/README.md)) |
 | Q.4 | Thử các đòn giảm chi phí trên bộ test, giữ đòn nào không làm tụt chỉ số: outsider chạy haiku hoặc chỉ đọc quanh điểm nóng; rút gọn input mạnh hơn (`reduce`); bỏ phiên ngắn; gộp stakes và hook-tension làm một lần gọi. Thay S2.3 | Agent | ✅ 2026-11-05: 0,83 → 0,26 USD/phiên (outsider haiku, tắt cache prompt, ước tính dry-run mới); cùng xếp hạng mới: recall 94%, p@5 0,83, p@10 0,69, hạng-t 5,16, `t` nửa trên 25/30 ([bản ghi](../../docs/experiments/2026-11-05-cost-cuts/README.md)) |
