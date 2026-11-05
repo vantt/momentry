@@ -14,7 +14,10 @@ test('validateHarvest', () => {
     hotspots: [{ id: 'H99', verdict: 'story' }, { id: 'H40', verdict: 'maybe' }],
   }, ids);
   for (const re of [/stories\[0\]: thiếu title/, /stories\[1\]: thiếu what_happened/, /stories\[2\]: thiếu lines/, /stories\[3\]: lines/,
-    /stories\[4\]: không phải object/, /id lạ "H99"/, /verdict "maybe"/]) assert.ok(e.some(m => re.test(m)), re);
+    /stories\[4\]: không phải object/]) assert.ok(e.some(m => re.test(m)), re);
+  assert.ok(!e.some(m => /hotspots/.test(m)), 'unknown hotspot ids and verdicts are left to the fill loop, not a rejected reply');
+  assert.deepEqual(validateHarvest({ stories: [story()], hotspots: [{ id: 'H1', verdict: 'story' }] }, ids), [], 'stories survive a stray hotspot id');
+  assert.match(validateHarvest({ stories: [], hotspots: ['x'] }, ids)[0], /hotspots\[0\]: không phải object/);
   assert.match(validateHarvest([], ids)[0], /không phải JSON object/);
   assert.match(validateHarvest({}, ids)[0], /thiếu mảng "stories"/);
   assert.match(validateHarvest({ stories: [], hotspots: {} }, ids)[0], /không phải mảng/);

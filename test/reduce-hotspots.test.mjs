@@ -9,6 +9,7 @@ import * as hot from '../lib/hotspots.mjs';
 
 const FIX = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'transcripts');
 const CLAUDE = path.join(FIX, 'claude-session.jsonl');
+const OWNER = path.join(FIX, 'claude-owner-voice.jsonl');
 const CODEX = path.join(FIX, 'rollout-2026-01-10T09-00-00-0f9e8d7c-aaaa-7bbb-8ccc-ddddeeeeffff.jsonl');
 
 const user = (L, text) => ({ L, ts: null, kind: 'user', text, bip: false });
@@ -16,6 +17,7 @@ const agent = (L, text) => ({ L, ts: null, kind: 'assistant', text });
 const shell = (L, text, name = 'Bash') => ({ L, ts: null, kind: 'tool', name, op: 'shell', paths: [], text });
 const write = (L, paths, name = 'Edit') => ({ L, ts: null, kind: 'tool', name, op: 'write', paths, text: paths[0] ?? '' });
 const result = (L, text, exitCode = null, isError = false) => ({ L, ts: null, kind: 'result', name: 'Bash', text, exitCode, isError });
+const rejected = L => ({ ...result(L, "The user doesn't want to proceed", null, true), rejected: true });
 
 test('approxTokens = chars / 3.2', () => {
   assert.equal(reduce.approxTokens(320), 100);
@@ -118,8 +120,24 @@ test('nonzeroExit', () => {
     [result(1, 'Exit code 9 in text only', null, false), null],
     [result(1, '', null, false), null],
     [user(1, 'exit 1'), null],
+    [result(1, 'PreToolUse:Bash hook error: [node guard.js]: x', null, true), null],
+    [rejected(1), null],
   ];
   for (const [e, want] of cases) assert.equal(hot.nonzeroExit(e), want, JSON.stringify(e));
+});
+
+test('blocked: hook, permission and worktree refusals only; real failures and user rejections are not blocked', () => {
+  const cases = [
+    [result(1, 'PreToolUse:Bash hook error: [node guard.js]: x', null, true), 'bị chặn'],
+    [result(1, '<tool_use_error>Blocked: sleep 30 is not allowed</tool_use_error>', null, true), 'bị chặn'],
+    [result(1, 'Permission for this command was denied by the policy', null, true), 'bị chặn'],
+    [result(1, 'This session is isolated in the worktree /w', null, true), 'bị chặn'],
+    [result(1, 'Exit code 1\nTraceback', 1), null],
+    [result(1, 'PreToolUse:Bash hook error in a command that passed', 0), null],
+    [rejected(1), null],
+    [agent(1, 'PreToolUse:Bash hook error'), null],
+  ];
+  for (const [e, want] of cases) assert.equal(hot.blocked(e), want, JSON.stringify(e));
 });
 
 test('metricPair: every connector, equal pair ignored, only user/assistant', () => {
@@ -134,6 +152,18 @@ test('metricPair: every connector, equal pair ignored, only user/assistant', () 
   assert.equal(hot.metricPair(result(1, '1 -> 2', 0)), null);
 });
 
+test('metricPair: position and id ranges are not a before/after; Vietnamese number forms parse', () => {
+  for (const t of ['rows 0 to 190', 'dòng 12 tới 40', 'đọc line 1 to 5', 'mapping-0241 to 0300', 'dropped-002 tới 017', 'từ 1816 to 85766 bytes', 'mất 8 to 12 days', 'dung lượng 160 to 216 MB'])
+    assert.equal(hot.metricPair(agent(1, t)), null, t);
+  assert.equal(hot.metricPair(agent(1, 'docs 365 → 4 301 file')), 'số 365→4 301');
+  assert.equal(hot.metricPair(agent(1, 'tỉ lệ sửa 8,3% → 2,1%')), 'số 8,3%→2,1%');
+  assert.equal(hot.metricPair(agent(1, 'lỗi 1.360 xuống 1.071')), 'số 1.360→1.071');
+  assert.equal(hot.metricPair(agent(1, 'ngưỡng 4 301 → 4301')), null);
+  assert.equal(hot.metricPair(agent(1, 'dòng 5 tới 9, còn lại đo 3 lên 7 giây')), 'số 3→7');
+  assert.equal(hot.metricPair(user(1, '<task-notification>done 3 → 9</task-notification>')), null);
+  assert.equal(hot.metricPair(user(1, 'Another Claude session sent a message: 3 → 9')), null);
+});
+
 test('gitReversal: shell op only', () => {
   const pos = {
     'git reset --hard HEAD~1': 'git reset', 'git revert abc': 'git revert', 'git rebase -i HEAD~3': 'git rebase',
@@ -143,6 +173,17 @@ test('gitReversal: shell op only', () => {
   for (const [cmd, want] of Object.entries(pos)) assert.equal(hot.gitReversal(shell(1, cmd)), want, cmd);
   for (const cmd of ['git status', 'git checkout main', 'git commit -m x', 'git push origin main', 'echo reset'])
     assert.equal(hot.gitReversal(shell(1, cmd)), null, cmd);
+  // routine: detached or new-branch checkout, pull --rebase, rebase onto upstream, restoring a lockfile, git words inside heredoc text
+  const routine = ['git checkout --detach abc123', 'git checkout --ours a.txt', 'git checkout -b topic', 'git pull --rebase', 'git rebase origin/main && git push',
+    'git rebase --autostash upstream/main', 'git rebase main', 'git checkout -- Cargo.lock', 'git checkout -- package-lock.json; git status',
+    "cat > d.md <<'EOF'\nplan: git revert if it fails\nEOF"];
+  for (const cmd of routine) assert.equal(hot.gitReversal(shell(1, cmd)), null, cmd);
+  const kept = {
+    'git rebase --abort': 'git rebase', 'git rebase -i origin/main': 'git rebase', 'git rebase HEAD~3': 'git rebase',
+    'git rebase origin/main; git reset --hard HEAD~1': 'git reset', 'git checkout -- src/a.mjs Cargo.lock': 'git checkout --', 'git checkout --': 'git checkout --',
+    "git commit --amend -m \"$(cat <<'EOF'\nmsg\nEOF\n)\"": 'git commit --amend',
+  };
+  for (const [cmd, want] of Object.entries(kept)) assert.equal(hot.gitReversal(shell(1, cmd)), want, cmd);
   assert.equal(hot.gitReversal({ ...shell(1, 'git reset --hard'), op: 'other' }), null);
   assert.equal(hot.gitReversal(agent(1, 'git reset --hard')), null);
   assert.equal(hot.gitReversal(shell(1, 'git reset --hard', 'exec_command')), 'git reset');
@@ -157,6 +198,76 @@ test('metaWrite: write op, any listed path', () => {
   for (const p of ['src/a.mjs', 'docs/skillset.md', 'mysettings.json.bak/x', 'README.md']) assert.equal(hot.metaWrite(write(1, [p])), null, p);
   assert.equal(hot.metaWrite(write(1, [])), null);
   assert.equal(hot.metaWrite({ ...shell(1, 'vim .claude/x'), paths: ['.claude/x'] }), null);
+});
+
+test('lessonWrite: edit tools and shell writes to memory, decision records, journals, CHANGELOG', () => {
+  const edit = ['/h/.claude/projects/p/memory/note.md', 'MEMORY.md', 'docs/decisions/0001-x.md', 'docs/adr/0002.md', 'ADR-7.md', 'plans/journals/day.md', 'CHANGELOG.md', 'C:\\r\\memory\\n.md'];
+  for (const p of edit) assert.ok(hot.lessonWrite(write(1, [p])), p);
+  assert.equal(hot.lessonWrite(write(1, ['/h/memory/feedback-x.md'])), 'ghi bài học feedback-x.md');
+  assert.equal(hot.lessonWrite(write(1, ['docs/decisions/0001-x.md'])), 'ghi quyết định 0001-x.md');
+  assert.equal(hot.lessonWrite(write(1, ['journals/d.md'])), 'ghi nhật ký d.md');
+  assert.equal(hot.lessonWrite(write(1, ['CHANGELOG.md'])), 'ghi changelog CHANGELOG.md');
+  for (const p of ['src/memory.mjs', 'docs/decision.md', 'docs/madrid/a.md', 'README.md']) assert.equal(hot.lessonWrite(write(1, [p])), null, p);
+  const sh = {
+    "cat > /h/memory/a.md <<'EOF'\nbody\nEOF": 'ghi bài học a.md',
+    "echo '- [x](a.md)' >> /h/memory/MEMORY.md": 'ghi bài học MEMORY.md',
+    'printf x | tee -a docs/decisions/0003.md': 'ghi quyết định 0003.md',
+    'cp /tmp/n.md /h/memory/n.md': 'ghi bài học n.md',
+    'mv -f draft.md plans/journals/j.md': 'ghi nhật ký j.md',
+    'cat <<EOF > CHANGELOG.md\nx\nEOF': 'ghi changelog CHANGELOG.md',
+  };
+  for (const [cmd, want] of Object.entries(sh)) assert.equal(hot.lessonWrite(shell(1, cmd)), want, cmd);
+  const reads = ['cat /h/memory/a.md', 'cp /h/memory/a.md /tmp/a.md', 'echo hi > /tmp/x.txt', "cat > /tmp/x <<'EOF'\necho y >> /h/memory/a.md\nEOF", 'ls /h/memory 2>/dev/null', 'echo x > /dev/null'];
+  for (const cmd of reads) assert.equal(hot.lessonWrite(shell(1, cmd)), null, cmd);
+  assert.equal(hot.lessonWrite(agent(1, 'cat > /h/memory/a.md')), null);
+  assert.equal(hot.lessonWrite({ ...shell(1, 'x'), op: 'other', paths: ['/h/memory/a.md'] }), null);
+});
+
+test('metaWrite leaves lesson records to lessonWrite', () => {
+  const p = '/h/.claude/projects/p/memory/note.md';
+  assert.equal(hot.metaWrite(write(1, [p])), null);
+  assert.equal(hot.metaWrite(write(1, [p, '/h/.claude/settings.json'])), 'ghi meta settings.json');
+});
+
+test('ownerVoice: interrupt, rejected call, choice answers, pushback, short turn after a long stretch', () => {
+  assert.equal(hot.ownerVoice(user(1, '[Request interrupted by user]')), 'chủ ngắt');
+  assert.equal(hot.ownerVoice(user(1, '[Request interrupted by user for tool use]')), 'chủ ngắt');
+  assert.equal(hot.ownerVoice(rejected(1)), 'chủ từ chối tool');
+  assert.equal(hot.ownerVoice(result(1, 'x', 1)), null);
+  for (const t of ['A', 'b', '2B', '1', '(a)', 'chọn b, cập nhật báo cáo', 'Đồng ý phương án 2', 'đồng ý', 'phương án 2', 'em chọn (1)', 'go with option B'])
+    assert.equal(hot.ownerVoice(user(1, t)), 'chủ chọn', t);
+  for (const t of ['không, làm lại', 'No. stop that', 'sao lại làm vậy', 'thông minh hơn đi', 'tiến độ lâu quá em', 'why did you do that', 'Stop', 'ko để anh tự bàn giao'])
+    assert.equal(hot.ownerVoice(user(1, t)), 'chủ phản đối hoặc thúc', t);
+  // chatter and long prompts are no owner signal; a short turn counts only after a long stretch
+  for (const t of ['tiếp tục', 'có không có gì', 'a lô', 'ab', 'không ' + 'x'.repeat(300), 'chọn ' + 'x'.repeat(300)])
+    assert.equal(hot.ownerVoice(user(1, t)), null, t);
+  assert.equal(hot.ownerVoice(user(1, 'tiếp tục'), 29), null);
+  assert.equal(hot.ownerVoice(user(1, 'tiếp tục'), 30), 'chủ trả lời ngắn sau chạy dài');
+  assert.equal(hot.ownerVoice(user(1, 'x'.repeat(101)), 99), null);
+  // harness text, /bip and non-user entries are not the owner
+  assert.equal(hot.ownerVoice(user(1, '<task-notification>A</task-notification>'), 99), null);
+  assert.equal(hot.ownerVoice(user(1, 'Another Claude session sent a message: đồng ý'), 99), null);
+  assert.equal(hot.ownerVoice({ ...user(1, '/bip A'), bip: true }, 99), null);
+  assert.equal(hot.ownerVoice(agent(1, 'đồng ý'), 99), null);
+});
+
+test('detect: the stretch counts entries since the last owner turn; harness lines do not reset it', () => {
+  const run = (from, n) => Array.from({ length: n }, (_, i) => agent(from + i, 'làm việc'));
+  const es = [user(1, 'bắt đầu làm'), ...run(2, 29), user(31, 'ok'), ...run(32, 20), user(60, '<task-notification>x</task-notification>'), ...run(61, 10), user(71, 'ok'),
+    ...run(72, 40), user(200, 'ok')];
+  const hs = hot.detect(es).filter(h => h.kind === 'ownerVoice');
+  assert.deepEqual(hs.map(h => [h.id, h.signals]), [['H71', ['chủ trả lời ngắn sau chạy dài']], ['H200', ['chủ trả lời ngắn sau chạy dài']]]);
+});
+
+test('Claude source exposes user rejections and interrupts; hotspots tell them from hook blocks and real failures', () => {
+  const es = claude.readEntries(OWNER);
+  assert.deepEqual(es.filter(e => e.rejected).map(e => e.L), [3]);
+  assert.deepEqual(hot.detect(es).map(h => [h.id, h.kind, h.signals]), [
+    ['H1', 'ownerVoice', ['chủ chọn', 'chủ từ chối tool', 'chủ ngắt']],
+    ['H6', 'blocked', ['bị chặn']],
+    ['H8', 'nonzeroExit', ['exit 1']],
+  ]);
+  assert.match(reduce.render(es).text, /\[L6\] RESULT \(bị chặn\): PreToolUse:Bash hook error/);
 });
 
 test('bipMark', () => {
