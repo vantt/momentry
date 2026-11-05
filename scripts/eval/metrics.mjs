@@ -60,7 +60,7 @@ export function rankMetrics(ranked, labels) {
 }
 
 /** Steps in pipeline order; `fill` is the harvest fill loop. */
-export const STEPS = ['harvest', 'fill', 'cluster', 'outsider', 'hook-tension', 'stakes'];
+export const STEPS = ['harvest', 'fill', 'cluster', 'outsider', 'hook-tension', 'stakes', 'angle'];
 
 /** Pipeline step of a fake-llm key (`harvest-fill-c1-r1-f1-retry` -> `fill`); unknown keys -> `other`. @param {string} key */
 export function stepOf(key) {

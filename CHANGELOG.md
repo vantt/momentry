@@ -6,6 +6,8 @@
 
 ### Added
 
+- **Góc kể** cho chuyện: sau khi xếp hạng, 10 chuyện đầu bảng của phiên (chưa có góc kể) được viết một đến ba câu nói điều người ta tưởng, điều hoá ra đúng và vì sao người nghe nên quan tâm, kèm ai muốn nghe. Model đọc file chuyện và vài dòng transcript quanh các dòng của chuyện (không đọc cả phiên), phải dẫn số dòng làm bằng chứng, không được bịa; không có chỗ ngoặt thật thì ghi `angle: none`. Ghi vào frontmatter (`angle`, `audience`) và dòng `**Góc kể:**` dưới tiêu đề, qua cùng cổng riêng tư như mọi chữ khác của chuyện; lần gom sau gộp vào chuyện không đổi góc kể đã có. Tường chuyện và trang đọc lấy góc kể làm dòng chính, tiêu đề sự kiện thành dòng phụ. Khoảng 0,02 USD mỗi phiên với `haiku` ([số đo](docs/experiments/2026-11-05-angle/README.md)). Khoá mới `angle.enabled`, `angle.model` (mặc định `haiku`), `angle.topN` (mặc định 10).
+- Lệnh `momentry angle [--top N] [--story ID] [--force]` viết góc kể cho chuyện đã có trong hộp (`--dry-run` xem trước và ước tính chi phí).
 - Giao diện web nghe cả địa chỉ Tailscale của máy (mặc định bật), để điện thoại hoặc máy khác trong tailnet mở được; `momentry ui --remote` in link có mã truy cập. Vẫn cần mã truy cập; chỉ nhận tên `*.ts.net`, tên máy và IP Tailscale. Tắt: `momentry config set ui.tailscale false` (chỉ đặt trong cấu hình người dùng).
 
 ### Changed

@@ -327,6 +327,31 @@ momentry rescore --session claude:1a2b3c4d
 
 Mã thoát: 0 xong; 1 lỗi; 2 sai cú pháp; 3 chưa có nguồn chặn; 4 model lỗi; 5 phiên đang bị khoá.
 
+### `momentry angle`
+
+Viết góc kể (điều người ta tưởng, điều hoá ra, vì sao người nghe nên quan tâm) cho chuyện đã có trong hộp mà chưa có góc kể: mặc định các chuyện đầu bảng xếp hạng. Cùng bước mà harvest chạy sau khi xếp hạng.
+
+**Thay đổi:** <box>/<id>.md (trường angle, audience và dòng **Góc kể:** trong thân; angle: none khi không có góc kể), hoặc <cache>/quarantine/ nếu vi phạm riêng tư hay chưa có nguồn chặn; <cache>/runs/angle/.
+
+**Cần:** repo đã init; `claude` CLI; transcript của phiên còn trên máy. Mỗi chuyện một lần gọi model (angle.model).
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--top N` | xét N chuyện đầu bảng xếp hạng của cả hộp (mặc định: angle.topN) |
+| `--story ID` | chỉ chuyện này |
+| `--force` | viết lại cả góc kể đã có (kể cả angle: none) |
+| `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
+
+```sh
+momentry angle --dry-run             # xem chuyện nào sẽ được viết góc kể, ước tính chi phí
+momentry angle --top 5
+momentry angle --story 2026-11-04-cache-lru --force --json
+```
+
+Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc lỗi; 2 sai cú pháp; 3 có góc kể giữ ngoài repo vì chưa có nguồn chặn; 4 model lỗi ở ít nhất một chuyện (chuyện đó chưa có góc kể).
+
+Tiếp theo: momentry list --rank
+
 ### `momentry quarantine`
 
 Liệt kê chuyện bị giữ ngoài repo; --release ID|all thả chuyện qua được kiểm riêng tư vào hộp.

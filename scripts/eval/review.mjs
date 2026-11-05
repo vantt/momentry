@@ -8,7 +8,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { makeLabel, slugAll, idSlug, matches } from './labels.mjs';
+import { makeLabel, slugAll, idSlug, matches, ANGLE_VERDICTS } from './labels.mjs';
 import { tailnetAddrs, hostAllowed, magicDnsName } from '../../lib/ui-server.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -95,9 +95,45 @@ function context(dataDir, id, rows) {
   const ranks = Object.fromEntries((row?.rank?.perLabel ?? []).map((p) => [p.name, p.rank]));
   const stories = (cap?.ranked ?? []).map((s) => {
     const story = { id: s.id, data: { hook: s.title } };
-    return { id: s.id, slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)) };
+    return { id: s.id, slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null };
   });
-  return { stories, ranks, total: row?.stories ?? null };
+  // the angle of the best-ranked found story matching each answer row (same title-only match as `matched`)
+  const withAngle = rows.map((r) => {
+    let l;
+    try { l = makeLabel(r, ''); } catch { return r; }
+    const s = stories.find((x) => x.angle && x.angle !== 'none' && matches({ id: x.id, data: { hook: x.title } }, l));
+    return s ? { ...r, angle: s.angle, angleStory: s.id } : r;
+  });
+  return { stories, rows: withAngle, ranks, total: row?.stories ?? null, angleChecks: readAngleChecks(dataDir, id) };
+}
+
+const angleFile = (dataDir, id) => path.join(dataDir, 'angle-labels', `${id}.json`);
+
+/** Verdict per story id of a session's angle check, {} when none saved yet. */
+function readAngleChecks(dataDir, id) {
+  const j = readJson(angleFile(dataDir, id));
+  return Object.fromEntries(Object.entries(j?.stories ?? {}).filter(([, v]) => v && Object.hasOwn(ANGLE_VERDICTS, v.verdict)).map(([k, v]) => [k, v.verdict]));
+}
+
+/**
+ * Saves (or clears, verdict null) the angle-check verdict of one story with an angle in the newest capture. The file
+ * keeps the angle text it judged, so a later prompt change can be compared. Private: folder 0700, file 0600.
+ */
+function saveAngleCheck(dataDir, id, storyId, verdict) {
+  if (verdict !== null && !Object.hasOwn(ANGLE_VERDICTS, verdict)) throw Object.assign(new Error('nhãn góc kể lạ'), { status: 400 });
+  const run = newest(path.join(dataDir, id, 'runs'), (f) => /^\d+$/.test(f));
+  const s = (run && readJson(path.join(run, 'capture.json')))?.ranked?.find((x) => x.id === storyId);
+  if (!s?.angle || s.angle === 'none') throw Object.assign(new Error('chuyện này không có góc kể trong bản chụp mới nhất'), { status: 400 });
+  const file = angleFile(dataDir, id);
+  const cur = readJson(file) ?? {};
+  const stories = cur.stories && typeof cur.stories === 'object' ? cur.stories : {};
+  if (verdict === null) delete stories[storyId];
+  else stories[storyId] = { verdict, angle: s.angle, at: new Date().toISOString() };
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify({ session: id, stories }, null, 2) + '\n', { mode: 0o600 });
+  fs.renameSync(tmp, file);
+  return readAngleChecks(dataDir, id);
 }
 
 const PAGE = fs.readFileSync(path.join(HERE, 'review.html'), 'utf8');
@@ -134,7 +170,17 @@ export function createReviewServer(o) {
       const m = /^\/api\/sessions\/([\w-]+)$/.exec(url.pathname);
       if (m && req.method === 'GET') {
         const { meta, rows } = readLabelFile(fs.readFileSync(file(m[1]), 'utf8'));
-        return send(res, 200, { id: m[1], meta, rows, ...context(o.data, m[1], rows) });
+        return send(res, 200, { id: m[1], meta, ...context(o.data, m[1], rows) });
+      }
+      const ma = /^\/api\/sessions\/([\w-]+)\/angle$/.exec(url.pathname);
+      if (ma && req.method === 'PUT') {
+        file(ma[1]);
+        let body = '';
+        for await (const c of req) { body += c; if (body.length > 1 << 16) return send(res, 413, { error: 'quá lớn' }); }
+        let j;
+        try { j = JSON.parse(body); } catch { return send(res, 400, { error: 'dữ liệu sai' }); }
+        if (typeof j?.story !== 'string' || !/^[\w-]+$/.test(j.story)) return send(res, 400, { error: 'id chuyện sai' });
+        return send(res, 200, { angleChecks: saveAngleCheck(o.data, ma[1], j.story, j.verdict ?? null) });
       }
       if (m && req.method === 'PUT') {
         let body = '';

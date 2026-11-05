@@ -13,7 +13,7 @@ import { paths } from '../../lib/paths.mjs';
 import { readBox } from '../../lib/box.mjs';
 import { sortRanked } from '../../lib/rank.mjs';
 import { heldDir } from '../../lib/quarantine.mjs';
-import { loadLabels } from './labels.mjs';
+import { loadLabels, angleCheckCounts, ANGLE_VERDICTS } from './labels.mjs';
 import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS } from './metrics.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -86,7 +86,7 @@ export function makeScratch(dir, env = process.env) {
 }
 
 /** Box stories plus new stories held by the privacy gate, best first. */
-function rankedStories(cfg) {
+export function rankedStories(cfg) {
   const box = readBox(cfg.box).filter((s) => !s.error);
   const held = [];
   const dir = heldDir(cfg.repo, cfg.cacheDir);
@@ -130,7 +130,12 @@ function parseDry(message) {
   return { usd: num(/~([\d.]+) USD/), tokens: num(/~(\d+) token/), chunks: num(/(\d+) khúc/), hotspots: num(/(\d+) điểm nóng/), entries: num(/(\d+) Entry/) };
 }
 
-const summary = (s) => ({ id: s.id, title: titleOf(s), tension: s.data.tension ?? null, stakes: s.data.stakes ?? null, strength: s.data.strength ?? null, hits: s.data.hits ?? null, held: !!s.held });
+/** One ranked story in capture.json; `angle` is the text, `none` (looked at, no tellable turn) or null (not looked at). */
+export const summary = (s) => ({
+  id: s.id, title: titleOf(s), tension: s.data.tension ?? null, stakes: s.data.stakes ?? null, strength: s.data.strength ?? null,
+  hits: s.data.hits ?? null, held: !!s.held, angle: typeof s.data.angle === 'string' ? s.data.angle : null,
+  audience: typeof s.data.audience === 'string' ? s.data.audience : null,
+});
 
 function nextRunDir(base) {
   ensurePrivateDir(base);
@@ -232,6 +237,14 @@ export function formatReport(rows, diffs, overall) {
   return L.join('\n');
 }
 
+/** Angle check counts per session (review page), plus the total. @param {Record<string, Record<string, number>>} checks */
+export function formatAngleChecks(checks) {
+  const keys = Object.keys(ANGLE_VERDICTS);
+  const line = (name, n) => `${name.padEnd(10)} ${keys.map((k) => `${ANGLE_VERDICTS[k]} ${n[k]}`).join(', ')} (trên ${keys.reduce((a, k) => a + n[k], 0)})`;
+  const total = Object.fromEntries(keys.map((k) => [k, Object.values(checks).reduce((a, n) => a + (n[k] ?? 0), 0)]));
+  return ['', 'kiểm góc kể (trang duyệt)', ...Object.entries(checks).map(([id, n]) => line(id, n)), line('tổng', total)].join('\n');
+}
+
 /** Rows -> overall numbers (first capture of each session for quality; every capture for cost). */
 export function overallOf(rows) {
   const firstOf = new Map();
@@ -320,9 +333,15 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   rows.sort((x, y) => x.id.localeCompare(y.id) || x.run - y.run);
   const overall = overallOf(rows);
   io.out(formatReport(rows, diffs, overall));
+  const angleChecks = {};
+  for (const s of sessions) {
+    const n = angleCheckCounts(path.join(out, 'angle-labels', `${s.id}.json`));
+    if (n) angleChecks[s.id] = n;
+  }
+  if (Object.keys(angleChecks).length) io.out(formatAngleChecks(angleChecks));
   const resDir = ensurePrivateDir(path.join(out, 'results'));
   const file = path.join(resDir, `${new Date().toISOString().replace(/[:.]/g, '-')}${a.capture ? '-capture' : ''}.json`);
-  fs.writeFileSync(file, JSON.stringify({ at: new Date().toISOString(), manifest: path.resolve(a.manifest), rows, diffs, overall }, null, 2) + '\n', { mode: 0o600 });
+  fs.writeFileSync(file, JSON.stringify({ at: new Date().toISOString(), manifest: path.resolve(a.manifest), rows, diffs, overall, angleChecks }, null, 2) + '\n', { mode: 0o600 });
   io.out(`\nđã ghi ${file}`);
   return failed ? 1 : 0;
 }

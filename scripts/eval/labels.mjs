@@ -1,6 +1,7 @@
 // Label files for the eval harness and the deterministic story <-> label match (format: scripts/eval/README.md).
 import fs from 'node:fs';
 import { stripDiacritics } from '../../lib/viet.mjs';
+import { ANGLE_LABEL } from '../../lib/box.mjs';
 
 /**
  * @typedef {object} Label
@@ -95,10 +96,30 @@ export function loadLabels(file) {
   return parseLabels(fs.readFileSync(file, 'utf8'), file);
 }
 
-/** Story text the keywords are matched against, in slug form wrapped in `-`: hook and body (title, sections). */
+/** Verdicts of the angle check on the review page, saved in `<data>/angle-labels/<session>.json`. */
+export const ANGLE_VERDICTS = Object.freeze({ tellable: 'kể được', 'no-story': 'không ra chuyện', invented: 'bịa' });
+
+/**
+ * Counts per verdict of an angle-check file `{session, stories: {<story id>: {verdict, angle, at}}}`; null when the
+ * file is missing or unreadable. @param {string} file @returns {Record<string, number>|null}
+ */
+export function angleCheckCounts(file) {
+  let j;
+  try { j = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; }
+  if (!j || typeof j !== 'object' || !j.stories || typeof j.stories !== 'object') return null;
+  const n = Object.fromEntries(Object.keys(ANGLE_VERDICTS).map((k) => [k, 0]));
+  for (const v of Object.values(j.stories)) if (v && Object.hasOwn(n, v.verdict)) n[v.verdict]++;
+  return n;
+}
+
+/**
+ * Story text the keywords are matched against, in slug form wrapped in `-`: hook and body (title, sections). The
+ * story angle line is left out, so adding angles never changes which labels a story matches.
+ */
 export function storyText(story) {
   const d = story?.data || {};
-  return `-${slugAll([d.hook, story?.body].filter(Boolean).join(' '))}-`;
+  const body = String(story?.body ?? '').split('\n').filter((l) => !l.startsWith(ANGLE_LABEL)).join('\n');
+  return `-${slugAll([d.hook, body].filter(Boolean).join(' '))}-`;
 }
 
 /** Slug part of a story id (date prefix dropped). @param {string} id */

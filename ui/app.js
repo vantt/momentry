@@ -197,8 +197,12 @@
     return `<article class="${cls}" data-key="${esc(s.key)}">
       ${!s.seen && s.status === 'raw' ? '<span class="new-flag" aria-label="unread">new!</span>' : ''}
       <div class="card-meta">${meta}</div>
-      <h3 class="card-title"><a href="#/story/${esc(s.key)}">${esc(s.title)}</a></h3>
-      ${s.summary ? `<p class="card-sum">${esc(s.summary)}</p>` : ''}
+      ${s.angle
+        ? `<h3 class="card-title card-angle"><a href="#/story/${esc(s.key)}">${esc(s.angle)}</a></h3>
+      <p class="card-event">${esc(s.title)}</p>
+      ${s.audience ? `<p class="card-aud">For ${esc(s.audience)}</p>` : ''}`
+        : `<h3 class="card-title"><a href="#/story/${esc(s.key)}">${esc(s.title)}</a></h3>
+      ${s.summary ? `<p class="card-sum">${esc(s.summary)}</p>` : ''}`}
       ${tags ? `<div class="card-signals">${tags}</div>` : ''}
       <div class="card-foot">
         <span class="row">${stars(s.stars)}<span class="mono">${esc(fmtDate(s.date))}</span></span>
@@ -319,7 +323,8 @@
       <div>
         <article class="sheet${used ? ' is-picked' : ''}">
           <div class="card-meta">${meta}</div>
-          <div class="title-row" data-section="title">
+          ${s.angle ? `<p class="sheet-angle">${esc(s.angle)}</p>${s.audience ? `<p class="sheet-aud">For ${esc(s.audience)}</p>` : ''}` : ''}
+          <div class="title-row${s.angle ? ' is-sub' : ''}" data-section="title">
             <h1 class="sheet-title">${esc(s.title)}</h1>
             <button class="btn btn-ghost btn-sm edit-btn" type="button" data-action="edit" data-field="title" aria-label="Edit title">${ICON.edit}</button>
           </div>

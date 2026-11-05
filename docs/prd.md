@@ -96,13 +96,14 @@ transcript trên đĩa (Claude .jsonl hoặc Codex rollout)
   -> [8] chấm main_goal, stakes             Sonnet
   -> [10] kiểm riêng tư                     script
   -> [11] dựng file chuyện, ghi hộp, sổ     script
+  -> [13] góc kể cho top N chuyện của phiên Haiku (xếp hạng như bước 12, rồi kiểm riêng tư)
   ...
   -> [12] liệt kê có xếp hạng (khi user mở) script
 ```
 
 Thứ tự chạy là 1 → 6 → **9 → 7 → 8** → 10 → 11: bước người ngoài chạy trước hai bước chấm để chuyện mới của nó được chấm cùng các cụm khác. Số bước giữ như cũ để khớp bảng dưới và các mục khác. Thí nghiệm đặt người ngoài sau bước chấm (TN 6d) vì ở đó nó chỉ đổi góc kể, không sinh chuyện cần chấm.
 
-Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (mục 6.3). Bước 12 chạy khi user gọi `list --rank`.
+Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (mục 6.3), rồi bước 13 (góc kể) cho các chuyện đầu bảng của phiên còn thiếu góc kể. Bước 12 chạy khi user gọi `list --rank`; bước 13 dùng cùng thứ tự đó. `momentry angle` chạy riêng bước 13 cho chuyện đã có trong hộp.
 
 ### 5.2 Từng bước
 
@@ -120,6 +121,7 @@ Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (m�
 | 10 | Kiểm riêng tư | `privacy.mjs` | Mọi trường văn bản của mỗi chuyện sắp ghi, tên file (slug), phần sẽ nối vào file cũ | Qua / vi phạm / bỏ qua (không có nguồn chặn) | Transcript chứa tên note, câu hỏi thật. Mẫu `lo-rieng-tu` rò qua dạng Telex | BG 6.4; DB 4; MẪU |
 | 11 | Dựng file, ghi hộp, sổ | `story.mjs`, `box.mjs`, `ledger.mjs` | Cụm đã chấm và qua kiểm | File chuyện mới hoặc cập nhật file cũ (mục 6.6); sổ ghi dòng cuối đã gom | Chạy lại không ghi trùng; hook gọi nhiều lần vẫn an toàn | BG 6.2; DB 4 |
 | 12 | Xếp hạng | `rank.mjs` | Frontmatter các chuyện | Thứ tự: chuyện chỉ outsider thấy xuống cuối → `tension ≠ none` → `stakes + strength` → `hits` | Không bỏ chuyện nào, chỉ đẩy chuyện đáng xem lên đầu | TN 6d mục 4 |
+| 13 | Góc kể | Haiku (`angle.md`), mỗi chuyện một lần gọi; `angle.mjs` chọn chuyện và cắt trích đoạn | `angle.topN` chuyện đầu bảng của phiên chưa có `angle` (bỏ chuyện `dropped`); với mỗi chuyện: hook, tension, sides, stakes, thân bài, cộng các `Entry` rút gọn quanh từng dòng trong `lines` (±2 Entry, thu lại tới khi dưới ~24k ký tự), chỉ của phiên có nhiều dòng nhất | `angle` (1–3 câu: điều người ta tưởng → điều hoá ra → vì sao người nghe nên quan tâm), `audience`, `evidence` (số dòng, phải nằm trong trích đoạn); hoặc `none: true` kèm lý do | Tiêu đề chỉ gọi tên sự kiện; người đọc phải tự nghĩ ra chuyện đằng sau. Lời gọi hỏng (sau một lần gọi lại) không làm hỏng cửa sổ: chuyện chưa có góc kể, `momentry angle` làm bù | [TN góc kể](experiments/2026-11-05-angle/README.md): 20 chuyện, haiku 19 góc kể và 1 none, ~0,017 USD mỗi phiên. **Chưa có nhãn người chấm** (kiểm ở trang duyệt) |
 
 ### 5.3 Điểm nóng
 
@@ -395,6 +397,9 @@ Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví 
 | `rank.model` | `sonnet` | Gộp cụm, hook/tension, stakes |
 | `outsider.enabled` | true | |
 | `outsider.model` | `haiku` | Đổi từ `sonnet` sau khi đo: rẻ hơn ~8 lần ở bước này, chất lượng xếp hạng không giảm ([cost-cuts](experiments/2026-11-05-cost-cuts/README.md)) |
+| `angle.enabled` | true | Bước 13 trong lúc gom; `momentry angle` chạy được cả khi tắt |
+| `angle.model` | `haiku` | `sonnet` viết gọn chữ hơn đôi chỗ nhưng tốn ~13 lần, hay quá 3 câu và chưa thấy hơn ([TN góc kể](experiments/2026-11-05-angle/README.md)) |
+| `angle.topN` | 10 | Số chuyện đầu bảng của phiên được xét; 0 = không gọi |
 | `llm.promptCache` | `off` | Mỗi prompt chỉ gửi một lần nên không cache (`DISABLE_PROMPT_CACHING=1`); `5m`, `1h`, `auto` (Claude Code tự chọn) |
 | `scan.quietMinutes` | 30 | |
 | `privacy.sources` | `[]` | **Chỉ đọc từ cấu hình người dùng hoặc env `MOMENTRY_PRIVACY_SOURCES`**, bỏ qua nếu nằm trong `.momentry.json`, để đường dẫn riêng không vào repo |
@@ -432,6 +437,8 @@ strength: 3                         # 0-3
 stakes: 3                           # 0-3, so với main_goal của phiên
 hits: 1                             # số lần chạy harvest có bắt chuyện này (trên runs)
 runs: 1                             # tổng số lần chạy harvest thành công đã xét chuyện này
+angle: "Điểm tìm kiếm tụt mà code không đổi: ..." # bước 13; `none` = đã xét, không có góc kể; thiếu = chưa xét
+audience: "dev làm tìm kiếm tiếng Việt" # bước 13; chỉ có khi angle có chữ
 privacy: checked                    # checked | unchecked (chỉ khi privacy.allowUnchecked)
 links: [2026-11-02-do-tim-kiem-tieng-viet]
 threads: [obsidian-hieu-tieng-viet]
@@ -439,6 +446,7 @@ threads: [obsidian-hieu-tieng-viet]
 
 # Một kiểu viết Unicode làm điểm tìm kiếm tụt 8 lần
 
+**Góc kể:** ... (cùng chữ với `angle`; chỉ khi bước 13 có góc kể)
 **Bối cảnh:** ...
 **Chuyện gì xảy ra:** ...
 **Bài học:** ...
@@ -461,6 +469,7 @@ threads: [obsidian-hieu-tieng-viet]
 | `runs` | số lần chạy harvest thành công của cửa sổ này |
 | `hook`, `tension`, `sides`, `strength`, `stakes` | bước 7–8 |
 | `source` | `chat Claude` hoặc `chat Codex`, kèm id phiên |
+| `angle`, `audience`, dòng Góc kể | bước 13, ghi sau khi file đã có (một bản vá như lúc gộp); không có góc kể thì `angle: none`, không có `audience` và dòng Góc kể |
 
 Thử với prompt gộp cụm trả đủ 4 đoạn thân bài là tối ưu chưa kiểm; v2 giữ prompt gộp cụm như lúc thử.
 
@@ -469,6 +478,7 @@ Luật ghi:
 - Chuyện mới: tạo file. Chuyện gộp vào file cũ (bước 6): chỉ **nối** vào các trường danh sách (`sessions`, `signals`, `hit_by`, `lines`, khử trùng); `runs += runs của cửa sổ này`; `hits += số lần chạy của cửa sổ này có bắt chuyện đó`. Nhờ vậy `hits ≤ runs` luôn đúng và `hits/runs` giữ nghĩa "tỉ lệ lần chạy bắt được". Không viết lại thân bài; mục "Góc người ngoài" chỉ được thêm nếu chưa có. Mọi phần nối thêm qua bộ kiểm riêng tư trước khi ghi.
 - Trường máy (`hook`, `tension`, `sides`, `strength`, `stakes`, `hits`, `runs`) được máy cập nhật khi `status: raw`. User đã đổi `status` thì máy không đụng nữa.
 - Máy không bao giờ đổi `status`, `links`, `threads` của file đã có. Chuyện mới có thể có `links`/`threads` rỗng.
+- Góc kể (`angle`, `audience`, dòng `**Góc kể:**` ngay dưới tiêu đề) chỉ được ghi khi chuyện chưa có `angle`, ở mọi `status`; gộp chuyện ở lần gom sau không đổi nó. Chỉ `momentry angle --force` viết lại (thay cả trường lẫn dòng trong thân).
 - `main_goal` của phiên lưu trong sổ, không lưu trong từng chuyện.
 - Chuyện cũ chưa có trường mới (8 chuyện mẫu) vẫn đọc được: trường thiếu coi là rỗng, xếp cuối khi `list --rank`.
 - Frontmatter chỉ dùng tập con YAML. Parser tự viết, không npm. Ngữ pháp:
@@ -498,7 +508,7 @@ Luật ghi:
 4. Mặc định chỉ báo cụm từ 2 chữ trở lên. Từ đơn chỉ báo khi nguồn có `proper: true`. Cụm đúng 2 chữ chỉ báo khi nguồn có `proper: true` hoặc mọi chữ đều viết hoa (dạng tên người). Lý do: tiếng Việt mỗi chữ là một âm tiết, nên tên note 2 chữ như "Câu hỏi", "Cửa sổ" thường là từ chung. Lần chạy thật đầu tiên (2026-11-03) cho thấy luật cũ chặn nhầm 7/8 chuyện; luật mới vẫn giữ lần chặn đúng duy nhất (một tên note 5 chữ lọt vào chuyện).
 5. Từ trong `.privacy-allow` không bao giờ bị báo.
 
-**Kiểm những gì:** mọi trường văn bản của frontmatter và thân, **slug tên file**, chuyện do `add` tạo (`--title`, `--note`), và mọi phần nối thêm vào file cũ (dòng `lines`, mục "Góc người ngoài").
+**Kiểm những gì:** mọi trường văn bản của frontmatter và thân, **slug tên file**, chuyện do `add` tạo (`--title`, `--note`), và mọi phần nối thêm vào file cũ (dòng `lines`, mục "Góc người ngoài", góc kể và `audience` của bước 13). Góc kể bị chặn hay chưa kiểm được thì vào `quarantine/` dưới dạng bản vá, như phần nối thêm.
 
 **Hành vi** (áp cho `harvest`, `rescore`, `add`):
 
@@ -553,6 +563,7 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
   lib/box.mjs                readBox(dir) -> Story[]; writeNew(story); mergeInto(id, patch); storiesOfSession(sid)
   lib/ledger.mjs             load(), save(), lock(sid) / touch / unlock (wx + pid + mtime), needsHarvest(sid, stat) -> {fromLine} | null
   lib/rank.mjs               rankKey(story); sortRanked(stories)
+  lib/angle.mjs              bước 13: pickStories, excerpt, angleOne, anglePatch
   lib/pipeline.mjs           runSession(sid, opts) -> Report: nối bước 1-11; rescore(sid)
   lib/hook.mjs               handleHook(event, stdin, flags); printHookConfig('claude'|'codex')
   lib/log.mjs                ghi hook.log, không chép nội dung chuyện
@@ -562,6 +573,7 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
   prompts/hook-tension.md    bước 7 (mục 2)
   prompts/stakes.md          bước 8 (mục 3, biến thể si)
   prompts/outsider.md        bước 9 (mục 4)
+  prompts/angle.md           bước 13 (góc kể)
   prompts/bip.md             mẫu lệnh /bip cho Claude và Codex
   test/*.test.mjs            gồm imports.test.mjs: quét mọi .mjs, cấm import không có tiền tố node: hoặc đường dẫn tương đối
   test/fixtures/             transcript giả, vault giả, kết quả LLM giả
@@ -585,6 +597,7 @@ momentry <lệnh> [cờ]
 | `add` | Ghi một chuyện tay (dùng cho `/bip`); qua kiểm riêng tư | `--title`, `--note`, `--by human`, `--session ID` |
 | `rescore` | Chấm lại (bước 9 tuỳ chọn, 7, 8) mọi chuyện `status: raw` của một phiên; xoá `needsRescore` | `--session ID`, `--no-outsider`, `--fake-llm DIR` |
 | `quarantine` | Liệt kê chuyện bị giữ ngoài repo; thả vào hộp nếu qua kiểm | `--release ID`, `--repo DIR` |
+| `angle` | Bước 13 cho chuyện đã có trong hộp (mặc định top `angle.topN` của cả hộp, chưa có góc kể) | `--top N`, `--story ID`, `--force`, `--dry-run`, `--json` |
 | `list` | Bảng id, ngày, status, hook, tension, stakes, strength, hits | `--rank`, `--status S`, `--thread T`, `--session ID`, `--json` |
 | `check` | Kiểm khuôn frontmatter, `id` (nếu có) khớp tên file, link không gãy, riêng tư | `--box DIR`, `--staged` |
 | `reduce` | In văn bản rút gọn và điểm nóng (gỡ lỗi, thí nghiệm) | `--transcript FILE`, `--to-line N`, `--out DIR` |
@@ -614,6 +627,7 @@ Cờ đặc biệt:
   | `outsider-<a>` | bước 9 |
   | `hook-tension-<a>` | bước 7 |
   | `stakes-<a>` | bước 8 |
+  | `angle-<k>` | bước 13, chuyện thứ k trong danh sách được chọn (theo hạng). Thiếu file thì chuyện đó chưa có góc kể; trong `harvest` không đổi mã thoát, trong `angle` là mã 4 |
 
   Lần gọi lại vì JSON hỏng hay sai khuôn dùng hậu tố `-retry` (ví dụ `harvest-c1-r1-retry`).
 - **Dạng file** của `--fake-llm` và `--save-llm` là đúng đầu ra `claude -p --output-format json`: đọc `result` (chuỗi), `total_cost_usd`, `is_error`, `duration_ms`. Fixture phải có cả ca thành công và ca `is_error: true`.
