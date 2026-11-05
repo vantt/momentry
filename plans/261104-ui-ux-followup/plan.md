@@ -30,3 +30,9 @@ Tách từ [261104-ui-ux](../261104-ui-ux/plan.md) ngày 2026-11-04, khi phần 
 | U.9 | **Skill `momentry`** (thay MCP, quyết định 2026-11-04 vì MCP tốn token mỗi phiên): một skill duy nhất, cài vào cả 5 host như `momentry-bip`. Lúc thường chỉ tên và mô tả nằm trong context (vài chục token); thân skill chỉ nạp khi người dùng hỏi ("tuần này có chuyện gì hay?", "viết chuyện X thành thread"). Skill chỉ agent gọi CLI `--json`; thêm lệnh `show <id> --json`, `mark <id> use\|later\|drop`. Soạn nháp bài do agent của người dùng viết bằng model họ đã trả, không tốn LLM phía momentry (đường ngắn tới E13). Kiểm host nào hỗ trợ skill (Antigravity đã dùng skill cho bip; Claude Code có; Codex, pi, omp cần kiểm) | Agent | ✅ 2026-11-05: skill `momentry` ở 5 host; lệnh `show`, `mark` |
 
 **Thứ tự:** U.1–U.3 cùng hoặc ngay sau lần bán đầu (U0); U.9 ngay sau; U.7b, U.8 khi có người dùng.
+
+**Quyết định 2026-11-05:**
+- Bỏ bí danh `/bip`; skill Codex đặt ở `~/.agents/skills`; shim `momentry` mất tính là lỗi trong dòng nhắc; dòng nhắc vẫn đi vào ngữ cảnh agent.
+- Thêm tạm ngừng gom chuyện theo dự án (`momentry pause`/`resume`).
+- Mọi cấu hình đi qua `momentry config` (kể cả theo dự án: `--project`), không thêm cờ lẻ như `init --box`.
+- Tỉ lệ top 5 được Use: có tính Later là "không dùng" hay không, anh trả lời sau khi dùng thật. Hiện vẫn tính Later là không dùng (`measures` trong `lib/metrics.mjs`).
