@@ -87,6 +87,22 @@ test('bad values and broken JSON exit 1', () => {
   assert.throws(() => loadConfig({ cwd: repo, env }), (e) => e.exitCode === EXIT.FAIL);
 });
 
+test('cost settings: haiku outsider, no prompt cache by default; cache setting validated', () => {
+  const { repo, env } = setup();
+  const c = loadConfig({ cwd: repo, env });
+  assert.equal(c.outsider.model, 'haiku');
+  assert.equal(c.llm.promptCache, 'off');
+  for (const [cfg, want] of [[{ llm: { promptCache: '1h' } }, (x) => x.llm.promptCache === '1h'],
+    [{ 'llm.promptCache': 'auto' }, (x) => x.llm.promptCache === 'auto']]) {
+    fs.writeFileSync(path.join(repo, '.momentry.json'), JSON.stringify(cfg));
+    assert.ok(want(loadConfig({ cwd: repo, env })), JSON.stringify(cfg));
+  }
+  for (const bad of [{ llm: { promptCache: 'forever' } }, { 'llm.promptCache': false }]) {
+    fs.writeFileSync(path.join(repo, '.momentry.json'), JSON.stringify(bad));
+    assert.throws(() => loadConfig({ cwd: repo, env }), (e) => e.exitCode === EXIT.FAIL, JSON.stringify(bad));
+  }
+});
+
 test('outside a git repo', () => {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-nogit-'));
   const c = loadConfig({ cwd: base, env: { HOME: base, MOMENTRY_CONFIG: path.join(base, 'none.json') }, flags: { box: 'b' } });

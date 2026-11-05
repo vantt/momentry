@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Gom chuyện rẻ hơn khoảng 3 lần (đo trên 8 phiên: 0,83 xuống 0,26 USD mỗi phiên), chất lượng xếp hạng không giảm. Chi tiết: [số đo](docs/experiments/2026-11-05-cost-cuts/README.md).
+  - Bước người ngoài dùng `haiku` thay `sonnet` (`outsider.model`). Muốn như cũ: `momentry config set outsider.model sonnet`.
+  - Không trả phí ghi cache prompt nữa: mỗi prompt chỉ gửi một lần, nên mọi lời gọi model chạy với cache tắt (khoá mới `llm.promptCache`, mặc định `off`; `auto` để Claude Code tự chọn như trước).
+- `--dry-run` ước tính chi phí theo giá đo được của từng model (kể cả giá cao hơn của `haiku` khi prompt quá 100k token) và theo từng khúc; trước đây ước tính thấp khoảng 1,5 lần.
+
 ## [0.3.0] - 2026-11-05
 
 ### Changed (cần làm khi nâng cấp)

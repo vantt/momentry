@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildArgs, call, callJson } from '../lib/llm.mjs';
+import { buildArgs, call, callJson, callEnv, callUsd } from '../lib/llm.mjs';
 import { extractJson } from '../lib/json.mjs';
 import { validateStakes, validateHookTension } from '../lib/validate.mjs';
 
@@ -52,6 +52,7 @@ test('call: success reads result, cost; prompt on stdin; STORY_HARVEST=1; save a
   assert.deepEqual(c.argv, buildArgs('haiku'));
   assert.equal(c.storyHarvest, '1');
   assert.equal(c.prompt, base.prompt);
+  assert.equal(c.cacheOff, '1', 'prompt cache is off by default');
   const saved = JSON.parse(fs.readFileSync(path.join(saveDir, 'harvest-c1-r1.json'), 'utf8'));
   assert.equal(saved.result, '{"x":1}');
   if (process.platform !== 'win32') assert.equal(fs.statSync(saveDir).mode & 0o777, 0o700);
@@ -159,4 +160,33 @@ test('callJson + fake-llm: harvest success', async () => {
   const r = await callJson({ ...base, fakeDir: FAKE_LLM, validate: () => [] });
   assert.equal(r.json.stories.length, 1);
   assert.equal(r.usd, 0.12);
+});
+
+test('callEnv: cache off by default, forced lifetimes clear the other cache switches, auto leaves env alone', () => {
+  const env = { PATH: '/bin', DISABLE_PROMPT_CACHING_SONNET: '1', CLAUDE_CODE_PROMPT_CACHE_TTL: '1h' };
+  assert.deepEqual(callEnv(env), { PATH: '/bin', STORY_HARVEST: '1', DISABLE_PROMPT_CACHING: '1' });
+  assert.deepEqual(callEnv(env, { cache: '5m' }), { PATH: '/bin', STORY_HARVEST: '1', CLAUDE_CODE_PROMPT_CACHE_TTL: '5m' });
+  assert.deepEqual(callEnv(env, { cache: '1h' }), { PATH: '/bin', STORY_HARVEST: '1', CLAUDE_CODE_PROMPT_CACHE_TTL: '1h' });
+  assert.deepEqual(callEnv(env, { cache: 'auto' }), { ...env, STORY_HARVEST: '1' });
+  assert.equal(env.STORY_HARVEST, undefined, 'caller env is not mutated');
+  assert.throws(() => callEnv(env, { cache: 'forever' }), (e) => e.exitCode === 4);
+});
+
+test('call: the cache setting reaches the child', async () => {
+  const f = fake('ok');
+  await call({ ...base, env: f.env, cache: '5m' });
+  const [c] = f.calls();
+  assert.equal(c.cacheOff, null);
+  assert.equal(c.cacheTtl, '5m');
+});
+
+test('callUsd: measured list prices, haiku long-prompt step at 100k, cache write factors', () => {
+  const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} vs ${b}`);
+  near(callUsd('haiku', 90000, 1000), (90000 * 0.1 + 1000 * 0.5) / 1e6);
+  near(callUsd('haiku', 110000, 1000), 5 * (110000 * 0.1 + 1000 * 0.5) / 1e6);
+  near(callUsd('sonnet', 100000, 2000), (100000 * 2 + 2000 * 10) / 1e6);
+  near(callUsd('claude-sonnet-5-5', 100000, 0, '1h'), 100000 * 4 / 1e6);
+  near(callUsd('sonnet', 100000, 0, '5m'), 100000 * 2.5 / 1e6);
+  near(callUsd('sonnet', 100000, 0, 'auto'), callUsd('sonnet', 100000, 0, '1h'));
+  near(callUsd('some-new-model', 1e6, 0), 4, 'unknown models priced as opus');
 });

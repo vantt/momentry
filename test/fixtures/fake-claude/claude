@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Fake `claude -p` for tests. Reads stdin, answers per FAKE_CLAUDE_PLAN (comma list, one mode per call):
 // ok | prose | is_error | is_error_exit | bad_json | bad_stdout | no_result | exit | hang
-// Call counter and a call log (argv, STORY_HARVEST, prompt length) live in FAKE_CLAUDE_STATE (a dir).
+// Call counter and a call log (argv, STORY_HARVEST, prompt, cache env) live in FAKE_CLAUDE_STATE (a dir).
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -19,7 +19,8 @@ process.stdin.on('end', () => {
     n = fs.existsSync(cf) ? Number(fs.readFileSync(cf, 'utf8')) : 0;
     fs.writeFileSync(cf, String(n + 1));
     fs.appendFileSync(path.join(state, 'calls.jsonl'),
-      JSON.stringify({ argv: process.argv.slice(2), storyHarvest: process.env.STORY_HARVEST ?? null, prompt: stdin, pid: process.pid }) + '\n');
+      JSON.stringify({ argv: process.argv.slice(2), storyHarvest: process.env.STORY_HARVEST ?? null, prompt: stdin, pid: process.pid,
+        cacheOff: process.env.DISABLE_PROMPT_CACHING ?? null, cacheTtl: process.env.CLAUDE_CODE_PROMPT_CACHE_TTL ?? null }) + '\n');
   }
   const mode = plan[Math.min(n, plan.length - 1)];
   const out = o => process.stdout.write(JSON.stringify({ type: 'result', duration_ms: 1234, total_cost_usd: 0.01, ...o }));

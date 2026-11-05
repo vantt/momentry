@@ -75,7 +75,7 @@ Không để lọt dữ liệu riêng vào repo.
 7. **Riêng tư là chốt chặn, không phải lời dặn.** Bộ kiểm chạy trên mọi chuyện (cả tên file, `add`, phần nối vào file cũ) trước khi ghi vào repo. Không có nguồn chặn thì báo "bỏ qua", không coi là qua: chuyện không vào repo mà nằm chờ ngoài repo (mục 6.7) (BG 6.4; DB 4).
 8. **Không can thiệp phiên chính.** Hook thoát ngay với mã 0, không in gì ra stdout, việc nặng chạy nền (raw capture mục 14).
 9. **Công cụ:** `.mjs` chạy trên Node, không npm, test bằng `node --test`. Không Python. Chạy cho cả Claude Code và Codex (BG 2).
-10. **Gọi model cô lập:** `claude -p --setting-sources "" --tools "" --strict-mcp-config --no-session-persistence`, kèm `STORY_HARVEST=1` để hook của chính lần gọi đó thoát ngay ([harness/run.sh][h-run]).
+10. **Gọi model cô lập:** `claude -p --setting-sources "" --tools "" --strict-mcp-config --no-session-persistence`, kèm `STORY_HARVEST=1` để hook của chính lần gọi đó thoát ngay ([harness/run.sh][h-run]), và mặc định `DISABLE_PROMPT_CACHING=1` (`llm.promptCache`).
 
 ---
 
@@ -392,7 +392,8 @@ Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví 
 | `harvest.timeoutSec` | 600 | Lần chạy dài từng mất 167 giây (TN 2) |
 | `rank.model` | `sonnet` | Gộp cụm, hook/tension, stakes |
 | `outsider.enabled` | true | |
-| `outsider.model` | `sonnet` | |
+| `outsider.model` | `haiku` | Đổi từ `sonnet` sau khi đo: rẻ hơn ~8 lần ở bước này, chất lượng xếp hạng không giảm ([cost-cuts](experiments/2026-11-05-cost-cuts/README.md)) |
+| `llm.promptCache` | `off` | Mỗi prompt chỉ gửi một lần nên không cache (`DISABLE_PROMPT_CACHING=1`); `5m`, `1h`, `auto` (Claude Code tự chọn) |
 | `scan.quietMinutes` | 30 | |
 | `privacy.sources` | `[]` | **Chỉ đọc từ cấu hình người dùng hoặc env `MOMENTRY_PRIVACY_SOURCES`**, bỏ qua nếu nằm trong `.momentry.json`, để đường dẫn riêng không vào repo |
 | `privacy.allowFile` | `<box>/.privacy-allow` | Chỉ chứa từ chung hay bị báo nhầm |
