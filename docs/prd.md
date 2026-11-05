@@ -119,7 +119,7 @@ Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (m�
 | 9 | Người ngoài | Sonnet, lần gọi riêng (`outsider.md`); chạy ngay sau bước 6 | Văn bản rút gọn + danh sách tiêu đề cụm | `outsider[]`: what, common_practice, gap, lines, already_picked | Đổi góc kể sang "cách làm người khác muốn học". Haiku gộp chung cho gap 0,45; Sonnet gọi riêng cho gap 2,31. **Opus chấm, có thể thiên vị văn phong chi tiết của Sonnet; so sánh đổi cùng lúc model, cách gọi và câu dặn**, nên không quy kết quả cho riêng việc "gọi riêng" | TN 4.2; TN 5 mục 4; TN 7. **Chưa qua phép thử cất kín** |
 | 10 | Kiểm riêng tư | `privacy.mjs` | Mọi trường văn bản của mỗi chuyện sắp ghi, tên file (slug), phần sẽ nối vào file cũ | Qua / vi phạm / bỏ qua (không có nguồn chặn) | Transcript chứa tên note, câu hỏi thật. Mẫu `lo-rieng-tu` rò qua dạng Telex | BG 6.4; DB 4; MẪU |
 | 11 | Dựng file, ghi hộp, sổ | `story.mjs`, `box.mjs`, `ledger.mjs` | Cụm đã chấm và qua kiểm | File chuyện mới hoặc cập nhật file cũ (mục 6.6); sổ ghi dòng cuối đã gom | Chạy lại không ghi trùng; hook gọi nhiều lần vẫn an toàn | BG 6.2; DB 4 |
-| 12 | Xếp hạng | `rank.mjs` | Frontmatter các chuyện | Thứ tự: `tension ≠ none` → `stakes × strength` → `hits` | Không bỏ chuyện nào, chỉ đẩy chuyện đáng xem lên đầu | TN 6d mục 4 |
+| 12 | Xếp hạng | `rank.mjs` | Frontmatter các chuyện | Thứ tự: chuyện chỉ outsider thấy xuống cuối → `tension ≠ none` → `stakes + strength` → `hits` | Không bỏ chuyện nào, chỉ đẩy chuyện đáng xem lên đầu | TN 6d mục 4 |
 
 ### 5.3 Điểm nóng
 
@@ -180,7 +180,7 @@ Vòng gọi bù **chưa được thử** (TN 7).
 
 | Cấu hình | Dùng khi | Hệ quả |
 |---|---|---|
-| `harvest.runs = 1` (mặc định) | Dùng hằng ngày | Rẻ nhất. `hits` của mọi chuyện là 1, xếp hạng dựa vào tension và stakes × strength. Với prompt e4, mỗi lần riêng lẻ đạt 6–7/7 đáp án và 7–8/8 chuyện `t` (TN 4.1, 6b) |
+| `harvest.runs = 1` (mặc định) | Dùng hằng ngày | Rẻ nhất. `hits` của mọi chuyện là 1, xếp hạng dựa vào tension và stakes + strength. Với prompt e4, mỗi lần riêng lẻ đạt 6–7/7 đáp án và 7–8/8 chuyện `t` (TN 4.1, 6b) |
 | `harvest.runs = N > 1` | Muốn đếm đồng thuận, hoặc phiên quan trọng | Chi phí harvest nhân N. `hits` thành tín hiệu xếp hạng: chuyện chỉ 1–3/5 lần bắt đều là `s` (TN 6b) |
 
 **Cấu hình `runs = 1` chưa được thử như một khối.** Các số trên đo với prompt e4 **có** phần người ngoài (c), mà (c) cũng sinh chuyện; prompt harvest v2 đã bỏ (c) (mục 5.4). Tension và stakes đo trên tóm tắt của 38 cụm gộp từ 5 lần chạy; với `runs = 1` và không có chuyện cũ, PRD bỏ bước gộp và chấm thẳng trên chuyện thô của một lần chạy (mục 5.7). Xem mục 11, điều 4 và 9.
@@ -209,8 +209,10 @@ Vòng gọi bù **chưa được thử** (TN 7).
 ### 5.9 Xếp hạng (bước 12)
 
 ```text
-khoá xếp = (tension ≠ none ? 0 : 1, -(stakes × strength), -hits, -date)
+khoá xếp = (chỉ outsider thấy ? 1 : 0, tension ≠ none ? 0 : 1, -(stakes + strength), -hits, -date)
 ```
+
+- **Đổi 2026-11-05** ([thí nghiệm xếp hạng](experiments/2026-11-05-ranking/README.md)): cộng thay vì nhân, vì strength của chuyện tension `none` luôn là 0 nên phép nhân bỏ qua stakes của chúng; chuyện chỉ bước outsider tìm ra (không có harvest) xuống cuối vì hiếm khi là `t`. Trên 8 phiên nhãn nháp: `t` nửa trên 21/30 → 23/30.
 
 - Không có ngưỡng. `list --rank` hiện hết, chỉ đổi thứ tự.
 - Lọc `stakes ≥ 2` từng cho precision 100% nhưng mất 1–2 chuyện `t` (gộp commit gỡ dữ liệu lộ; máy đề xuất 179 viết tắt) (TN 6d mục 3). Vì vậy không có cờ lọc stakes mặc định.
