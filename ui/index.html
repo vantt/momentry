@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>momentry</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#/" aria-label="momentry, your stories">momentry</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#/" data-nav="stories">Stories <span class="count" data-count hidden></span></a>
+      <a href="#/series" data-nav="series">Series</a>
+      <a href="#/privacy" data-nav="privacy">Privacy</a>
+      <a href="#/cost" data-nav="cost">Cost</a>
+      <a href="#/health" data-nav="health">Health <span class="dot" data-health-dot hidden aria-label="needs attention"></span></a>
+      <a href="#/settings" data-nav="settings">Settings</a>
+    </nav>
+    <div class="top-actions">
+      <button class="btn btn-ghost btn-sm hide-sm" type="button" data-action="palette" aria-label="Search actions (Ctrl+K)"><span class="kbd">Ctrl K</span></button>
+      <button class="btn btn-primary btn-sm" type="button" data-action="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Quick note</button>
+    </div>
+  </div>
+</header>
+<main id="main" tabindex="-1" aria-live="polite">
+  <noscript><div class="err-page panel"><h2>momentry needs JavaScript</h2><p>Turn JavaScript on for this page. Everything runs on your own machine.</p></div></noscript>
+</main>
+<footer class="footer"><span>Runs on your machine. No momentry server.</span><span data-version></span></footer>
+<div class="toasts" role="status" aria-live="polite"></div>
+
+<dialog id="note-dialog" aria-labelledby="note-title">
+  <form class="dialog-card" method="dialog" data-form="note">
+    <button class="btn btn-ghost btn-sm x" type="button" data-action="close-dialog" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div><span class="hand">jot it down before it fades</span><h2 id="note-title">Quick note</h2></div>
+    <div class="field" data-note-project></div>
+    <div class="field"><label for="note-t">Title</label><input class="input" id="note-t" name="title" maxlength="160" autocomplete="off" placeholder="One line: what moved?"></div>
+    <div class="field"><label for="note-b">What happened</label><textarea class="textarea" id="note-b" name="note" placeholder="Two to four sentences: the situation, what you tried, what changed."></textarea><p class="hint">Saved as a markdown file in the project's story folder, checked against your private names first.</p></div>
+    <p class="err-text" data-note-err hidden></p>
+    <div class="row"><button class="btn btn-primary" type="submit" data-note-save>Save to wall</button><button class="btn btn-ghost" type="button" data-action="close-dialog">Cancel</button><span class="hint hide-sm">Ctrl+Enter saves</span></div>
+  </form>
+</dialog>
+
+<dialog id="palette" aria-label="Go to">
+  <div class="dialog-card palette">
+    <label class="sr-only" for="palette-q">Search pages and actions</label>
+    <input class="input" id="palette-q" placeholder="Go to, or do…" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="palette-list">
+    <ul id="palette-list" role="listbox"></ul>
+  </div>
+</dialog>
+</body>
+</html>
