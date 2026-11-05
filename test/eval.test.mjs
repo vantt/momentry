@@ -215,3 +215,19 @@ test('harness: replays a stored capture, measures it against labels, writes resu
   assert.equal(res.diffs[0].diff.labelAgreement, 1);
   assert.ok(!fs.existsSync(path.join(run1, 'replay')), 'replay scratch removed without --keep');
 });
+
+test('review page: a label file read and written back keeps every label the harness sees', async () => {
+  const { readLabelFile, writeLabelFile } = await import('../scripts/eval/review.mjs');
+  const text = `---\nsession: abc12345\nhost: claude\nstatus: draft\n---\n| # | slug | tiêu đề | dòng | keywords | t | lý do |\n|---|---|---|---|---|---|---|\n| 1 | tmp-quota | /tmp hết hạn mức | 487-740 | EDQUOT, worktree | x | Sự cố. |\n| 2 | | Tìm kiếm tiếng Việt | 1363-1364, 2344 | tiếng Việt, dấu | | |\n`;
+  const f = readLabelFile(text);
+  assert.equal(f.meta.status, 'draft');
+  assert.equal(f.rows.length, 2);
+  assert.equal(f.rows[0].t, 'x');
+  const back = writeLabelFile(f.front, 'reviewed', f.rows);
+  assert.match(back, /^status: reviewed$/m);
+  assert.deepEqual(parseLabels(back).map((l) => ({ ...l, name: undefined, slugs: undefined })), parseLabels(text).map((l) => ({ ...l, name: undefined, slugs: undefined })));
+  assert.deepEqual(parseLabels(back)[1].slugs, ['tim-kiem-tieng-viet'], 'a row without slug gets one from its title');
+  const added = writeLabelFile(f.front, 'draft', [...f.rows, { title: 'Bài | có gạch', keywords: 'a, b', t: 'x' }]);
+  assert.equal(parseLabels(added).length, 3);
+  assert.throws(() => writeLabelFile(f.front, 'draft', [{ title: '', keywords: '' }]), /keywords hoặc slug/);
+});

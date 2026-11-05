@@ -7,7 +7,10 @@ Node ≥ 20, không dependency, như phần còn lại của repo.
 ```sh
 node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json --capture   # gọi model thật, tốn tiền
 node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json             # chạy lại, 0 USD
+node scripts/eval/review.mjs                                                       # trang duyệt nhãn trên máy
 ```
+
+`review.mjs` mở trang trên 127.0.0.1 (in link có khoá): tick chuyện đáng kể, xoá dòng không phải chuyện, thêm chuyện còn thiếu (gõ tay hoặc chọn từ danh sách momentry tìm ra trong bản chụp mới nhất), rồi đánh dấu đã duyệt. Trang ghi thẳng vào file nhãn, cùng định dạng ở dưới. Cờ: `--labels DIR`, `--data DIR` (bản chụp để lấy danh sách và hạng, mặc định `docs/_private/eval/new-defaults`), `--port N` (mặc định 4826).
 
 | Cờ | Nghĩa |
 |---|---|
@@ -16,7 +19,7 @@ node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json           
 | `--out DIR` | thư mục dữ liệu, mặc định `docs/_private/eval/` của repo chứa script |
 | `--only ID,ID` | chỉ các phiên này |
 | `--jobs N` | số phiên chạy song song (mặc định 1) |
-| `--budget USD` | với `--capture`: bỏ phiên tiếp theo khi số đã tiêu trong lần gọi này cộng 2 × ước tính `dry-run` của phiên vượt mức. Hệ số 2 lấy từ [lần chạy thật DM](../../docs/experiments/2026-11-04-dm-real-run/README.md) |
+| `--budget USD` | với `--capture`: bỏ phiên tiếp theo khi số đã tiêu trong lần gọi này cộng 1,3 × ước tính `dry-run` của phiên vượt mức. Ước tính lệch 0,65–1,16 lần so với thực tế ([giảm chi phí](../../docs/experiments/2026-11-05-cost-cuts/README.md)) |
 | `--keep` | giữ repo nháp của lần chạy lại để soi |
 
 Mã thoát: 0 xong; 1 có phiên hỏng (chụp, chạy lại, file nhãn); 2 sai cú pháp hoặc manifest hỏng.
@@ -27,7 +30,7 @@ Mã thoát: 0 xong; 1 có phiên hỏng (chụp, chạy lại, file nhãn); 2 sa
 
 Mỗi lần chạy (chụp hay chạy lại) dùng một repo git nháp mới với `.momentry.json`, cache (`MOMENTRY_CACHE`), file cấu hình (`MOMENTRY_CONFIG`) và danh sách dự án (`XDG_CONFIG_HOME`) riêng, đều nằm trong thư mục dữ liệu. Hộp, sổ, cache và cấu hình thật không bị ghi. Từ cấu hình thật chỉ đọc `privacy.sources` (tên riêng tư) để cổng riêng tư chạy như thật; cấu hình nháp bật `allowUnchecked`, nên khi máy không có nguồn chặn, chuyện vẫn vào hộp nháp. Chuyện bị cổng riêng tư giữ lại vẫn được tính vào danh sách xếp hạng (đánh dấu `held`), để chỉ số không phụ thuộc tên riêng tư.
 
-Lời gọi model chạy với môi trường thật (đăng nhập `claude`), cấu hình mặc định (harvest `haiku`, chấm và người ngoài `sonnet`, `runs` 1), không theo cấu hình riêng của người dùng.
+Lời gọi model chạy với môi trường thật (đăng nhập `claude`), cấu hình mặc định (harvest và người ngoài `haiku`, chấm `sonnet`, `runs` 1), không theo cấu hình riêng của người dùng.
 
 ## Manifest
 
