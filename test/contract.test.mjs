@@ -14,7 +14,7 @@ const CONTRACT = {
   'sources/claude.mjs': { sessionId: 1, encodeProjectDir: 1, listTranscripts: 1, readEntries: 1, countLines: 1 },
   'sources/codex.mjs': { sessionId: 1, sessionMeta: 1, listTranscripts: 1, readEntries: 1, patchPaths: 1, countLines: 1 },
   'reduce.mjs': { approxTokens: 1, renderEntry: 1, render: 1, chunk: 2 },
-  'hotspots.mjs': { nonzeroExit: 1, metricPair: 1, gitReversal: 1, metaWrite: 1, bipMark: 1, detect: 1, format: 1 },
+  'hotspots.mjs': { nonzeroExit: 1, blocked: 1, metricPair: 1, gitReversal: 1, metaWrite: 1, lessonWrite: 1, ownerVoice: 1, bipMark: 1, detect: 1, format: 1 },
   'prompts.mjs': { render: 2 },
   'llm.mjs': { buildArgs: 1, call: 1, callJson: 1 },
   'json.mjs': { extractJson: 1 },
