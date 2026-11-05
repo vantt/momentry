@@ -194,6 +194,7 @@ test('UI: turning a project on lists it; a gone folder stays listed as missing a
   assert.equal(gone.name, 'beta');
   assert.equal(gone.box, outside);
   assert.match(gone.error, /folder of this project is gone/);
+  assert.deepEqual(A.settingsView(ctx).missing.map((p) => p.id), [gone.id], 'Settings offers to remove it');
   await assert.rejects(() => A.healthView(ctx, { project: gone.id }), (e) => e.status === 409);
   assert.throws(() => A.exportProject(ctx, gone.id), (e) => e.status === 409);
   assert.throws(() => A.deleteProject(ctx, { project: gone.id, confirm: 'nope' }), /Type beta/);
