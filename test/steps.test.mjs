@@ -228,7 +228,7 @@ test('mergePatch adds the outsider section only when absent', () => {
   assert.deepEqual(mergePatch({ body: '' }, { id: 'C2', members: [], hits: 0 }, [], {}, sctx), {});
 });
 
-test('rank: tension != none first, then stakes x strength, hits, newer date; missing fields last', () => {
+test('rank: tension != none first, then stakes + strength, hits, newer date; missing fields last', () => {
   const s = (id, d) => ({ id, data: d });
   const stories = [
     s('old-sample', { date: '2026-01-01', status: 'raw' }),
@@ -240,8 +240,35 @@ test('rank: tension != none first, then stakes x strength, hits, newer date; mis
     s('t-nostakes', { tension: 'khac', strength: 3, hits: 9 }),
   ];
   assert.deepEqual(sortRanked(stories).map((x) => x.id), ['t-high-hits', 't-high-newer', 't-high', 't-low', 't-nostakes', 'none-high', 'old-sample']);
-  assert.equal(rankKey(stories[0])[0], 2);
+  assert.equal(rankKey(stories[0])[1], 2);
   assert.equal(sortRanked(stories).length, stories.length);
+});
+
+test('rank: a zero on one axis does not erase the other (sum, not product)', () => {
+  const s = (id, d) => ({ id, data: { hits: 1, date: '2026-01-02', ...d } });
+  const stories = [
+    s('none-side', { tension: 'none', stakes: 0, strength: 0 }),
+    s('none-turning-point', { tension: 'none', stakes: 2, strength: 0 }),
+    s('t-weak', { tension: 'khac', stakes: 1, strength: 1 }),
+    s('t-side-strong', { tension: 'khac', stakes: 0, strength: 3 }),
+  ];
+  assert.deepEqual(sortRanked(stories).map((x) => x.id), ['t-side-strong', 't-weak', 'none-turning-point', 'none-side']);
+});
+
+test('rank: stories found only by the outsider step go after every other story', () => {
+  const s = (id, d) => ({ id, data: { hits: 1, date: '2026-01-02', ...d } });
+  const stories = [
+    s('outsider-only', { tension: 'khac', stakes: 3, strength: 3, hits: 0, hit_by: ['outsider'] }),
+    s('outsider-hotspot', { tension: 'khac', stakes: 3, strength: 3, hits: 0, hit_by: ['hotspot', 'outsider'] }),
+    s('harvest-outsider', { tension: 'khac', stakes: 1, strength: 1, hit_by: ['harvest', 'outsider'] }),
+    s('harvest-none', { tension: 'none', stakes: 0, strength: 0, hit_by: ['harvest'] }),
+    s('bip-outsider', { tension: 'none', stakes: 0, strength: 0, hit_by: ['bip', 'outsider'] }),
+    s('manual', { date: '2026-01-01', status: 'raw' }),
+  ];
+  assert.deepEqual(sortRanked(stories).map((x) => x.id),
+    ['harvest-outsider', 'bip-outsider', 'harvest-none', 'manual', 'outsider-hotspot', 'outsider-only']);
+  assert.equal(rankKey(stories[0])[0], 1);
+  assert.equal(rankKey(stories[5])[0], 0);
 });
 
 test('chunked hits: same run in two chunks counts once', async () => {
