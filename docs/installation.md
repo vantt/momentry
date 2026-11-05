@@ -23,7 +23,7 @@ Cần sẵn: Node ≥ 20 trên PATH, git, và `claude` CLI đã đăng nhập. I
 | Dấu bản cài (ghi cả thư mục shim) | `~/.local/share/momentry/.momentry-managed` | `%LOCALAPPDATA%\momentry\app\.momentry-managed` |
 | Cấu hình người dùng | `~/.config/momentry/config.json` | `%APPDATA%\momentry\config.json` |
 | Cache (sổ, khoá, quarantine, `hook.log`) | `~/.cache/momentry` (quyền 0700) | `%LOCALAPPDATA%\momentry\cache` |
-| Hook, extension, `/bip` của các agent | xem [Host được hỗ trợ](#host-được-hỗ-trợ) | như cột bên trái, dưới `%USERPROFILE%` |
+| Hook, extension, lệnh và skill của các agent | xem [Host được hỗ trợ](#host-được-hỗ-trợ) | như cột bên trái, dưới `%USERPROFILE%` |
 
 Linux tôn trọng `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` khi là đường dẫn tuyệt đối. macOS dùng cùng bố cục `~/.config`, `~/.cache` như Linux (có chủ ý, giống đa số CLI dành cho dev).
 
@@ -33,13 +33,27 @@ Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `curre
 
 `momentry init` (và `momentry connect`) cài cho mọi host có trên máy, **ở mọi profile tìm thấy**: thư mục mặc định cùng các profile theo quy ước `~/.codex-*`, `~/.pi/accounts/*`, `~/.omp/profiles/*/agent`, `~/.agy-homes/*/.gemini`. `momentry doctor` báo profile mới chưa được cài; `momentry connect <host> --yes` cài bù. `momentry scan` đọc transcript ở mọi profile.
 
-| Host | Gom tự động bằng | `/bip` | Transcript |
+| Host | Gom tự động bằng | Transcript |
+|---|---|---|
+| Claude Code | hook `PreCompact`, `SessionEnd`, `SessionStart` trong `settings.json` | `projects/<cwd mã hoá>/<uuid>.jsonl` |
+| Codex | hook `PreCompact`, `SessionEnd`, `SessionStart` trong `hooks.json` (Codex hỏi duyệt tin cậy hook mới) | `sessions/YYYY/MM/DD/rollout-*.jsonl` |
+| pi | extension `extensions/momentry.ts` (sự kiện `session_start`, `session_before_compact`, `session_shutdown`) | `sessions/<cwd>/<ts>_<uuid>.jsonl` |
+| omp (oh-my-pi) | extension `extensions/momentry.ts` (cùng file với pi) | `sessions/<cwd>/<ts>_<uuid>.jsonl` |
+| Antigravity (`agy`, IDE) | hook `SessionStart` trong nhóm `"momentry"` của `config/hooks.json`; gom các phiên agy trước đó của repo | `antigravity-*/brain/<id>/.system_generated/logs/transcript_full.jsonl` |
+
+### Lệnh agent và skill `momentry`
+
+Mỗi host có hai lệnh: `momentry-bip` (đánh dấu khoảnh khắc vừa rồi, gọi `momentry add`) và `momentry-ui` (chạy `momentry ui`: mở giao diện web, hoặc in đường dẫn file để mở; mã truy cập nằm trong file, không bao giờ in ra). Tên cũ `/bip` được giữ làm bí danh một thời gian ở những host đã có nó. Ngoài ra là skill `momentry`: lúc thường chỉ tên và mô tả nằm trong context của agent; thân skill chỉ nạp khi bạn hỏi về chuyện ("tuần này có chuyện gì hay?", "viết chuyện X thành thread"), và nó chỉ bảo agent gọi `momentry list --rank --json`, `momentry show <id> --json`, `momentry mark <id> use|later|drop --json`. Bài nháp do chính agent của bạn viết, bằng model bạn đã trả; momentry không gọi model nào cho việc này.
+
+| Host | Gọi lệnh | File lệnh (trong thư mục profile) | Skill `momentry` |
 |---|---|---|---|
-| Claude Code | hook `PreCompact`, `SessionEnd`, `SessionStart` trong `settings.json` | `commands/bip.md` | `projects/<cwd mã hoá>/<uuid>.jsonl` |
-| Codex | hook `PreCompact`, `SessionEnd`, `SessionStart` trong `hooks.json` (Codex hỏi duyệt tin cậy hook mới) | `prompts/bip.md` | `sessions/YYYY/MM/DD/rollout-*.jsonl` |
-| pi | extension `extensions/momentry.ts` (sự kiện `session_start`, `session_before_compact`, `session_shutdown`) | `prompts/bip.md` | `sessions/<cwd>/<ts>_<uuid>.jsonl` |
-| omp (oh-my-pi) | extension `extensions/momentry.ts` (cùng file với pi) | `commands/bip.md` | `sessions/<cwd>/<ts>_<uuid>.jsonl` |
-| Antigravity (`agy`, IDE) | hook `SessionStart` trong nhóm `"momentry"` của `config/hooks.json`; gom các phiên agy trước đó của repo | skill `config/skills/bip/SKILL.md` (`disable-model-invocation: true`) | `antigravity-*/brain/<id>/.system_generated/logs/transcript_full.jsonl` |
+| Claude Code | `/momentry-bip`, `/momentry-ui`, `/bip` | `commands/{momentry-bip,momentry-ui,bip}.md` | `skills/momentry/SKILL.md` |
+| Codex | `$momentry-bip`, `$momentry-ui` (hoặc chọn trong `/skills`) | skill `skills/{momentry-bip,momentry-ui}/SKILL.md` kèm `agents/openai.yaml` (`allow_implicit_invocation: false`) | `skills/momentry/SKILL.md` |
+| pi | `/momentry-bip`, `/momentry-ui`, `/bip` | `prompts/{momentry-bip,momentry-ui,bip}.md` | `skills/momentry/SKILL.md` (gọi tay: `/skill:momentry`) |
+| omp (oh-my-pi) | `/momentry-bip`, `/momentry-ui`, `/bip` | `commands/{momentry-bip,momentry-ui,bip}.md` | `skills/momentry/SKILL.md` |
+| Antigravity | `/momentry-bip`, `/momentry-ui`, `/bip` | skill `config/skills/{momentry-bip,momentry-ui,bip}/SKILL.md` (`disable-model-invocation: true`) | `config/skills/momentry/SKILL.md` |
+
+Codex từ 0.117 bỏ hẳn custom prompt (`~/.codex/prompts`, `/prompts:bip`), nên ở Codex hai lệnh là skill, gọi bằng `$tên`; `momentry connect` (và `momentry update`, qua `doctor --fix`) xoá `prompts/bip.md` cũ do momentry ghi. Skill Codex nằm ở `$CODEX_HOME/skills` (Codex vẫn đọc chỗ này bên cạnh `~/.agents/skills`), để mỗi profile `~/.codex-*` có bản riêng như hook. Máy đã cài bản cũ: `momentry update` (hoặc `momentry doctor --fix`) thêm các tên mới ở profile đã kết nối mà không hỏi lại; profile chưa kết nối vẫn cần `momentry connect --yes`.
 
 Antigravity không có sự kiện kết thúc phiên hay trước compact, chỉ có `SessionStart` và `Stop` (chạy sau mỗi lượt và chặn agent). Theo quyết định 2026-11-03, momentry chỉ dùng `SessionStart`: một phiên agy được gom khi bạn mở phiên agy kế tiếp trong repo đó, hoặc khi chạy `momentry scan --agy`. Transcript của agy không có thư mục làm việc, nên momentry ghi chỉ mục `<cache>/agy-sessions.jsonl` lúc phiên mở; phiên mở trước khi cài momentry không được gom.
 
@@ -129,10 +143,10 @@ Mỗi host chạy lệnh hook bằng một shell khác nhau trên Windows, nên 
 | pi, omp | extension gọi thẳng `cmd.exe` | (trong `momentry.ts`) |
 | Antigravity | `cmd /c` | `"C:/…/momentry.cmd" hook session-start --agy` |
 
-Lệnh `/bip` do agent tự chạy trong shell của nó (PowerShell là mặc định), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
+Lệnh `momentry-bip`, `momentry-ui` và skill `momentry` do agent tự chạy trong shell của nó (PowerShell là mặc định), nên gọi `momentry` theo tên; `install.ps1` đã thêm thư mục shim vào PATH.
 
 Đã kiểm trên Windows thật (runner CI `windows-2025`, workflow `windows-hook-probe`, 2026-11-04): Claude Code gọi hook lúc mở và kết thúc phiên, `harvest` đọc được transcript; Codex v0.166, pi 1.5.0 và omp 18.16 gọi hook lúc mở phiên. Antigravity chưa chạy thật trên Windows vì cần một tài khoản đã đăng nhập (đã kiểm trên Linux). Nếu `hook.log` không có dòng `hook.spawned` sau một phiên, chạy `momentry doctor` và báo lỗi kèm kết quả.
 
 ## Gỡ
 
-`momentry uninstall` (hoặc `sh install.sh --uninstall`) gỡ hook và `/bip` của momentry (chỉ mục của mình, có sao lưu), shim, thư mục cài và mục PATH (Windows). Cấu hình, cache, hộp chuyện và `.momentry.json` trong các repo được giữ; `--purge` xoá thêm cấu hình và cache.
+`momentry uninstall` (hoặc `sh install.sh --uninstall`) gỡ hook, lệnh agent (tên mới, bí danh `/bip` và tên cũ) và skill `momentry` (chỉ file của mình mà bạn chưa sửa, có sao lưu), shim, thư mục cài và mục PATH (Windows). Cấu hình, cache, hộp chuyện và `.momentry.json` trong các repo được giữ; `--purge` xoá thêm cấu hình và cache.

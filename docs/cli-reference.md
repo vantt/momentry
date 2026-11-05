@@ -43,16 +43,16 @@ Mọi lệnh nhận `--json` và in đúng một object ra stdout, kể cả khi
 
 ### `momentry init`
 
-Bật momentry cho repo này: tạo .momentry.json và hộp chuyện, cài hook + /bip cho Claude Code/Codex, rồi chạy doctor.
+Bật momentry cho repo này: tạo .momentry.json và hộp chuyện, cài hook, lệnh momentry-bip/momentry-ui và skill momentry cho các agent tìm thấy, rồi chạy doctor.
 
-**Thay đổi:** <repo>/.momentry.json, thư mục hộp <repo>/docs/storytelling-material; ~/.claude/settings.json (khoá hooks), ~/.claude/commands/bip.md, ~/.codex/hooks.json, ~/.codex/prompts/bip.md (có sao lưu *.momentry-bak-*). Chạy lại không đổi gì nếu đã đủ.
+**Thay đổi:** <repo>/.momentry.json, thư mục hộp <repo>/docs/storytelling-material; phần của agent như momentry connect (ví dụ ~/.claude/settings.json khoá hooks, ~/.claude/commands/momentry-bip.md, ~/.codex/hooks.json, ~/.codex/skills/momentry-bip/), có sao lưu *.momentry-bak-*. Chạy lại không đổi gì nếu đã đủ.
 
 **Cần:** git repo; Node ≥ 20; `claude` CLI đã đăng nhập; privacy.sources trong cấu hình người dùng (init chỉ cách khai báo nếu thiếu).
 
 | Cờ | Ý nghĩa |
 |---|---|
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
-| `--no-connect` | không cài hook và /bip cho Claude Code/Codex |
+| `--no-connect` | không cài hook, lệnh và skill cho agent |
 
 ```sh
 momentry init
@@ -171,9 +171,41 @@ momentry ui --no-open --json       # cho agent: in file mở giao diện để �
 
 Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc cờ.
 
+### `momentry show <id>`
+
+In đầy đủ một chuyện trong hộp: tiêu đề, trạng thái, các phần (bối cảnh, chuyện gì xảy ra, bài học…). Chỉ đọc.
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
+
+```sh
+momentry show 2026-11-04-cache-lru
+momentry show 2026-11-04-cache-lru --json   # cho agent (skill momentry)
+```
+
+Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện sai khuôn; 2 sai cú pháp hoặc id sai khuôn.
+
+### `momentry mark <id> <use|later|drop>`
+
+Đánh dấu một chuyện: use (sẽ dùng, status picked), later (để sau, chỉ ghi trên máy này), drop (bỏ, status dropped).
+
+**Thay đổi:** use/drop: dòng status trong <box>/<id>.md; later: <cache>/ui-state.json.
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
+
+```sh
+momentry mark 2026-11-04-cache-lru use
+momentry mark 2026-11-04-cache-lru drop --json
+```
+
+Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện sai khuôn; 2 sai cú pháp, id hoặc nhãn sai.
+
 ### `momentry add`
 
-Ghi một chuyện tay (lệnh /bip gọi lệnh này). Qua kiểm riêng tư.
+Ghi một chuyện tay (lệnh momentry-bip của agent gọi lệnh này). Qua kiểm riêng tư.
 
 **Thay đổi:** <box>/<date>-<slug>.md, hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn.
 
@@ -308,9 +340,9 @@ Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc c
 
 ### `momentry connect [claude|codex|pi|omp|agy]`
 
-Cài (hoặc --remove gỡ) hook/extension và lệnh /bip cho Claude Code, Codex, pi, omp, Antigravity, ở mọi profile tìm thấy. init đã gọi bước này.
+Cài (hoặc --remove gỡ) hook/extension, lệnh momentry-bip, momentry-ui (giữ /bip làm bí danh) và skill momentry cho Claude Code, Codex, pi, omp, Antigravity, ở mọi profile tìm thấy. init đã gọi bước này.
 
-**Thay đổi:** Mỗi profile tìm thấy (~/.claude; ~/.codex, ~/.codex-*; ~/.pi/agent, ~/.pi/accounts/*; ~/.omp/agent, ~/.omp/profiles/*/agent; ~/.gemini, ~/.agy-homes/*/.gemini): Claude/Codex: khoá hooks trong settings.json / hooks.json và bip.md; pi/omp: extensions/momentry.ts và bip.md; Antigravity: nhóm "momentry" trong config/hooks.json và config/skills/bip/SKILL.md. Sao lưu *.momentry-bak-* trước khi sửa; chỉ đụng phần của momentry.
+**Thay đổi:** Mỗi profile tìm thấy (~/.claude; ~/.codex, ~/.codex-*; ~/.pi/agent, ~/.pi/accounts/*; ~/.omp/agent, ~/.omp/profiles/*/agent; ~/.gemini, ~/.agy-homes/*/.gemini): Claude: khoá hooks trong settings.json, commands/{momentry-bip,momentry-ui,bip}.md, skills/momentry/SKILL.md; Codex: khoá hooks trong hooks.json, skills/{momentry-bip,momentry-ui,momentry}/ (gỡ prompts/bip.md cũ của momentry); pi: extensions/momentry.ts, prompts/{momentry-bip,momentry-ui,bip}.md, skills/momentry/SKILL.md; omp: như pi nhưng lệnh ở commands/; Antigravity: nhóm "momentry" trong config/hooks.json và config/skills/{momentry-bip,momentry-ui,bip,momentry}/SKILL.md. Sao lưu *.momentry-bak-* trước khi sửa; chỉ đụng phần của momentry.
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -411,11 +443,11 @@ Tiếp theo: momentry doctor
 
 ### `momentry uninstall`
 
-Gỡ momentry: hook và /bip, shim, bản cài. Giữ cấu hình, cache, hộp chuyện trừ khi --purge.
+Gỡ momentry: hook, lệnh agent và skill, shim, bản cài. Giữ cấu hình, cache, hộp chuyện trừ khi --purge.
 
 Tên khác: `remove`.
 
-**Thay đổi:** gỡ mục "momentry hook" khỏi ~/.claude/settings.json, ~/.codex/hooks.json; xoá bip.md của mình; xoá shim và <install>. --purge: xoá thêm thư mục cấu hình và cache. Không đụng hộp chuyện và .momentry.json trong các repo.
+**Thay đổi:** gỡ mục "momentry hook" khỏi ~/.claude/settings.json, ~/.codex/hooks.json và các host khác; xoá file lệnh và skill do momentry ghi (tên mới, bí danh /bip và tên cũ) mà bạn chưa sửa; xoá shim và <install>. --purge: xoá thêm thư mục cấu hình và cache. Không đụng hộp chuyện và .momentry.json trong các repo.
 
 | Cờ | Ý nghĩa |
 |---|---|
