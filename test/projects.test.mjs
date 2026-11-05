@@ -40,7 +40,9 @@ const run = (args, { cwd, env }) => spawnSync(process.execPath, [BIN, ...args], 
 
 test('the list lives in the config dir, never in a repo', () => {
   const { env, base } = sandbox();
-  assert.equal(Projects.listFile(env), path.join(base, 'config-home', 'momentry', 'projects.json'));
+  // the sandbox sets XDG_CONFIG_HOME, which Windows ignores in favour of %APPDATA% (unset here, so under HOME)
+  const configDir = process.platform === 'win32' ? path.join(base, 'home', 'AppData', 'Roaming') : path.join(base, 'config-home');
+  assert.equal(Projects.listFile(env), path.join(configDir, 'momentry', 'projects.json'));
 });
 
 test('an older install: the list is filled once from the ledger and MOMENTRY_REPOS, gone folders left out', () => {
