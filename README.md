@@ -50,6 +50,8 @@ momentry list --rank
 
 From now on the hooks harvest after every session. To mark a moment yourself while you work, type `/bip <note>` in your agent.
 
+To read, pick and edit stories in the browser instead, run `momentry ui`: a local page on 127.0.0.1 with your story wall, privacy, cost, health and settings. It stops by itself once no tab is open.
+
 <details>
 <summary>Install with your agent</summary>
 

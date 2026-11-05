@@ -152,6 +152,25 @@ momentry list --status picked --json
 
 Mã thoát: 0 xong; 1 không có hộp (chạy momentry init); 2 sai cú pháp.
 
+### `momentry ui`
+
+Mở giao diện web trên máy (đọc chuyện, chọn chuyện, riêng tư, chi phí, sức khoẻ, thiết lập). Một tiến trình, chỉ nghe 127.0.0.1, tự tắt khi không còn tab nào mở.
+
+**Thay đổi:** <cache>/ui.json (cổng, mã truy cập, pid của tiến trình đang chạy), <cache>/ui-open.html (trang mở có mã truy cập, chỉ bạn đọc được), <cache>/ui-state.json (chuyện đã đọc, để sau). Mọi thay đổi khác do bạn bấm trên giao diện.
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--no-open` | không mở trình duyệt, chỉ in đường dẫn file mở giao diện (mã truy cập nằm trong file, không in ra) |
+| `--port N` | cổng muốn dùng (mặc định: 4825) |
+| `--serve` | chạy tiến trình web ngay trong terminal này (thường do momentry ui tự gọi) |
+
+```sh
+momentry ui
+momentry ui --no-open --json       # cho agent: in file mở giao diện để đưa người dùng
+```
+
+Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc cờ.
+
 ### `momentry add`
 
 Ghi một chuyện tay (lệnh /bip gọi lệnh này). Qua kiểm riêng tư.

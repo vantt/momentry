@@ -46,6 +46,8 @@ momentry list --rank
 
 Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/bip <ghi chú>` trong agent của bạn.
 
+Muốn đọc, chọn và sửa chuyện trên trình duyệt thì chạy `momentry ui`: một trang trên máy (127.0.0.1) có tường chuyện, riêng tư, chi phí, sức khoẻ và thiết lập. Không còn tab nào mở thì nó tự tắt.
+
 <details>
 <summary>Cài bằng agent của bạn</summary>
 
