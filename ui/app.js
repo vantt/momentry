@@ -575,6 +575,11 @@
         <div class="danger"><h4>Delete this project's data</h4><p class="hint">Removes the story folder, held stories, session history and the project's momentry file. Your code and conversations are not touched.</p>
           <form class="add-row" data-form="delete" data-project="${esc(p.id)}" data-name="${esc(p.name)}"><label class="sr-only" for="del-${esc(p.id)}">Type ${esc(p.name)} to confirm</label><input class="input" id="del-${esc(p.id)}" name="confirm" placeholder="Type ${esc(p.name)} to confirm" autocomplete="off"><button class="btn btn-danger" type="submit">Delete data</button></form></div>
       </div>`).join('') : '<p class="hint">No project is turned on yet. <a href="#/setup">Set one up</a>.</p>'}
+      ${v.missing.map((p) => `<div class="project-card"><h3>${esc(p.name)} <span class="tag">Folder gone</span></h3><p class="path">${esc(p.root)}</p>
+        <p class="hint">${esc(p.error)}</p>
+        <div class="danger"><h4>Remove from momentry</h4><p class="hint">Takes it off the list and removes what is left of it: stories kept outside the repo, held stories and session history.</p>
+          <form class="add-row" data-form="delete" data-project="${esc(p.id)}" data-name="${esc(p.name)}"><label class="sr-only" for="del-${esc(p.id)}">Type ${esc(p.name)} to confirm</label><input class="input" id="del-${esc(p.id)}" name="confirm" placeholder="Type ${esc(p.name)} to confirm" autocomplete="off"><button class="btn btn-danger" type="submit">Remove</button></form></div>
+      </div>`).join('')}
     </section>
     <details class="adv panel"${advOpen ? ' open' : ''}><summary>${ICON.chev}Advanced</summary><p class="hint">Models, retries and limits. The defaults suit most people.</p>
       ${adv.map((f) => controlHtml(f, v.user[f.key], 'user')).join('')}
