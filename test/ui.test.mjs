@@ -8,7 +8,7 @@ import { stringify, parse } from '../lib/frontmatter.mjs';
 import { KEYS, write as writeConfig } from '../lib/config-cmd.mjs';
 import { SCHEMA, validate } from '../lib/config-schema.mjs';
 import * as A from '../lib/ui-api.mjs';
-import { createUiServer } from '../lib/ui-server.mjs';
+import { createUiServer, hostAllowed, isTailnetIp, tailnetAddrs, remoteUrls, tailscaleWanted } from '../lib/ui-server.mjs';
 
 function setup() {
   const base = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dm-ui-')));
@@ -318,4 +318,46 @@ test('review fixes: turning gitignore off removes only our lines', () => {
   A.ignoreBox(repo, env);
   A.setGitignore(ctx, { project: A.listProjects(ctx)[0].id, on: false });
   assert.equal(fs.readFileSync(path.join(repo, '.gitignore'), 'utf8'), 'node_modules\n\n# keep\n');
+});
+
+test('tailnet: only Tailscale addresses and names are accepted, and only when listening there', async () => {
+  assert.ok(isTailnetIp('100.64.0.1') && isTailnetIp('100.127.255.254') && isTailnetIp('fd7a:115c:a1e0::1'));
+  assert.ok(!isTailnetIp('100.63.0.1') && !isTailnetIp('100.128.0.1') && !isTailnetIp('192.168.1.2') && !isTailnetIp('fd00::1'));
+  const ifaces = { lo: [{ address: '127.0.0.1', internal: true }], tailscale0: [{ address: '100.101.102.103', internal: false }, { address: 'fd7a:115c:a1e0::5', internal: false }], eth0: [{ address: '10.0.0.2', internal: false }] };
+  assert.deepEqual(tailnetAddrs(ifaces), ['100.101.102.103', 'fd7a:115c:a1e0::5']);
+  const tn = ['100.101.102.103', 'fd7a:115c:a1e0::5'];
+  assert.ok(hostAllowed('127.0.0.1:4825', 4825, []));
+  assert.ok(hostAllowed('100.101.102.103:4825', 4825, tn));
+  assert.ok(hostAllowed('[fd7a:115c:a1e0::5]:4825', 4825, tn));
+  assert.ok(hostAllowed('box.tail1234.ts.net:4825', 4825, tn));
+  assert.ok(!hostAllowed('box.tail1234.ts.net:4825', 4825, []), 'no tailnet listener, no tailnet names');
+  assert.ok(!hostAllowed('100.101.102.103:4826', 4825, tn));
+  assert.ok(!hostAllowed('evil.test:4825', 4825, tn));
+  assert.ok(!hostAllowed('ts.net.evil.test:4825', 4825, tn));
+  assert.deepEqual(remoteUrls({ port: 4825, token: 'k', tailnet: ['100.101.102.103'], dnsName: 'box.tail1234.ts.net' }), ['http://box.tail1234.ts.net:4825/#t=k', 'http://100.101.102.103:4825/#t=k']);
+  assert.deepEqual(remoteUrls({ port: 4825, token: 'k' }), []);
+
+  const { ctx } = setup();
+  const token = 'x'.repeat(32);
+  let port = 0;
+  let tailnet = [];
+  const server = createUiServer({ env: ctx.env, cwd: ctx.cwd, token, port: () => port, tailnet: () => tailnet });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  port = server.address().port;
+  try {
+    const auth = { 'x-momentry-token': token };
+    const viaName = { ...auth, host: `box.tail1234.ts.net:${port}`, origin: `http://box.tail1234.ts.net:${port}` };
+    assert.equal((await request(port, { path: '/api/stories', headers: viaName })).status, 421);
+    tailnet = ['100.101.102.103'];
+    assert.equal((await request(port, { path: '/api/stories', headers: viaName })).status, 200);
+    assert.equal((await request(port, { path: '/api/stories', headers: { ...viaName, 'x-momentry-token': 'y'.repeat(32) } })).status, 401, 'the access key is still required');
+    assert.equal((await request(port, { path: '/api/stories', headers: { ...viaName, origin: 'http://evil.test' } })).status, 403);
+  } finally { server.close(); }
+});
+
+test('tailnet listening is on by default and off only through the user config', () => {
+  const { ctx } = setup();
+  assert.equal(tailscaleWanted(ctx.env), true);
+  writeConfig({ cwd: ctx.cwd, env: ctx.env, key: 'ui.tailscale', value: false, parsed: true });
+  assert.equal(tailscaleWanted(ctx.env), false);
 });

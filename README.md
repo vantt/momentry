@@ -50,7 +50,7 @@ momentry list --rank
 
 From now on the hooks harvest after every session. To mark a moment yourself while you work, type `/momentry-bip <note>` in your agent (`$momentry-bip` in Codex; the old `/bip` name is gone). `/momentry-ui` opens the web UI. Or just ask your agent "any good stories this week?": the `momentry` skill lets it read and label your stories through the CLI, and draft a post with the model you already pay for.
 
-To read, pick and edit stories in the browser instead, run `momentry ui`: a local page on 127.0.0.1 with your story wall, privacy, cost, health and settings. It stops by itself once no tab is open.
+To read, pick and edit stories in the browser instead, run `momentry ui`: a local page on 127.0.0.1 with your story wall, privacy, cost, health and settings. It also listens on your Tailscale address, so your phone or another machine on your tailnet can open it: run `momentry ui --remote` for the link (it carries the access key). To keep it on this machine only: `momentry config set ui.tailscale false`. It stops by itself once no tab is open.
 
 <details>
 <summary>Install with your agent</summary>
