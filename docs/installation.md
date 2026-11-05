@@ -30,7 +30,7 @@ Linux tôn trọng `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` khi là 
 
 Danh sách dự án (`projects.json`, khoá là git root) là nơi `momentry ui` tìm dự án. `init`, nút bật dự án trong giao diện và mọi lệnh hook gọi (`scan`, `harvest`) thêm repo đang quan sát vào đó; máy cài từ bản cũ được điền một lần từ sổ phiên và `MOMENTRY_REPOS`. Repo vẫn được quan sát nhờ `.momentry.json` hoặc `MOMENTRY_REPOS`, như trước. Thư mục dự án bị chuyển hay xoá vẫn nằm trong danh sách, được đánh dấu mất, cho tới khi bạn xoá dự án đó trong giao diện.
 
-Tạm dừng gom chuyện cho một dự án mà không xoá `.momentry.json`: `momentry pause` trong repo (hoặc `--repo DIR`), hay tắt công tắc "Gather stories" của dự án trong Settings. Dấu tạm dừng nằm trong `projects.json` của máy, nên repo clone về không tự dừng hay bật lại được. Khi tạm dừng, hook không chạy `scan`/`harvest` cho repo đó, `scan --auto` bỏ qua, dòng nhắc lúc mở phiên im lặng; chuyện cũ vẫn đọc được trong giao diện và CLI, còn `momentry scan`, `add` chạy tay vẫn làm (kèm một dòng báo đang tạm dừng). `momentry status` và `doctor` hiện trạng thái này như thông tin, không phải lỗi. `momentry resume` bật lại; phiên làm trong lúc tạm dừng không được gom tự động, muốn gom thì chạy tay `momentry scan`.
+Tạm dừng gom chuyện cho một dự án mà không xoá `.momentry.json`: `momentry pause` trong repo (hoặc `--repo DIR`; lối tắt của `momentry config set paused true --project`), hay tắt công tắc "Gather stories" của dự án trong Settings. Dấu tạm dừng nằm trong `projects.json` của máy, nên repo clone về không tự dừng hay bật lại được. Khi tạm dừng, hook không chạy `scan`/`harvest` cho repo đó, `scan --auto` bỏ qua, dòng nhắc lúc mở phiên im lặng; chuyện cũ vẫn đọc được trong giao diện và CLI, còn `momentry scan`, `add` chạy tay vẫn làm (kèm một dòng báo đang tạm dừng). `momentry status` và `doctor` hiện trạng thái này như thông tin, không phải lỗi. `momentry resume` bật lại; phiên làm trong lúc tạm dừng không được gom tự động, muốn gom thì chạy tay `momentry scan`.
 
 Số đo (`metrics.json` trong cache, quyền 0600) chỉ nằm trên máy, không gửi đi đâu: thời điểm cài, lúc có chuyện đầu tiên ở mỗi dự án, và mỗi lần bạn chọn Use, Later, Drop kèm hạng của chuyện lúc đó. File không chứa tên chuyện, id hay đường dẫn (dự án và chuyện chỉ là mã băm) và giữ tối đa 1000 quyết định gần nhất. Máy đã dùng momentry trước khi có số đo thì thời điểm cài ghi là không rõ, không đoán. Màn Cost của `momentry ui` và `momentry status --json` hiện hai số: thời gian từ cài tới chuyện đầu, và tỉ lệ chuyện được Use trong số chuyện bạn đã quyết khi chúng nằm trong top 5 (hiện từ 10 chuyện trở lên).
 
@@ -154,12 +154,36 @@ Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên tr
 
 ## Khoá cấu hình
 
-`momentry config default` in mọi khoá và giá trị mặc định; `momentry config show` in giá trị đang dùng kèm nơi đặt nó.
+Mọi cài đặt đổi bằng một lệnh, `momentry config` (giao diện web ghi qua đúng các hàm đó). `momentry config default` in mọi khoá và giá trị mặc định; `momentry config show` in giá trị đang dùng kèm nơi đặt nó. Không có `--project`, `set`/`unset` sửa cấu hình người dùng, chung mọi dự án.
+
+### Cài đặt riêng từng dự án
+
+Thêm `--project` để xem và đổi cài đặt của repo đang đứng (hoặc `--repo DIR`). `show --project` in từng khoá kèm nơi đặt: `repo` (`.momentry.json`), `dự án trên máy này`, `người dùng`, `mặc định` hoặc biến env.
+
+| Khoá | Ghi vào | Ghi chú |
+|---|---|---|
+| `box` | trong repo: `.momentry.json` (đường dẫn tương đối); ngoài repo: `projects.json` của máy | Thư mục chuyện. Đường dẫn tương đối tính từ git root; ngoài repo phải là đường dẫn tuyệt đối (`~` được mở). Không nhận `.`, `..`, chính repo hay thư mục chứa repo. `unset` gỡ cái riêng nhất trước: thư mục của máy, rồi tới `.momentry.json` |
+| `repo` | `.momentry.json` | Tên dự án ghi trên chuyện |
+| `budget.dailyUsd` | cấu hình người dùng (`budget.projects`, khoá là git root) | Ngân sách mỗi ngày riêng của dự án; chưa đặt thì chỉ ngân sách chung giới hạn |
+| `private` | cấu hình người dùng (`privacy.privateProjects`) | Chế độ riêng tư: chuyện của dự án không vào bản nháp và nhãn dùng chung |
+| `paused` | `projects.json` của máy | Tạm dừng gom chuyện; `momentry pause` / `resume` là lối tắt |
+
+Đặt `box` trong repo, `repo` hay `paused true` cần repo đã `momentry init`; config không tự bật repo. Ba khoá cuối và thư mục chuyện ngoài repo chỉ nằm trên máy: `.momentry.json` có ghi `paused`, `private` hay `budget` cũng bị bỏ qua, nên repo clone về không tự dừng, tự tắt riêng tư hay nâng ngân sách được.
+
+```sh
+momentry config set box ~/Documents/momentry-chuyen --project   # thư mục chuyện ngoài repo, chỉ trên máy này
+momentry config set budget.dailyUsd 1 --project
+momentry config show --project --json
+momentry config unset box --project --dry-run
+```
+
+### Mọi khoá
 
 | Khoá | Mặc định | Ghi chú |
 |---|---|---|
-| `box` | `docs/storytelling-material` | Tương đối với git root. Hộp ngoài repo chọn cho một dự án (trong giao diện) chỉ nằm trong danh sách dự án, thắng `.momentry.json`; env và cờ vẫn thắng nó |
+| `box` | `docs/storytelling-material` | Tương đối với git root. Hộp ngoài repo chọn cho một dự án (`config set box … --project` hoặc giao diện) chỉ nằm trong danh sách dự án, thắng `.momentry.json`; env và cờ vẫn thắng nó |
 | `repo` | tên thư mục git root | |
+| `budget.dailyUsd` | 3 | Ngân sách mỗi ngày (USD) cho phiên gom tự động, chung mọi dự án; 0 là không giới hạn. Chỉ nhận từ cấu hình người dùng |
 | `harvest.runs` / `.model` / `.fillRetries` / `.maxInputTokens` / `.timeoutSec` | 1 / `haiku` / 1 / 150000 / 600 | |
 | `rank.model` | `sonnet` | |
 | `outsider.enabled` / `.model` | true / `sonnet` | |
