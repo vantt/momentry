@@ -10,7 +10,7 @@ node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json           
 node scripts/eval/review.mjs                                                       # trang duyệt nhãn trên máy
 ```
 
-`review.mjs` mở trang trên 127.0.0.1 và địa chỉ Tailscale của máy (in link có khoá; `--local` chỉ nghe trên máy): tick chuyện đáng kể, xoá dòng không phải chuyện, thêm chuyện còn thiếu (gõ tay hoặc chọn từ danh sách momentry tìm ra trong bản chụp mới nhất), rồi đánh dấu đã duyệt. Trang ghi thẳng vào file nhãn, cùng định dạng ở dưới. Cờ: `--labels DIR`, `--data DIR` (bản chụp để lấy danh sách và hạng, mặc định `docs/_private/eval/new-defaults`), `--port N` (mặc định 4826), `--key K` (giữ khoá của tab đang mở; khoá được nhớ ở `docs/_private/eval/.review-key` nên khởi động lại không đổi link).
+`review.mjs` mở trang trên 127.0.0.1 và địa chỉ Tailscale của máy (in link có khoá; `--local` chỉ nghe trên máy): tick chuyện đáng kể, xoá dòng không phải chuyện, thêm chuyện còn thiếu (gõ tay hoặc chọn từ danh sách momentry tìm ra trong bản chụp mới nhất), rồi đánh dấu đã duyệt. Bản chụp có góc kể thì trang hiện góc kể dưới tiêu đề trong danh sách "Momentry tìm ra" và dưới dòng đáp án khớp với chuyện đó; mỗi chuyện có góc kể có ba nút **kể được** / **không ra chuyện** / **bịa** (kiểm góc kể), lưu ngay vào `<data>/angle-labels/<phiên>.json` (thư mục 0700, file 0600, kèm chữ góc kể lúc chấm) để đo lại khi đổi prompt. Trang ghi thẳng vào file nhãn, cùng định dạng ở dưới. Cờ: `--labels DIR`, `--data DIR` (bản chụp để lấy danh sách và hạng, mặc định `docs/_private/eval/new-defaults`), `--port N` (mặc định 4826), `--key K` (giữ khoá của tab đang mở; khoá được nhớ ở `docs/_private/eval/.review-key` nên khởi động lại không đổi link).
 
 | Cờ | Nghĩa |
 |---|---|
@@ -51,6 +51,9 @@ Lời gọi model chạy với môi trường thật (đăng nhập `claude`), c
 
 ```
 <out>/<id>/runs/<n>/capture.json   cửa sổ thật đã chạy, sha của cửa sổ, ước tính dry-run, báo cáo --json, danh sách xếp hạng
+                                 (mỗi chuyện: id, title, tension, stakes, strength, hits, held, angle, audience;
+                                 angle là chữ, `none`, hoặc null khi bước góc kể chưa xét chuyện)
+<out>/angle-labels/<id>.json     kiểm góc kể từ trang duyệt: {session, stories: {<id chuyện>: {verdict, angle, at}}}
 <out>/<id>/runs/<n>/llm/           đầu ra thô của mọi lời gọi model (--save-llm), dùng lại bằng --fake-llm
 <out>/<id>/runs/<n>/scratch/       repo, hộp, cache nháp của lần chụp (prompt nằm ở scratch/cache/runs/)
 <out>/results/<thời điểm>.json     mọi chỉ số của một lần chạy harness
@@ -85,7 +88,7 @@ status: draft
 
 ### Khớp chuyện với nhãn
 
-Tất định, không dùng LLM chấm. Mọi chữ được đưa về dạng slug: bỏ dấu, `đ` thành `d`, chữ thường, các từ nối bằng `-`. Văn bản của chuyện là `hook` cộng thân file (tiêu đề, bối cảnh, chuyện gì xảy ra, bài học, artefact, góc người ngoài). Chuyện khớp nhãn khi có ít nhất một điều:
+Tất định, không dùng LLM chấm. Mọi chữ được đưa về dạng slug: bỏ dấu, `đ` thành `d`, chữ thường, các từ nối bằng `-`. Văn bản của chuyện là `hook` cộng thân file (tiêu đề, bối cảnh, chuyện gì xảy ra, bài học, artefact, góc người ngoài), bỏ dòng góc kể để thêm góc kể không đổi việc khớp nhãn. Chuyện khớp nhãn khi có ít nhất một điều:
 
 1. một `slug` của nhãn là chuỗi con của phần slug trong id chuyện (bỏ ngày);
 2. ít nhất `min` từ khoá xuất hiện trọn từ trong văn bản chuyện (`repo` không khớp `report`);
@@ -120,5 +123,12 @@ Dòng tổng: trung bình các chỉ số chất lượng trên lần chụp đ�
 | outsider | `outsider-1`, `outsider-c<k>-1` |
 | hook-tension | `hook-tension-1` |
 | stakes | `stakes-1` |
+| angle | `angle-<k>` (góc kể, chuyện thứ k theo hạng) |
+
+Bản chụp làm trước khi có bước góc kể không có file `angle-*`: lúc chạy lại, các lời gọi góc kể hỏng (không tốn tiền) và chuyện không có góc kể; trạng thái và thứ tự không đổi.
+
+### Kiểm góc kể
+
+Có `<out>/angle-labels/<id>.json` thì harness in thêm bảng đếm mỗi phiên: kể được, không ra chuyện, bịa (và dòng tổng), và ghi vào `angleChecks` của file kết quả.
 
 Token vào = `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`; token ra = `output_tokens`; USD = `total_cost_usd`; phần = USD của bước / tổng.

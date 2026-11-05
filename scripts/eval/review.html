@@ -56,6 +56,16 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: v
 .found .n { color: var(--muted); font-size: 12px; width: 24px; text-align: right; flex: none; }
 .found .t { flex: 1; }
 .found .m { font-size: 12px; color: var(--ok); flex: none; }
+.angle { font-size: 13px; color: var(--text); border-left: 2px solid var(--accent); padding: 2px 0 2px 8px; margin: 4px 0 2px; }
+.angle .aud { display: block; color: var(--muted); font-size: 12px; }
+.angle.none { color: var(--muted); border-left-color: var(--line); font-style: italic; }
+.fields .angle { margin: 4px 6px; }
+.verdict { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.verdict button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--panel); color: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer; }
+.verdict button:hover { border-color: var(--accent); }
+.verdict button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+.verdict button[data-v="invented"][aria-pressed="true"] { border-color: var(--bad); color: var(--bad); }
+.verdict button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--panel); color: inherit; padding: 7px 14px; border-radius: var(--r); cursor: pointer; }
 .btn:hover { border-color: var(--accent); }
 .btn.small { font-size: 12px; padding: 3px 10px; flex: none; }
@@ -125,6 +135,7 @@ function render() {
       <label class="tbox" title="Chuyện thật sự đáng kể"><input type="checkbox" data-f="t" ${r.t ? 'checked' : ''}>đáng kể</label>
       <div class="fields">
         <input class="title" data-f="title" value="${esc(r.title)}" aria-label="Tiêu đề">
+        ${r.angle ? `<div class="angle" title="Góc kể của chuyện momentry tìm ra khớp với đáp án này">${esc(r.angle)}</div>` : ''}
         ${r.why ? `<div class="why">${esc(r.why)}</div>` : ''}
         <label>từ khoá<input class="small" data-f="keywords" value="${esc(r.keywords)}" placeholder="3–6 từ đặc trưng, cách nhau dấu phẩy"></label>
         <label>dòng<input class="small" data-f="lines" value="${esc(r.lines)}" placeholder="không bắt buộc"></label>
@@ -133,7 +144,9 @@ function render() {
       <button class="del" data-del="${i}" title="Không phải chuyện: xoá" aria-label="Xoá">×</button>
     </div>`).join('') || '<p class="empty">Chưa có đáp án.</p>';
   const found = cur.stories.length ? `<div class="found"><ul>${cur.stories.map((s, i) => `
-      <li><span class="n">${i + 1}</span><span class="t">${esc(s.title)}</span>${s.matched ? '<span class="m">đã có trong đáp án</span>' : `<button class="btn small" data-addstory="${i}">+ thêm làm đáp án</button>`}</li>`).join('')}</ul></div>` : '<p class="empty">Chưa có bản chụp cho phiên này.</p>';
+      <li><span class="n">${i + 1}</span><span class="t">${esc(s.title)}${angleHtml(s)}</span>${s.matched ? '<span class="m">đã có trong đáp án</span>' : `<button class="btn small" data-addstory="${i}">+ thêm làm đáp án</button>`}</li>`).join('')}</ul></div>` : '<p class="empty">Chưa có bản chụp cho phiên này.</p>';
+  const angled = cur.stories.filter((s) => s.angle && s.angle !== 'none');
+  const checked = angled.filter((s) => cur.angleChecks[s.id]).length;
   document.getElementById('main').innerHTML = `
     <div class="head"><h2>${esc(m.domain || cur.id)}</h2>
       <div class="meta">${esc(cur.id)} · ${esc(m.host)} · ${esc(m.language)} · dòng ${esc(m.window)} · ${m.status === 'reviewed' ? 'đã duyệt' : 'nháp'}</div></div>
@@ -141,7 +154,24 @@ function render() {
     <h3>Đáp án (${cur.rows.length})</h3>${rows}
     <h3>Thêm chuyện còn thiếu</h3>
     <form class="add" id="add"><input name="title" placeholder="Tiêu đề, ví dụ: test bằng điểm làm CI đỏ" required><input name="keywords" placeholder="Từ khoá, ví dụ: snapshot, bằng điểm, flaky" required><button class="btn">Thêm</button></form>
-    <h3>Momentry tìm ra (${cur.stories.length})</h3>${found}`;
+    <h3>Momentry tìm ra (${cur.stories.length})</h3>
+    ${angled.length ? `<div class="help">Kiểm góc kể (${checked}/${angled.length} đã chấm): với mỗi chuyện có góc kể, chọn <b>kể được</b> nếu đó là chuyện bạn kể được, <b>không ra chuyện</b> nếu đúng nhưng không có gì để kể, <b>bịa</b> nếu có chi tiết không có trong phiên. Lưu ngay khi bấm.</div>` : ''}${found}`;
+}
+
+const VERDICTS = [['tellable', 'kể được'], ['no-story', 'không ra chuyện'], ['invented', 'bịa']];
+function angleHtml(s) {
+  if (!s.angle) return '';
+  if (s.angle === 'none') return '<div class="angle none">không có góc kể</div>';
+  const v = cur.angleChecks[s.id];
+  return `<div class="angle">${esc(s.angle)}${s.audience ? `<span class="aud">cho: ${esc(s.audience)}</span>` : ''}</div>
+    <div class="verdict" role="group" aria-label="Kiểm góc kể">${VERDICTS.map(([k, w]) => `<button type="button" data-angle="${esc(s.id)}" data-v="${k}" aria-pressed="${v === k}">${w}</button>`).join('')}</div>`;
+}
+
+async function setVerdict(story, verdict) {
+  try {
+    const r = await api('/api/sessions/' + cur.id + '/angle', { method: 'PUT', body: JSON.stringify({ story, verdict }) });
+    cur.angleChecks = r.angleChecks; render(); msg('Đã lưu kiểm góc kể.');
+  } catch (err) { msg('Không lưu được: ' + err.message, true); }
 }
 
 document.addEventListener('input', (e) => {
@@ -153,10 +183,12 @@ document.addEventListener('input', (e) => {
   setDirty(true);
 });
 document.addEventListener('click', (e) => {
+  const v = e.target.closest('[data-angle]');
+  if (v) return setVerdict(v.dataset.angle, v.getAttribute('aria-pressed') === 'true' ? null : v.dataset.v);
   const b = e.target.closest('[data-id]'); if (b) return open(b.dataset.id);
   const d = e.target.closest('[data-del]'); if (d) { cur.rows.splice(Number(d.dataset.del), 1); setDirty(true); return render(); }
   const a = e.target.closest('[data-addstory]');
-  if (a) { const s = cur.stories[a.dataset.addstory]; cur.rows.push({ slug: s.slug, title: s.title, lines: '', keywords: '', t: '', why: 'thêm từ danh sách momentry tìm ra' }); s.matched = true; setDirty(true); render(); }
+  if (a) { const s = cur.stories[a.dataset.addstory]; cur.rows.push({ slug: s.slug, title: s.title, lines: '', keywords: '', t: '', why: 'thêm từ danh sách momentry tìm ra', ...(s.angle && s.angle !== 'none' ? { angle: s.angle } : {}) }); s.matched = true; setDirty(true); render(); }
 });
 document.addEventListener('submit', (e) => {
   if (e.target.id !== 'add') return; e.preventDefault();
