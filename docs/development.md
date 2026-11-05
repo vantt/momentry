@@ -110,6 +110,8 @@ Mỗi lời gọi model đọc `DIR/<key>.json`, đúng dạng đầu ra `claude
 
 Gọi lại vì JSON hỏng hay sai khuôn: thêm hậu tố `-retry` (ví dụ `harvest-c1-r1-retry`).
 
+Bộ đo chất lượng và chi phí ([scripts/eval/](../scripts/eval/README.md)) dùng đúng cặp `--save-llm`/`--fake-llm` này: chụp đầu ra model của nhiều phiên một lần, rồi chạy lại 0 USD để đo mọi thay đổi xếp hạng, chấm điểm, rút gọn. Dữ liệu và nhãn nằm trong `docs/_private/eval/`, không commit.
+
 `--save-prompts DIR` giữ prompt (`<key>.prompt.txt`) và đầu ra thô của model (`<key>.json`) ở DIR thay cho `<cache>/runs/<phiên>/<ts>/`; với `--dry-run` không kèm `--fake-llm` chỉ ghi prompt harvest.
 
 ## Cài đặt
