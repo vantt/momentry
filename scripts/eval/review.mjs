@@ -158,11 +158,16 @@ export function createReviewServer(o) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { values: a } = parseArgs({ options: { labels: { type: 'string' }, data: { type: 'string' }, port: { type: 'string' }, local: { type: 'boolean' } } });
+  const { values: a } = parseArgs({ options: { labels: { type: 'string' }, data: { type: 'string' }, port: { type: 'string' }, local: { type: 'boolean' }, key: { type: 'string' } } });
   const base = path.join(ROOT, 'docs/_private/eval');
   const labels = path.resolve(a.labels ?? path.join(base, 'labels'));
   const data = path.resolve(a.data ?? path.join(base, 'new-defaults'));
-  const key = crypto.randomBytes(18).toString('base64url');
+  // the key stays the same across restarts (private file next to the labels), so an open tab keeps working
+  const keyFile = path.join(path.dirname(labels), '.review-key');
+  let key = '';
+  try { key = fs.readFileSync(keyFile, 'utf8').trim(); } catch { /* first run */ }
+  if (a.key) { key = a.key.replace(/^.*#k=/, '').trim(); fs.writeFileSync(keyFile, key, { mode: 0o600 }); }
+  if (!/^[\w-]{20,}$/.test(key)) { key = crypto.randomBytes(18).toString('base64url'); fs.writeFileSync(keyFile, key, { mode: 0o600 }); }
   const port = Number(a.port ?? 4826);
   const tailnet = [];
   const listen = (addr) => new Promise((resolve, reject) => {

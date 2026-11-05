@@ -230,4 +230,6 @@ test('review page: a label file read and written back keeps every label the harn
   const added = writeLabelFile(f.front, 'draft', [...f.rows, { title: 'Bài | có gạch', keywords: 'a, b', t: 'x' }]);
   assert.equal(parseLabels(added).length, 3);
   assert.throws(() => writeLabelFile(f.front, 'draft', [{ title: '', keywords: '' }]), /keywords hoặc slug/);
+  const fromFound = writeLabelFile(f.front, 'draft', [{ slug: 'agent-dong-task', title: 'Agent đóng task', keywords: '', t: 'x' }]);
+  assert.equal(parseLabels(fromFound)[0].min, 1, 'a story picked from the found list has a slug and no keywords');
 });

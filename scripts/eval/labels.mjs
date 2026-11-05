@@ -49,7 +49,7 @@ export function makeLabel(raw, where) {
   if (!keywords.length && !slugs.length) throw new Error(`${where}: cần keywords hoặc slug`);
   const tv = String(raw.t ?? '').trim().toLowerCase();
   if (!TRUE.has(tv) && !FALSE.has(tv)) throw new Error(`${where}: cột t phải là x hoặc trống: ${raw.t}`);
-  const min = raw.min == null || String(raw.min).trim() === '' ? Math.min(2, keywords.length) : Number(raw.min);
+  const min = raw.min == null || String(raw.min).trim() === '' ? Math.max(1, Math.min(2, keywords.length)) : Number(raw.min);
   if (!Number.isInteger(min) || min < 1 || min > Math.max(1, keywords.length)) throw new Error(`${where}: min phải là số nguyên 1..${keywords.length}: ${raw.min}`);
   return {
     name: String(raw.slug || raw.title || keywords.join(' ')).trim(), t: TRUE.has(tv), keywords, slugs,
