@@ -123,20 +123,23 @@ Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (m�
 
 ### 5.3 Điểm nóng
 
-Bốn hàm thuần, mỗi hàm chỉ nhìn một `Entry`. Port từ [harness/reduce.mjs][h-reduce]. Harness lọc theo tên tool của Claude (`Bash`; `Edit/Write/MultiEdit/NotebookEdit`). Bản port **không** xét tên tool mà xét `op` và `paths` của `Entry` chuẩn hoá (mục 6.2), để chạy được trên Codex (`shell`/`exec_command`, `apply_patch`).
+Các hàm thuần, mỗi hàm chỉ nhìn một `Entry` (riêng `ownerVoice` nhận thêm số entry đã qua kể từ lượt người trước). Bốn hàm nguyên thuỷ (`nonzeroExit`, `metricPair`, `gitReversal`, `metaWrite`) port từ [harness/reduce.mjs][h-reduce]. Harness lọc theo tên tool của Claude (`Bash`; `Edit/Write/MultiEdit/NotebookEdit`). Bản port **không** xét tên tool mà xét `op` và `paths` của `Entry` chuẩn hoá (mục 6.2), để chạy được trên Codex (`shell`/`exec_command`, `apply_patch`).
 
 | Hàm | Bắt gì | Xét trường | Ví dụ thật (TN 3 mục 3) |
 |---|---|---|---|
-| `nonzeroExit` | Kết quả tool có exit ≠ 0 hoặc cờ lỗi. `exitCode: null` và `isError: false` thì không tính | `kind: result`, `exitCode`, `isError` | `H14` exit 144 thành "pkill -f giết luôn shell đang chạy" |
-| `metricPair` | Cặp số trước/sau trong lời user hoặc agent (`a → b`, `->`, `=>`, `lên`, `xuống`, `thành`, `tới`, `to`) | `kind: user/assistant`, `text` | 0,667 → 0,307 |
-| `gitReversal` | `git reset/revert/rebase/restore/checkout --/commit --amend/push -f`, squash | `op: shell`, `text` (lệnh) | `H22` git reset thành chuyện gộp 6 commit gỡ dữ liệu lộ |
-| `metaWrite` | Ghi vào `.claude/`, `.codex/`, `.agents/`, `AGENTS.md`, `CLAUDE.md`, `skills/`, `hooks/`, `settings*.json` | `op: write`, `paths[]` | Tự làm công cụ cho agent |
+| `nonzeroExit` | Kết quả tool có exit ≠ 0 hoặc cờ lỗi. `exitCode: null` và `isError: false` thì không tính. Không tính lệnh bị chặn (`blocked`) và lệnh người dùng từ chối (`ownerVoice`) | `kind: result`, `exitCode`, `isError` | `H14` exit 144 thành "pkill -f giết luôn shell đang chạy" |
+| `blocked` | Kết quả lỗi do môi trường chặn chứ không phải do lệnh: hook (`PreToolUse … hook error`), từ chối quyền, sandbox, chốt worktree. Loại riêng, ít khi là chuyện | `kind: result`, `isError`, `text` | Hook chặn câu hỏi của agent |
+| `metricPair` | Cặp số trước/sau trong lời user hoặc agent (`a → b`, `->`, `=>`, `lên`, `xuống`, `thành`, `tới`, `to`). Bỏ khoảng vị trí và khoảng id ("rows 0 to 190", "dòng 12 tới 40", "mapping-0241 to 0300", "8 to 12 days"), cặp bằng nhau, và dòng user do harness chèn. Hiểu số có dấu cách ngăn nghìn ("4 301"), dấu phẩy thập phân, `%` | `kind: user/assistant`, `text` | 0,667 → 0,307 |
+| `gitReversal` | `git reset/revert/rebase/restore/checkout --/commit --amend/push -f`, squash. Không tính `checkout --detach/--ours/--theirs`, `rebase` thường lên `origin/…`/`upstream/…`/nhánh chính (giữ `--abort`, `-i`, `--onto`), `checkout -- <lockfile>`, và chữ nằm trong thân heredoc | `op: shell`, `text` (lệnh) | `H22` git reset thành chuyện gộp 6 commit gỡ dữ liệu lộ |
+| `metaWrite` | Ghi vào `.claude/`, `.codex/`, `.agents/`, `AGENTS.md`, `CLAUDE.md`, `skills/`, `hooks/`, `settings*.json` (trừ file bài học, thuộc `lessonWrite`) | `op: write`, `paths[]` | Tự làm công cụ cho agent |
+| `lessonWrite` | Ghi vào memory (`/memory/`, `MEMORY.md`), bản ghi quyết định (`decisions/`, `adr/`), `journals/`, `CHANGELOG`: bằng công cụ sửa file hoặc bằng shell (`>`, `>>`, `tee`, heredoc, `cp`, `mv`). Chỉ xét đường dẫn, không xét chữ "Lịch sử quyết định" trong nội dung | `op: write` `paths[]`, hoặc `op: shell` `text` | Bài học agent tự ghi ở bước ngoặt |
+| `ownerVoice` | Tiếng người dùng: ngắt (`[Request interrupted by user]`), từ chối lệnh tool, câu trả lời lựa chọn ("A", "2B", "chọn …", "đồng ý …", "phương án 2"), phản đối hoặc thúc ("không", "sao lại", "thông minh hơn", "lâu quá", "no", "stop", "why did"), câu ngắn (≤ 100 ký tự) sau ≥ 30 entry agent tự chạy. Bỏ dòng do harness chèn (thẻ `<…>`, tin liên phiên) và `/bip` | `kind: user` `text`; `kind: result` `rejected`; số entry từ lượt người trước | Quyết định của chủ dự án |
 
 Thêm một loại không phải hàm ngôn ngữ: `Entry` có `bip: true` thành điểm nóng loại `bip`. Trên Claude, `sources/claude` đặt cờ này khi đọc thẻ `<command-name>/bip</command-name>` **trước** khi lọc bỏ dòng `<command-` (mục 6.1). Trên Codex, prompt tuỳ chỉnh được bung ra thành chữ nên không còn `/bip` nguyên văn: Codex chỉ dựa vào `momentry add` (mục 6.4). Phần này là đề xuất của PRD, chưa thử.
 
 Gộp điểm nóng cùng loại cách nhau ≤ 5 dòng thành một điểm. Trên phiên thí nghiệm ra 28 điểm (TN 1). Id điểm nóng là toàn cục theo dòng gốc: `H<L>` (ví dụ `H1325`), không đánh số lại theo khúc (mục 6.2).
 
-Lưu ý: `metricPair` có điều kiện "mũi tên/từ nối" nên có ngoại lệ ngôn ngữ nhỏ (`lên`, `xuống`, `thành`, `tới`, `to`). Đây là từ nối số, không phải regex bắt cảm xúc hay quyết định. Giữ đúng regex harness đã chạy.
+Lưu ý: `metricPair` có điều kiện "mũi tên/từ nối" nên có ngoại lệ ngôn ngữ nhỏ (`lên`, `xuống`, `thành`, `tới`, `to`). Đây là từ nối số, không phải regex bắt cảm xúc hay quyết định. Bản harness chưa lọc khoảng số; bộ lọc khoảng, số Việt và `ownerVoice`/`lessonWrite`/`blocked` thêm sau, đo trên 4 phiên thật ở [số đo](experiments/2026-11-05-material-signals/README.md). Từ vựng phản đối của `ownerVoice` giữ hẹp có chủ ý: cụm cố định, không có "không" đứng giữa câu. `ownerVoice` và cờ `rejected` chỉ có trên Claude.
 
 ### 5.4 Harvest (bước 4)
 
@@ -266,6 +269,7 @@ Bảng tính cho **một cửa sổ** (một lần gom). Phiên gom hai lần (P
   text: '...',             // tool op=shell: dòng lệnh
   bip: false,              // user: dòng là lệnh /bip (chỉ Claude)
   isError: false,
+  rejected: true,          // result: người dùng từ chối lệnh tool (chỉ Claude)
   exitCode: 144 }          // result: số nếu biết, null nếu không biết
 ```
 

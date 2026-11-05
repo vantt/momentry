@@ -10,6 +10,11 @@
 
 ### Changed
 
+- Điểm nóng bắt đúng chỗ hơn, để harvest bớt chuyện rác và thấy quyết định của người dùng ([số đo](docs/experiments/2026-11-05-material-signals/README.md), 4 phiên thật):
+  - Loại mới `ownerVoice`: người dùng chọn phương án ("A", "đồng ý phương án 2"), phản đối hoặc thúc ("sao lại", "lâu quá"), ngắt, từ chối lệnh tool, hoặc trả lời ngắn sau một đoạn agent tự chạy dài. Chỉ có trên Claude.
+  - Loại mới `lessonWrite`: ghi vào memory, bản ghi quyết định, `journals/`, `CHANGELOG`, kể cả qua shell (`>`, `tee`, heredoc, `cp`, `mv`). `metaWrite` giữ phần cấu hình agent.
+  - Loại mới `blocked`: lệnh bị hook, quyền hoặc sandbox chặn tách khỏi `nonzeroExit`.
+  - `metricPair` bỏ khoảng số ("rows 0 to 190") và đọc số Việt ("4 301", "8,3%"): 216 xuống 51 lượt bắt. `gitReversal` bỏ `checkout --detach`, `rebase` thường lên upstream, `checkout -- <lockfile>` và chữ trong heredoc: 109 xuống 52.
 - Thứ tự của `list --rank` và tường chuyện: chuyện chỉ bước người ngoài tìm ra (không lần harvest nào bắt được) xếp cuối; stakes và strength được cộng thay vì nhân, nên một trục bằng 0 không còn xoá trục kia (chuyện không có giằng xé nhưng stakes cao giờ đứng trên các chuyện không giằng xé khác). Trên 8 phiên chạy lại: chuyện đáng kể ở nửa trên 21/30 → 23/30, hạng trung bình 6,41 → 5,79 ([bản ghi](docs/experiments/2026-11-05-ranking/README.md)).
 - Gom chuyện rẻ hơn khoảng 3 lần (đo trên 8 phiên: 0,83 xuống 0,26 USD mỗi phiên), chất lượng xếp hạng không giảm. Chi tiết: [số đo](docs/experiments/2026-11-05-cost-cuts/README.md).
   - Bước người ngoài dùng `haiku` thay `sonnet` (`outsider.model`). Muốn như cũ: `momentry config set outsider.model sonnet`.
