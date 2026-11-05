@@ -45,7 +45,7 @@ Mọi lệnh nhận `--json` và in đúng một object ra stdout, kể cả khi
 
 Bật momentry cho repo này: tạo .momentry.json và hộp chuyện, cài hook, lệnh momentry-bip/momentry-ui và skill momentry cho các agent tìm thấy, rồi chạy doctor.
 
-**Thay đổi:** <repo>/.momentry.json, thư mục hộp <repo>/docs/storytelling-material, <config>/projects.json (danh sách dự án trên máy); phần của agent như momentry connect (ví dụ ~/.claude/settings.json khoá hooks, ~/.claude/commands/momentry-bip.md, ~/.codex/hooks.json, ~/.codex/skills/momentry-bip/), có sao lưu *.momentry-bak-*. Chạy lại không đổi gì nếu đã đủ.
+**Thay đổi:** <repo>/.momentry.json, thư mục hộp <repo>/docs/storytelling-material, <config>/projects.json (danh sách dự án trên máy), <cache>/metrics.json (lần đầu: thời điểm cài, chỉ nằm trên máy); phần của agent như momentry connect (ví dụ ~/.claude/settings.json khoá hooks, ~/.claude/commands/momentry-bip.md, ~/.codex/hooks.json, ~/.codex/skills/momentry-bip/), có sao lưu *.momentry-bak-*. Chạy lại không đổi gì nếu đã đủ.
 
 **Cần:** git repo; Node ≥ 20; `claude` CLI đã đăng nhập; privacy.sources trong cấu hình người dùng (init chỉ cách khai báo nếu thiếu).
 
@@ -88,7 +88,7 @@ Tiếp theo: chạy lệnh ở cột "sửa" của từng check chưa đạt, r�
 
 ### `momentry status`
 
-Tóm tắt nhanh (không gọi claude) và đúng một lệnh nên chạy tiếp.
+Tóm tắt nhanh (không gọi claude) và đúng một lệnh nên chạy tiếp; --json kèm số đo trên máy (thời gian từ cài tới chuyện đầu, tỉ lệ Use trong top 5).
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -105,7 +105,7 @@ Mã thoát: 0 ổn; 1 có việc cần làm (xem "tiếp"); 2 sai cú pháp.
 
 Gom mọi phiên Claude Code, Codex, pi, omp, Antigravity của repo chưa gom hết, ở mọi profile (bỏ qua phiên đang mở).
 
-**Thay đổi:** <box>/*.md (chuyện mới hoặc gộp), <cache>/ledger.json, <cache>/runs/, <config>/projects.json (thêm repo vào danh sách dự án).
+**Thay đổi:** <box>/*.md (chuyện mới hoặc gộp), <cache>/ledger.json, <cache>/runs/, <config>/projects.json (thêm repo vào danh sách dự án), <cache>/metrics.json (lúc có chuyện đầu tiên).
 
 **Cần:** repo đã init; `claude` CLI; tốn ~1 USD cho phiên cỡ 150k token.
 
@@ -190,7 +190,7 @@ Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện
 
 Đánh dấu một chuyện: use (sẽ dùng, status picked), later (để sau, chỉ ghi trên máy này), drop (bỏ, status dropped).
 
-**Thay đổi:** use/drop: dòng status trong <box>/<id>.md; later: <cache>/ui-state.json.
+**Thay đổi:** use/drop: dòng status trong <box>/<id>.md; later: <cache>/ui-state.json; quyết định kèm hạng của chuyện lúc đó: <cache>/metrics.json (chỉ nằm trên máy).
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -207,7 +207,7 @@ Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện
 
 Ghi một chuyện tay (lệnh momentry-bip của agent gọi lệnh này). Qua kiểm riêng tư.
 
-**Thay đổi:** <box>/<date>-<slug>.md, hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn.
+**Thay đổi:** <box>/<date>-<slug>.md, hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn; với --by live: <cache>/metrics.json (lúc có chuyện đầu tiên).
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -288,7 +288,7 @@ Mã thoát: 0 xong; 1 lỗi; 2 sai cú pháp; 3 chưa có nguồn chặn; 4 mode
 
 Liệt kê chuyện bị giữ ngoài repo; --release ID|all thả chuyện qua được kiểm riêng tư vào hộp.
 
-**Thay đổi:** --release: ghi chuyện vào hộp và xoá bản giữ trong <cache>/quarantine; chuyện còn vi phạm vẫn bị giữ.
+**Thay đổi:** --release: ghi chuyện vào hộp và xoá bản giữ trong <cache>/quarantine, <cache>/metrics.json (lúc có chuyện đầu tiên); chuyện còn vi phạm vẫn bị giữ.
 
 | Cờ | Ý nghĩa |
 |---|---|

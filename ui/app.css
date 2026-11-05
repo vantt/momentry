@@ -387,6 +387,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
 .stat-row { display: flex; gap: var(--s-10); flex-wrap: wrap; align-items: flex-end; }
 .stat .label { color: var(--muted); font-weight: 500; }
 .stat .val { font-family: var(--font-display); font-weight: 800; font-size: var(--text-2xl); font-variant-numeric: tabular-nums; }
+.measures .stat-row { align-items: flex-start; gap: var(--s-6) var(--s-10); }
+.measures .stat { flex: 1 1 240px; max-width: 46ch; }
+.measures .stat .hint { margin-top: var(--s-1); }
 .bars { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--s-3); align-items: end; height: 180px; margin-top: var(--s-6); }
 .bar { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: var(--s-1); height: 100%; min-width: 0; }
 .bar .fill { width: 100%; max-width: 48px; background: var(--rule-strong); border-radius: 4px 4px 0 0; min-height: 2px; transition: height var(--t-med) var(--ease); }
