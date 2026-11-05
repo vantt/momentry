@@ -23,7 +23,7 @@ test('connect keeps the user\'s hooks, adds ours once, backs up, keeps mode; rem
   assert.equal(hosts.inspectHooks('claude', PREFIX, env).status, 'missing');
 
   const dry = hosts.apply('claude', { prefix: PREFIX, dryRun: true, env });
-  assert.equal(dry.changes.length, 5, 'hooks, momentry-bip, momentry-ui, the /bip alias, the momentry skill');
+  assert.equal(dry.changes.length, 4, 'hooks, momentry-bip, momentry-ui, the momentry skill');
   assert.deepEqual(JSON.parse(fs.readFileSync(settings, 'utf8')), user, 'dry run writes nothing');
 
   const r = hosts.apply('claude', { prefix: PREFIX, env });
@@ -136,26 +136,26 @@ test('codex: old snake_case entries (ignored by Codex) are replaced by PascalCas
   hosts.apply('codex', { prefix: PREFIX, env });
   assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(f, 'utf8')).hooks), ['PreCompact', 'SessionEnd', 'SessionStart']);
   assert.equal(hosts.inspectHooks('codex', PREFIX, env).status, 'ok');
-  assert.ok(fs.existsSync(path.join(h, '.codex', 'skills', 'momentry-bip', 'SKILL.md')));
+  assert.ok(fs.existsSync(path.join(h, '.agents', 'skills', 'momentry-bip', 'SKILL.md')));
   assert.ok(!fs.existsSync(path.join(h, '.codex', 'prompts', 'bip.md')), 'Codex has no custom prompts any more');
 });
 
-test('pi and omp: extension + /bip in every profile; idempotent; edited files kept; remove deletes ours', () => {
+test('pi and omp: extension + commands in every profile, pi\'s skill once in ~/.agents/skills; idempotent; edited files kept; remove deletes ours', () => {
   const { h, env } = home();
   for (const d of ['.pi/agent', '.pi/accounts/work', '.omp/agent', '.omp/profiles/p1/agent']) fs.mkdirSync(path.join(h, d), { recursive: true });
   const r = hosts.apply('pi', { prefix: PREFIX, env });
-  assert.equal(r.changes.length, 10, r.changes.join('\n'));
+  assert.equal(r.changes.length, 7, 'extension and two commands per profile, one shared skill: ' + r.changes.join('\n'));
   const ext = path.join(h, '.pi', 'accounts', 'work', 'extensions', 'momentry.ts');
   const text = fs.readFileSync(ext, 'utf8');
   assert.match(text, /pi\.on\("session_shutdown"/);
   assert.match(text, /const HOST = "pi";/);
   assert.match(text, /\/\/ momentry:ext sha256=[0-9a-f]{64}\n$/);
-  assert.match(fs.readFileSync(path.join(h, '.pi', 'agent', 'prompts', 'bip.md'), 'utf8'), /\$ARGUMENTS/);
+  assert.match(fs.readFileSync(path.join(h, '.pi', 'agent', 'prompts', 'momentry-bip.md'), 'utf8'), /\$ARGUMENTS/);
   assert.deepEqual(hosts.apply('pi', { prefix: PREFIX, env }).changes, []);
   assert.equal(hosts.inspect('pi', PREFIX, env).status, 'ok');
 
   hosts.apply('omp', { prefix: PREFIX, env });
-  assert.ok(fs.existsSync(path.join(h, '.omp', 'profiles', 'p1', 'agent', 'commands', 'bip.md')));
+  assert.ok(fs.existsSync(path.join(h, '.omp', 'profiles', 'p1', 'agent', 'commands', 'momentry-bip.md')));
   assert.match(fs.readFileSync(path.join(h, '.omp', 'agent', 'extensions', 'momentry.ts'), 'utf8'), /const HOST = "omp";/);
 
   fs.mkdirSync(path.join(h, '.pi', 'accounts', 'new'));
@@ -182,8 +182,8 @@ test('Antigravity: a "momentry" group next to other groups in config/hooks.json;
   assert.ok(fs.existsSync(path.join(h, '.agy-homes', 'acc', '.gemini', 'config', 'hooks.json')), 'every account');
   const acc = JSON.parse(fs.readFileSync(path.join(h, '.agy-homes', 'acc', '.gemini', 'config', 'hooks.json'), 'utf8'));
   assert.equal(acc.momentry.SessionStart[0].command, `${PREFIX} hook session-start --agy --user-home "${h}"`, 'account dirs run agy under another HOME');
-  const skill = fs.readFileSync(path.join(h, '.gemini', 'config', 'skills', 'bip', 'SKILL.md'), 'utf8');
-  assert.match(skill, /^---\nname: bip\n[\s\S]*disable-model-invocation: true\n---\n/);
+  const skill = fs.readFileSync(path.join(h, '.gemini', 'config', 'skills', 'momentry-bip', 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: momentry-bip\n[\s\S]*disable-model-invocation: true\n---\n/);
   assert.doesNotMatch(skill, /\$ARGUMENTS/);
   assert.equal(hosts.inspect('agy', PREFIX, env).status, 'ok');
   hosts.apply('agy', { prefix: PREFIX, remove: true, env });

@@ -144,10 +144,12 @@ test('printHookConfig shows the current command names: momentry-bip and momentry
   assert.match(claude, /~\/\.claude\/commands\/momentry-ui\.md/);
   assert.match(claude, /^ {3}"\/home\/u\/\.local\/bin\/momentry" ui$/m, 'the ui command text');
   assert.match(claude, /dòng nhắc/, 'mentions the session-start reminder');
+  assert.doesNotMatch(claude, /\/bip\b|bí danh/, 'the old /bip alias is gone');
   const codex = printHookConfig('codex', { prefix: '"/home/u/.local/bin/momentry"' });
   assert.doesNotMatch(codex, /prompts\/bip\.md|\/bip\b/, 'Codex has no custom prompts any more');
-  assert.match(codex, /~\/\.codex\/skills\/momentry-bip\/SKILL\.md/);
-  assert.match(codex, /~\/\.codex\/skills\/momentry-ui\/agents\/openai\.yaml/);
+  assert.match(codex, /~\/\.agents\/skills\/momentry-bip\/SKILL\.md/, 'the Agent Skills dir');
+  assert.match(codex, /~\/\.agents\/skills\/momentry-ui\/agents\/openai\.yaml/);
+  assert.doesNotMatch(codex, /\.codex\/skills/, 'not the deprecated $CODEX_HOME/skills');
   assert.match(codex, /\$momentry-bip/);
   assert.match(codex, /^name: momentry-ui$/m);
   assert.match(codex, /allow_implicit_invocation: false/);

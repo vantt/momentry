@@ -44,7 +44,7 @@ momentry scan --max-sessions 1
 momentry list --rank
 ```
 
-Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/momentry-bip <ghi chú>` trong agent của bạn (`$momentry-bip` trong Codex; `/bip` cũ vẫn dùng được một thời gian). `/momentry-ui` mở giao diện web. Hoặc cứ hỏi agent “tuần này có chuyện gì hay?”: skill `momentry` cho nó đọc và đánh dấu chuyện qua CLI, và viết nháp bài bằng model bạn đã trả.
+Từ đây hook tự gom sau mỗi phiên. Muốn tự đánh dấu một khoảnh khắc ngay lúc đang làm, gõ `/momentry-bip <ghi chú>` trong agent của bạn (`$momentry-bip` trong Codex; tên cũ `/bip` đã bỏ). `/momentry-ui` mở giao diện web. Hoặc cứ hỏi agent “tuần này có chuyện gì hay?”: skill `momentry` cho nó đọc và đánh dấu chuyện qua CLI, và viết nháp bài bằng model bạn đã trả.
 
 Muốn đọc, chọn và sửa chuyện trên trình duyệt thì chạy `momentry ui`: một trang trên máy (127.0.0.1) có tường chuyện, riêng tư, chi phí, sức khoẻ và thiết lập. Không còn tab nào mở thì nó tự tắt.
 

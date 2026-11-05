@@ -1,8 +1,8 @@
 #!/bin/sh
 # Offline lifecycle of install.sh + the installed CLI, in a throwaway HOME:
 # package two versions -> install -> re-install (no-op) -> init (hooks, agent commands, skill) -> session-start
-# reminder -> doctor -> update --check (10)
-# -> update -> tampered release refused -> uninstall (data kept) -> command gone.
+# reminder (and a missing shim counted) -> doctor -> update --check (10)
+# -> update (removes what older versions installed, keeps edited files) -> tampered release refused -> uninstall (data kept) -> command gone.
 # Usage: sh scripts/test-installer.sh
 set -eu
 
@@ -43,17 +43,19 @@ printf 'Trần Thị Bích Ngọc\n' > "$HOME/names.txt"
 "$BIN" config set privacy.sources "[{\"type\":\"lines\",\"path\":\"$HOME/names.txt\"}]" >/dev/null
 (cd "$WORK/repo" && "$BIN" init --yes --json) | json_ok || fail "init --yes --json"
 grep -q "momentry\\\\\" hook session-end" "$HOME/.claude/settings.json" || fail "hook registered through the shim"
-grep -q "add --by human" "$HOME/.claude/commands/bip.md" || fail "/bip installed"
-for f in .pi/agent/extensions/momentry.ts .pi/accounts/work/extensions/momentry.ts .omp/agent/extensions/momentry.ts .pi/agent/prompts/bip.md .omp/agent/commands/bip.md .gemini/config/skills/bip/SKILL.md; do
-  [ -f "$HOME/$f" ] || fail "init did not install $f"
-done
+grep -q "add --by human" "$HOME/.claude/commands/momentry-bip.md" || fail "momentry-bip installed"
 grep -q '"momentry"' "$HOME/.gemini/config/hooks.json" || fail "Antigravity hook group missing"
-for f in .claude/commands/momentry-bip.md .claude/commands/momentry-ui.md .claude/skills/momentry/SKILL.md \
-  .codex/skills/momentry-bip/SKILL.md .codex/skills/momentry-bip/agents/openai.yaml .codex/skills/momentry-ui/SKILL.md .codex/skills/momentry/SKILL.md \
-  .pi/agent/prompts/momentry-bip.md .pi/agent/prompts/momentry-ui.md .pi/agent/skills/momentry/SKILL.md \
+# Codex and pi read the shared ~/.agents/skills: their skills sit there once, for every profile
+for f in .pi/agent/extensions/momentry.ts .pi/accounts/work/extensions/momentry.ts .omp/agent/extensions/momentry.ts \
+  .claude/commands/momentry-bip.md .claude/commands/momentry-ui.md .claude/skills/momentry/SKILL.md \
+  .agents/skills/momentry-bip/SKILL.md .agents/skills/momentry-bip/agents/openai.yaml .agents/skills/momentry-ui/SKILL.md .agents/skills/momentry/SKILL.md \
+  .pi/agent/prompts/momentry-bip.md .pi/agent/prompts/momentry-ui.md .pi/accounts/work/prompts/momentry-bip.md \
   .omp/agent/commands/momentry-bip.md .omp/agent/commands/momentry-ui.md .omp/agent/skills/momentry/SKILL.md \
   .gemini/config/skills/momentry-bip/SKILL.md .gemini/config/skills/momentry-ui/SKILL.md .gemini/config/skills/momentry/SKILL.md; do
   [ -f "$HOME/$f" ] || fail "init did not install $f"
+done
+for f in .claude/commands/bip.md .pi/agent/prompts/bip.md .omp/agent/commands/bip.md .gemini/config/skills/bip .codex/skills .pi/agent/skills .pi/accounts/work/skills; do
+  [ ! -e "$HOME/$f" ] || fail "init installed $f (the /bip alias is gone; Codex and pi skills live in ~/.agents/skills)"
 done
 grep -q "hook session-start\"" "$HOME/.claude/settings.json" || fail "Claude SessionStart hook missing"
 grep -q "hook session-start --codex" "$HOME/.codex/hooks.json" || fail "Codex SessionStart hook missing"
@@ -73,6 +75,15 @@ printf '%s' "$OUT" | node -e 'const j=JSON.parse(require("fs").readFileSync(0,"u
 OUT=$(printf '{"cwd":"%s","source":"compact"}' "$WORK/repo" | "$BIN" hook session-start)
 [ -z "$OUT" ] || fail "reminder repeated after compaction: $OUT"
 rm "$BOX/2026-11-05-thu.md"
+# a missing shim is a problem to fix (the installed copy still runs the hook here, as pi's extension falls back to it)
+APP="$HOME/.local/share/momentry/versions/v$V1/bin/momentry.mjs"
+mv "$BIN" "$WORK/shim.bak"
+OUT=$(printf '{"cwd":"%s","source":"startup"}' "$WORK/repo" | node "$APP" hook session-start)
+printf '%s' "$OUT" | node -e 'const j=JSON.parse(require("fs").readFileSync(0,"utf8")); if(j.systemMessage!=="momentry: 1 lỗi cần sửa (momentry doctor)") process.exit(1)' \
+  || fail "missing shim not counted: $OUT"
+(cd "$WORK/repo" && node "$APP" doctor --fix >/dev/null) || true
+[ -x "$BIN" ] || fail "doctor --fix did not write the shim back"
+rm -f "$WORK/shim.bak"
 
 step "doctor"
 (cd "$WORK/repo" && "$BIN" doctor --json) | json_ok || fail "doctor"
@@ -81,9 +92,20 @@ step "update --check reports a newer version with exit 10"
 set +e; MOMENTRY_RELEASE_BASE="$WORK/r2" "$BIN" update --check >/dev/null; code=$?; set -e
 [ "$code" = 10 ] || fail "update --check exit $code"
 
-step "update"
+step "update cleans what older versions installed (edited files kept)"
+cp "$HOME/.claude/commands/momentry-bip.md" "$HOME/.claude/commands/bip.md"
+cp "$HOME/.pi/agent/prompts/momentry-bip.md" "$HOME/.pi/agent/prompts/bip.md"
+mkdir -p "$HOME/.codex/skills" "$HOME/.pi/agent/skills"
+cp -R "$HOME/.agents/skills/momentry-bip" "$HOME/.agents/skills/momentry" "$HOME/.codex/skills/"
+cp -R "$HOME/.agents/skills/momentry" "$HOME/.pi/agent/skills/"
+sed 's/Việc của bạn:/Việc của bạn (đã sửa):/' "$HOME/.omp/agent/commands/momentry-bip.md" > "$HOME/.omp/agent/commands/bip.md"
 MOMENTRY_RELEASE_BASE="$WORK/r2" "$BIN" update --yes
 "$BIN" --version | grep -qx "momentry $V2" || fail "updated version"
+for f in .claude/commands/bip.md .pi/agent/prompts/bip.md .codex/skills/momentry-bip .codex/skills/momentry .pi/agent/skills/momentry; do
+  [ ! -e "$HOME/$f" ] || fail "update left $f"
+done
+grep -q "đã sửa" "$HOME/.omp/agent/commands/bip.md" || fail "update removed an edited file"
+rm "$HOME/.omp/agent/commands/bip.md"
 "$BIN" config get privacy.sources | grep -q names.txt || fail "config survived the update"
 (cd "$WORK/repo" && "$BIN" doctor --json) | json_ok || fail "doctor after update"
 
@@ -120,7 +142,7 @@ set +e; "$BIN" uninstall </dev/null >/dev/null 2>&1; code=$?; set -e
 [ ! -e "$HOME/.pi/agent/extensions/momentry.ts" ] && [ ! -e "$HOME/.omp/agent/extensions/momentry.ts" ] || fail "pi/omp extension left"
 ! grep -q '"momentry"' "$HOME/.gemini/config/hooks.json" || fail "Antigravity hook group left"
 ! grep -q "momentry" "$HOME/.codex/hooks.json" || fail "Codex hooks left"
-LEFT=$(find "$HOME/.claude" "$HOME/.codex" "$HOME/.pi" "$HOME/.omp" "$HOME/.gemini" \( -name 'momentry*' -o -name 'bip.md' -o -path '*/skills/bip' \) ! -name '*.momentry-bak-*' -print)
+LEFT=$(find "$HOME/.claude" "$HOME/.codex" "$HOME/.pi" "$HOME/.omp" "$HOME/.gemini" "$HOME/.agents" \( -name 'momentry*' -o -name 'bip.md' -o -path '*/skills/bip' \) ! -name '*.momentry-bak-*' -print)
 [ -z "$LEFT" ] || fail "agent commands or skills left: $LEFT"
 [ -f "$HOME/.config/momentry/config.json" ] || fail "config was removed without --purge"
 [ -f "$WORK/repo/.momentry.json" ] || fail "repo file was removed"

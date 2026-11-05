@@ -48,17 +48,28 @@ Shim tìm `node` trên PATH lúc chạy và đọc bản đang dùng từ `curre
 
 ### Lệnh agent và skill `momentry`
 
-Mỗi host có hai lệnh: `momentry-bip` (đánh dấu khoảnh khắc vừa rồi, gọi `momentry add`) và `momentry-ui` (chạy `momentry ui`: mở giao diện web, hoặc in đường dẫn file để mở; mã truy cập nằm trong file, không bao giờ in ra). Tên cũ `/bip` được giữ làm bí danh một thời gian ở những host đã có nó. Ngoài ra là skill `momentry`: lúc thường chỉ tên và mô tả nằm trong context của agent; thân skill chỉ nạp khi bạn hỏi về chuyện ("tuần này có chuyện gì hay?", "viết chuyện X thành thread"), và nó chỉ bảo agent gọi `momentry list --rank --json`, `momentry show <id> --json`, `momentry mark <id> use|later|drop --json`. Bài nháp do chính agent của bạn viết, bằng model bạn đã trả; momentry không gọi model nào cho việc này.
+Mỗi host có hai lệnh: `momentry-bip` (đánh dấu khoảnh khắc vừa rồi, gọi `momentry add`) và `momentry-ui` (chạy `momentry ui`: mở giao diện web, hoặc in đường dẫn file để mở; mã truy cập nằm trong file, không bao giờ in ra). Tên cũ `/bip` đã bỏ; dùng `/momentry-bip` (`$momentry-bip` ở Codex). Ngoài ra là skill `momentry`: lúc thường chỉ tên và mô tả nằm trong context của agent; thân skill chỉ nạp khi bạn hỏi về chuyện ("tuần này có chuyện gì hay?", "viết chuyện X thành thread"), và nó chỉ bảo agent gọi `momentry list --rank --json`, `momentry show <id> --json`, `momentry mark <id> use|later|drop --json`. Bài nháp do chính agent của bạn viết, bằng model bạn đã trả; momentry không gọi model nào cho việc này.
 
-| Host | Gọi lệnh | File lệnh (trong thư mục profile) | Skill `momentry` |
+| Host | Gọi lệnh | File lệnh | Skill `momentry` |
 |---|---|---|---|
-| Claude Code | `/momentry-bip`, `/momentry-ui`, `/bip` | `commands/{momentry-bip,momentry-ui,bip}.md` | `skills/momentry/SKILL.md` |
-| Codex | `$momentry-bip`, `$momentry-ui` (hoặc chọn trong `/skills`) | skill `skills/{momentry-bip,momentry-ui}/SKILL.md` kèm `agents/openai.yaml` (`allow_implicit_invocation: false`) | `skills/momentry/SKILL.md` |
-| pi | `/momentry-bip`, `/momentry-ui`, `/bip` | `prompts/{momentry-bip,momentry-ui,bip}.md` | `skills/momentry/SKILL.md` (gọi tay: `/skill:momentry`) |
-| omp (oh-my-pi) | `/momentry-bip`, `/momentry-ui`, `/bip` | `commands/{momentry-bip,momentry-ui,bip}.md` | `skills/momentry/SKILL.md` |
-| Antigravity | `/momentry-bip`, `/momentry-ui`, `/bip` | skill `config/skills/{momentry-bip,momentry-ui,bip}/SKILL.md` (`disable-model-invocation: true`) | `config/skills/momentry/SKILL.md` |
+| Claude Code | `/momentry-bip`, `/momentry-ui` | `<profile>/commands/{momentry-bip,momentry-ui}.md` | `<profile>/skills/momentry/SKILL.md` |
+| Codex | `$momentry-bip`, `$momentry-ui` (hoặc chọn trong `/skills`) | skill `~/.agents/skills/{momentry-bip,momentry-ui}/SKILL.md` kèm `agents/openai.yaml` (`allow_implicit_invocation: false`) | `~/.agents/skills/momentry/SKILL.md` |
+| pi | `/momentry-bip`, `/momentry-ui` | `<profile>/prompts/{momentry-bip,momentry-ui}.md` | `~/.agents/skills/momentry/SKILL.md` (gọi tay: `/skill:momentry`) |
+| omp (oh-my-pi) | `/momentry-bip`, `/momentry-ui` | `<profile>/commands/{momentry-bip,momentry-ui}.md` | `<profile>/skills/momentry/SKILL.md` |
+| Antigravity | `/momentry-bip`, `/momentry-ui` | skill `<profile>/config/skills/{momentry-bip,momentry-ui}/SKILL.md` (`disable-model-invocation: true`) | `<profile>/config/skills/momentry/SKILL.md` |
 
-Codex từ 0.117 bỏ hẳn custom prompt (`~/.codex/prompts`, `/prompts:bip`), nên ở Codex hai lệnh là skill, gọi bằng `$tên`; `momentry connect` (và `momentry update`, qua `doctor --fix`) xoá `prompts/bip.md` cũ do momentry ghi. Skill Codex nằm ở `$CODEX_HOME/skills` (Codex vẫn đọc chỗ này bên cạnh `~/.agents/skills`), để mỗi profile `~/.codex-*` có bản riêng như hook. Máy đã cài bản cũ: `momentry update` (hoặc `momentry doctor --fix`) thêm các tên mới ở profile đã kết nối mà không hỏi lại; profile chưa kết nối vẫn cần `momentry connect --yes`.
+`~/.agents/skills` là thư mục Agent Skills dùng chung: mọi profile Codex và mọi profile pi đều đọc nó, nên momentry đặt skill của hai host này ở đó đúng một lần. Vì vậy không host nào thấy cùng một skill hai lần:
+
+- Codex coi `$CODEX_HOME/skills` là chỗ cũ (deprecated). Từ bản này momentry không ghi vào đó nữa.
+- pi đọc cả `<profile>/skills` lẫn `~/.agents/skills` và cảnh báo khi một tên có ở cả hai, nên momentry không đặt bản riêng trong profile pi. Trong `/skill:` của pi còn thấy `momentry-bip` và `momentry-ui` của Codex; hai skill này chỉ chạy khi gọi tên (`disable-model-invocation: true`).
+- omp chỉ đọc `~/.agents/skills` (và `~/.claude/skills`) khi bạn bật trong cài đặt của omp, và khi đó bỏ qua bản trùng y hệt. momentry giữ bản trong profile omp; nội dung skill `momentry` giống nhau từng byte ở mọi host.
+- Claude Code và Antigravity không đọc `~/.agents/skills`.
+
+Gỡ một host (`momentry connect codex --remove`) để nguyên `~/.agents/skills/momentry` khi host kia (pi) vẫn đang kết nối; host cuối cùng gỡ thì xoá. `momentry uninstall` xoá hết.
+
+Codex từ 0.117 bỏ hẳn custom prompt (`~/.codex/prompts`), nên ở Codex hai lệnh là skill, gọi bằng `$tên`.
+
+**Máy đã cài bản cũ.** `momentry update` (qua `doctor --fix`, không hỏi lại), `momentry doctor --fix` và `momentry connect` dọn ở mọi profile đã kết nối: thêm file mới; xoá bí danh `/bip` (`commands/bip.md`, `prompts/bip.md`, `config/skills/bip/`), `~/.codex/prompts/bip.md`, skill trong `~/.codex/skills` và mỗi `~/.codex-*/skills`, và `~/.pi/agent/skills/momentry` (pi đọc bản trong `~/.agents/skills`). Chỉ xoá file momentry ghi mà bạn chưa sửa. File bạn đã sửa thì được giữ. Nếu một skill bạn đã sửa vẫn nằm ở chỗ cũ, `momentry doctor` báo rằng host sẽ thấy skill đó hai lần; xoá nó, hoặc gộp phần bạn sửa vào bản mới. Profile chưa kết nối vẫn cần `momentry connect --yes`.
 
 ### Dòng nhắc lúc mở phiên
 
@@ -70,7 +81,7 @@ momentry: 3 chuyện mới (/momentry-ui) · 2 phiên chờ ngân sách ngày (m
 
 - **chuyện mới**: chuyện trạng thái `raw` trong hộp của repo đó mà bạn chưa mở trong `momentry ui`.
 - **phiên chờ ngân sách**: phiên của repo đó mà lần quét tự động hôm nay chưa gom vì hết ngân sách ngày.
-- **lỗi cần sửa**: kiểm nhanh, chỉ đọc file: cấu hình, nguồn chặn riêng tư, hộp chuyện, quyền cache, và kết nối của chính host đó (hook, lệnh, skill). Chỉ đếm cái có cách sửa; `momentry doctor` cho biết chi tiết.
+- **lỗi cần sửa**: kiểm nhanh, chỉ đọc file: cấu hình, nguồn chặn riêng tư, hộp chuyện, quyền cache, kết nối của chính host đó (hook, lệnh, skill), và shim `momentry` của bản cài (hook và lệnh agent gọi nó; mất thì chạy lại lệnh cài, hoặc `momentry doctor --fix`, để ghi lại). Chỉ đếm cái có cách sửa; `momentry doctor` cho biết chi tiết. Dòng nhắc không kiểm PATH, vì trong hook PATH là của agent, không phải của bạn.
 
 Mỗi phần chỉ hiện khi khác 0. Khi không có gì để nói, hook không in gì (Antigravity nhận `{}`). Dòng nhắc chỉ nói về repo của phiên, không gọi mạng hay model, và chạy trong khoảng 50 ms. Mọi lỗi được nuốt (ghi vào `hook.log`), nên phiên luôn mở được. Sau compact (Claude, Codex) hay `/reload` (pi, omp), hook không nhắc lại.
 
@@ -177,4 +188,4 @@ Lệnh `momentry-bip`, `momentry-ui` và skill `momentry` do agent tự chạy t
 
 ## Gỡ
 
-`momentry uninstall` (hoặc `sh install.sh --uninstall`) gỡ hook, lệnh agent (tên mới, bí danh `/bip` và tên cũ) và skill `momentry` (chỉ file của mình mà bạn chưa sửa, có sao lưu), shim, thư mục cài và mục PATH (Windows). Cấu hình, cache, hộp chuyện và `.momentry.json` trong các repo được giữ; `--purge` xoá thêm cấu hình và cache.
+`momentry uninstall` (hoặc `sh install.sh --uninstall`) gỡ hook, lệnh agent và skill (cả trong `~/.agents/skills`, bí danh `/bip` cũ và chỗ cũ `~/.codex*/skills`; chỉ file của mình mà bạn chưa sửa, có sao lưu), shim, thư mục cài và mục PATH (Windows). Cấu hình, cache, hộp chuyện và `.momentry.json` trong các repo được giữ; `--purge` xoá thêm cấu hình và cache.
