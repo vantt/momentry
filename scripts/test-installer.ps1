@@ -80,8 +80,15 @@ try {
     [IO.File]::WriteAllText($story, "---`nid: 2026-11-05-thu`nstatus: raw`n---`n`n# thu`n")
     $out = (@{ cwd = $repo; source = 'startup' } | ConvertTo-Json -Compress) | & $bin hook session-start
     if ($LASTEXITCODE -ne 0) { Fail "hook exit $LASTEXITCODE" }
+    if (-not $out) {
+        $log = Join-Path $env:LOCALAPPDATA 'momentry\cache\hook.log'
+        if (Test-Path $log) { Get-Content -Tail 20 $log | Write-Host }
+        Write-Host "repo: $repo; git root: $(& git rev-parse --show-toplevel)"
+        & $bin list --json | Write-Host
+        Fail 'Claude reminder: no output'
+    }
     $j = ($out -join "`n") | ConvertFrom-Json
-    if (-not $j.hookSpecificOutput.additionalContext.StartsWith('momentry: 1 chuy')) { Fail "Claude reminder: $out" }
+    if (-not "$($j.hookSpecificOutput.additionalContext)".StartsWith('momentry: 1 chuy')) { Fail "Claude reminder: $out" }
     if (-not $j.systemMessage.Contains('(/momentry-ui)')) { Fail "Claude reminder command: $out" }
     $out = (@{ cwd = $repo } | ConvertTo-Json -Compress) | & $bin hook session-start --codex
     if (-not ((($out -join "`n") | ConvertFrom-Json).systemMessage.Contains('($momentry-ui)'))) { Fail "Codex reminder: $out" }
