@@ -1,7 +1,7 @@
 ---
 title: "Chất lượng chọn chuyện và chi phí mỗi phiên (E17)"
 description: "Bộ test gán nhãn, harness chạy lại, đo chi phí từng bước, chỉnh xếp hạng, thí nghiệm e5."
-status: todo
+status: in-progress
 priority: P1
 branch: website-v2
 tags: [quality, cost]
@@ -27,12 +27,12 @@ Lý do: người mua trả tiền cho danh sách chuyện xếp hạng; chuyện
 
 | ID | Việc | Ai | Trạng thái |
 |---|---|---|---|
-| Q.1 | Bộ test chất lượng: 5–10 phiên gán nhãn, nhiều domain và host (ít nhất 2 Codex, 1 phiên tiếng Anh), mỗi phiên có đáp án "chuyện đáng kể" và nhãn `t`. Nhãn nằm trong `docs/_private/` | Anh gán nhãn; agent chọn phiên và soạn file nhãn nháp | ⬜ |
-| Q.2 | Harness đo: lưu đầu ra model bằng `--save-llm`, chạy lại bằng `--fake-llm` để đổi thuật toán xếp hạng mà không tốn tiền. Chỉ số: recall đáp án, precision@5/@10, hạng trung bình của nhãn `t`, độ lệch giữa 2 lần chạy, USD và giây mỗi phiên | Agent | ⬜ |
-| Q.3 | Đo chi phí từng bước (harvest, cluster, outsider, hook-tension, stakes) từ `stats`; ghi bảng vào `docs/experiments/`. Ước đoán: outsider (sonnet đọc nguyên khúc ~150k token) và harvest chiếm phần lớn | Agent | ⬜ |
-| Q.4 | Thử các đòn giảm chi phí trên bộ test, giữ đòn nào không làm tụt chỉ số: outsider chạy haiku hoặc chỉ đọc quanh điểm nóng; rút gọn input mạnh hơn (`reduce`); bỏ phiên ngắn; gộp stakes và hook-tension làm một lần gọi. Thay S2.3 | Agent | ⬜ |
-| Q.5 | Chỉnh xếp hạng: trọng số tension, stakes, hits, outsider; sửa ca dòng 18 (tension `none`, stakes 2 bị hạng 26). Mục tiêu DM.5: 8/8 nhãn `t` nửa trên | Agent | ⬜ |
-| Q.6 | Thí nghiệm e5 (`Xenova/multilingual-e5-small` của `vantt/obsidian-hybrid-search`): thay LLM ở bước cluster và gộp vào chuyện cũ bằng độ tương đồng embedding, LLM chỉ xử ca lưng chừng. Đo trên bộ test: chất lượng gộp, USD tiết kiệm, thời gian | Agent | ⬜ sau Q.3 |
+| Q.1 | Bộ test chất lượng: 5–10 phiên gán nhãn, nhiều domain và host (ít nhất 2 Codex, 1 phiên tiếng Anh), mỗi phiên có đáp án "chuyện đáng kể" và nhãn `t`. Nhãn nằm trong `docs/_private/` | Anh gán nhãn; agent chọn phiên và soạn file nhãn nháp | 🟡 2026-11-05: 8 phiên nháp (7 Claude, 1 omp tiếng Anh), 60 đáp án, 30 `t`, trong `docs/_private/eval/labels/`; chờ anh duyệt; thiếu phiên Codex (máy không có) |
+| Q.2 | Harness đo: lưu đầu ra model bằng `--save-llm`, chạy lại bằng `--fake-llm` để đổi thuật toán xếp hạng mà không tốn tiền. Chỉ số: recall đáp án, precision@5/@10, hạng trung bình của nhãn `t`, độ lệch giữa 2 lần chạy, USD và giây mỗi phiên | Agent | ✅ 2026-11-05: `scripts/eval/` ([README](../../scripts/eval/README.md)) |
+| Q.3 | Đo chi phí từng bước (harvest, cluster, outsider, hook-tension, stakes) từ `stats`; ghi bảng vào `docs/experiments/`. Ước đoán: outsider (sonnet đọc nguyên khúc ~150k token) và harvest chiếm phần lớn | Agent | ✅ 2026-11-05: outsider 69%, harvest 20%, chấm 10%, cluster 0%; 0,83 USD/phiên ([bản ghi](../../docs/experiments/2026-11-05-step-cost/README.md)) |
+| Q.4 | Thử các đòn giảm chi phí trên bộ test, giữ đòn nào không làm tụt chỉ số: outsider chạy haiku hoặc chỉ đọc quanh điểm nóng; rút gọn input mạnh hơn (`reduce`); bỏ phiên ngắn; gộp stakes và hook-tension làm một lần gọi. Thay S2.3 | Agent | 🟡 đang chạy |
+| Q.5 | Chỉnh xếp hạng: trọng số tension, stakes, hits, outsider; sửa ca dòng 18 (tension `none`, stakes 2 bị hạng 26). Mục tiêu DM.5: 8/8 nhãn `t` nửa trên | Agent | ✅ 2026-11-05: `t` nửa trên 21/30 → 23/30; DM.5 3/8 phiên, trần 5/8 vì recall ([bản ghi](../../docs/experiments/2026-11-05-ranking/README.md)) |
+| Q.6 | Thí nghiệm e5 (`Xenova/multilingual-e5-small` của `vantt/obsidian-hybrid-search`): thay LLM ở bước cluster và gộp vào chuyện cũ bằng độ tương đồng embedding, LLM chỉ xử ca lưng chừng. Đo trên bộ test: chất lượng gộp, USD tiết kiệm, thời gian | Agent | ⏸️ không làm vì chi phí: Q.3 đo cluster tốn 0 USD |
 | Q.7 | Quyết đưa e5 vào bản bán hay không, dựa trên Q.3 và Q.6 | Anh | ⬜ |
 
 **Đánh giá ban đầu về e5 (2026-11-04), chờ Q.3 và Q.6 xác nhận:**
