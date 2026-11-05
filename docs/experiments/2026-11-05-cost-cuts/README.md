@@ -136,3 +136,14 @@ Mốc có cùng hiện tượng (`2dfb5915` #1 không nghĩ 14 chuyện, #2 ngh�
 - 1a và 1b dùng lại harvest của mốc, nên USD cả phiên của hai biến thể này không so được trực tiếp; chỉ so bước người ngoài.
 - Bậc giá 100k của `haiku` và giá `opus` đo bằng vài lời gọi thử, không phải bảng giá công bố.
 - Một máy, một ngày, gói thuê bao (cache mặc định 1 giờ); với API key Claude Code mặc định cache 5 phút, nên phần tiết kiệm của việc tắt cache nhỏ hơn.
+
+## Chấm lại trên nhãn đã duyệt (2026-11-05, tối)
+
+User duyệt cả 8 phiên qua trang `scripts/eval/review.mjs`: 79 đáp án, 33 nhãn `t` (trước đó là 60 đáp án và 30 `t`, do agent soạn nháp). Chạy lại miễn phí, cùng thứ tự xếp hạng hiện tại.
+
+| Bộ chụp | recall | p@5 | p@10 | hạng-t trung bình | `t` nửa trên | phiên đạt DM.5 |
+|---|---|---|---|---|---|---|
+| Mặc định mới (outsider `haiku`, cache tắt) | 96% | 0,88 | 0,76 | 4,95 | 25/33 | 3/8 |
+| Chụp gốc (outsider `sonnet`) | 72% | 0,63 | 0,61 | 5,57 | 18/33 | |
+
+**Lệch có hệ thống, đọc kỹ trước khi so hai dòng:** một số đáp án mới được thêm bằng nút "thêm làm đáp án", tức là lấy từ danh sách chuyện của bộ chụp mặc định mới, kèm slug của chuyện đó. Các đáp án này khớp bộ mới theo cách xây dựng, nên recall và p@k của bộ mới bị đẩy lên so với bộ gốc. Con số dùng được để theo dõi bộ mới qua các lần đổi sau; không dùng để kết luận bộ mới tìm chuyện tốt hơn bộ gốc. Kết luận "giảm chi phí không làm tụt chất lượng" vẫn dựa trên so sánh với nhãn nháp ở trên.
