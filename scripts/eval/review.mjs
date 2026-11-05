@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Local page for reviewing label files: tick `t`, drop rows, add stories momentry found, mark a session reviewed.
-// Reads and writes the same markdown files the harness reads (scripts/eval/README.md). 127.0.0.1 only, with a key.
+// Reads and writes the same markdown files the harness reads (scripts/eval/README.md). Listens on 127.0.0.1 and,
+// unless --local, on this machine's Tailscale addresses (same rules as `momentry ui`); every API call needs the key.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,6 +9,7 @@ import crypto from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { makeLabel, slugAll, idSlug, matches } from './labels.mjs';
+import { tailnetAddrs, hostAllowed, magicDnsName } from '../../lib/ui-server.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
@@ -100,7 +102,7 @@ function context(dataDir, id, rows) {
 
 const PAGE = fs.readFileSync(path.join(HERE, 'review.html'), 'utf8');
 
-/** @param {{labels: string, data: string, key: string}} o */
+/** @param {{labels: string, data: string, key: string, tailnet?: string[]}} o */
 export function createReviewServer(o) {
   const file = (id) => {
     if (!/^[\w-]+$/.test(id)) throw Object.assign(new Error('id sai'), { status: 400 });
@@ -115,8 +117,10 @@ export function createReviewServer(o) {
   return http.createServer(async (req, res) => {
     try {
       const port = req.socket.localPort;
-      if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(String(req.headers.host).toLowerCase())) return send(res, 421, 'wrong host', 'text/plain');
-      if (req.headers.origin && ![`http://127.0.0.1:${port}`, `http://localhost:${port}`].includes(req.headers.origin)) return send(res, 403, { error: 'origin' });
+      const tn = o.tailnet ?? [];
+      if (!hostAllowed(req.headers.host, port, tn)) return send(res, 421, 'wrong host', 'text/plain');
+      const origin = req.headers.origin;
+      if (origin && !(origin.startsWith('http://') && hostAllowed(origin.slice(7), port, tn))) return send(res, 403, { error: 'origin' });
       const url = new URL(req.url, `http://127.0.0.1:${port}`);
       if (url.pathname === '/') return send(res, 200, PAGE, 'text/html; charset=utf-8');
       if (req.headers['x-key'] !== o.key) return send(res, 401, { error: 'Thiếu khoá: mở lại link in ra từ lệnh review.' });
@@ -154,17 +158,25 @@ export function createReviewServer(o) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { values: a } = parseArgs({ options: { labels: { type: 'string' }, data: { type: 'string' }, port: { type: 'string' } } });
+  const { values: a } = parseArgs({ options: { labels: { type: 'string' }, data: { type: 'string' }, port: { type: 'string' }, local: { type: 'boolean' } } });
   const base = path.join(ROOT, 'docs/_private/eval');
   const labels = path.resolve(a.labels ?? path.join(base, 'labels'));
   const data = path.resolve(a.data ?? path.join(base, 'new-defaults'));
   const key = crypto.randomBytes(18).toString('base64url');
-  const server = createReviewServer({ labels, data, key });
-  server.on('error', (e) => {
-    console.error(e.code === 'EADDRINUSE' ? `Cổng ${a.port ?? 4826} đang bận (có thể trang duyệt đã chạy ở terminal khác). Tắt nó, hoặc chọn cổng khác: --port 4827` : e.message);
+  const port = Number(a.port ?? 4826);
+  const tailnet = [];
+  const listen = (addr) => new Promise((resolve, reject) => {
+    const srv = createReviewServer({ labels, data, key, tailnet });
+    srv.once('error', reject);
+    srv.listen(port, addr, () => resolve(srv));
+  });
+  try { await listen('127.0.0.1'); } catch (e) {
+    console.error(e.code === 'EADDRINUSE' ? `Cổng ${port} đang bận (có thể trang duyệt đã chạy ở terminal khác). Tắt nó, hoặc chọn cổng khác: --port 4827` : e.message);
     process.exit(1);
-  });
-  server.listen(Number(a.port ?? 4826), '127.0.0.1', () => {
-    console.log(`Duyệt nhãn: http://127.0.0.1:${server.address().port}/#k=${key}\nNhãn: ${labels}\nCtrl+C để tắt.`);
-  });
+  }
+  if (!a.local) for (const ip of tailnetAddrs()) { try { await listen(ip); tailnet.push(ip); } catch { /* address gone: this machine still works */ } }
+  const dns = tailnet.length ? magicDnsName() : null;
+  const hp = (h) => (h.includes(':') ? `[${h}]:${port}` : `${h}:${port}`);
+  const links = ['127.0.0.1', ...(dns ? [dns] : []), ...tailnet.filter((ip) => !ip.includes(':'))].map((h) => `  http://${hp(h)}/#k=${key}`);
+  console.log(`Duyệt nhãn (link có khoá, đừng gửi cho người khác):\n${links.join('\n')}\n${tailnet.length ? 'Máy khác trong tailnet mở được link .ts.net hoặc IP 100.x.' : 'Không thấy Tailscale: chỉ mở được trên máy này.'}\nNhãn: ${labels}\nCtrl+C để tắt.`);
 }
