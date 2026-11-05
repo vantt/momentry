@@ -10,7 +10,7 @@ node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json           
 node scripts/eval/review.mjs                                                       # trang duyệt nhãn trên máy
 ```
 
-`review.mjs` mở trang trên 127.0.0.1 (in link có khoá): tick chuyện đáng kể, xoá dòng không phải chuyện, thêm chuyện còn thiếu (gõ tay hoặc chọn từ danh sách momentry tìm ra trong bản chụp mới nhất), rồi đánh dấu đã duyệt. Trang ghi thẳng vào file nhãn, cùng định dạng ở dưới. Cờ: `--labels DIR`, `--data DIR` (bản chụp để lấy danh sách và hạng, mặc định `docs/_private/eval/new-defaults`), `--port N` (mặc định 4826).
+`review.mjs` mở trang trên 127.0.0.1 và địa chỉ Tailscale của máy (in link có khoá; `--local` chỉ nghe trên máy): tick chuyện đáng kể, xoá dòng không phải chuyện, thêm chuyện còn thiếu (gõ tay hoặc chọn từ danh sách momentry tìm ra trong bản chụp mới nhất), rồi đánh dấu đã duyệt. Trang ghi thẳng vào file nhãn, cùng định dạng ở dưới. Cờ: `--labels DIR`, `--data DIR` (bản chụp để lấy danh sách và hạng, mặc định `docs/_private/eval/new-defaults`), `--port N` (mặc định 4826).
 
 | Cờ | Nghĩa |
 |---|---|
