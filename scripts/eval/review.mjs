@@ -8,7 +8,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { makeLabel, slugAll, idSlug, matches, ANGLE_VERDICTS } from './labels.mjs';
+import { makeLabel, slugAll, idSlug, matches, ANGLE_VERDICTS, UNDERSTOOD } from './labels.mjs';
 import { tailnetAddrs, hostAllowed, magicDnsName } from '../../lib/ui-server.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -81,6 +81,26 @@ export function writeLabelFile(front, status, rows, hasMin = false) {
 const newest = (dir, filter) => { try { return fs.readdirSync(dir).filter(filter).sort().map((f) => path.join(dir, f)).at(-1) ?? null; } catch { return null; } };
 const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return null; } };
 
+const runNo = (dir) => Number(path.basename(dir));
+const newestRun = (runs) => { try { return fs.readdirSync(runs).filter((f) => /^\d+$/.test(f)).map(Number).sort((a, b) => a - b).map((n) => path.join(runs, String(n))).at(-1) ?? null; } catch { return null; } };
+
+/**
+ * The earlier angle of each story, to show beside the new one: `prevAngle` / `prevAudience` written into the capture
+ * (a trial that redid angles), else the angle of the same story (id without date) in the run before the newest.
+ */
+function previousAngles(runs, run, cap) {
+  const out = new Map();
+  for (const s of cap?.ranked ?? []) if (typeof s.prevAngle === 'string') out.set(s.id, { angle: s.prevAngle, audience: s.prevAudience ?? null });
+  if (out.size) return out;
+  const before = run && runNo(run) > 1 ? readJson(path.join(runs, String(runNo(run) - 1), 'capture.json')) : null;
+  const byId = new Map((before?.ranked ?? []).map((s) => [idSlug(s.id), s]));
+  for (const s of cap?.ranked ?? []) {
+    const p = byId.get(idSlug(s.id));
+    if (typeof p?.angle === 'string') out.set(s.id, { angle: p.angle, audience: p.audience ?? null });
+  }
+  return out;
+}
+
 /**
  * Stories momentry found in the newest capture of a session, and per-label rank from the newest scored replay.
  * `matched` is judged on the title only (the capture keeps no body), so it is a hint for spotting missing answers.
@@ -88,14 +108,20 @@ const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); }
 function context(dataDir, id, rows) {
   const labels = rows.flatMap((r) => { try { return [makeLabel(r, '')]; } catch { return []; } });
   const runs = path.join(dataDir, id, 'runs');
-  const run = newest(runs, (f) => /^\d+$/.test(f));
+  const run = newestRun(runs);
   const cap = run && readJson(path.join(run, 'capture.json'));
+  const prev = previousAngles(runs, run, cap);
   const res = readJson(newest(path.join(dataDir, 'results'), (f) => f.endsWith('.json') && !f.includes('capture')) ?? '');
   const row = res?.rows?.find((r) => r.id === id && r.rank);
   const ranks = Object.fromEntries((row?.rank?.perLabel ?? []).map((p) => [p.name, p.rank]));
   const stories = (cap?.ranked ?? []).map((s) => {
     const story = { id: s.id, data: { hook: s.title } };
-    return { id: s.id, slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null };
+    const p = prev.get(s.id);
+    return {
+      id: s.id, slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null,
+      spine: s.spine ?? null, completeness: s.completeness ?? null,
+      prevAngle: p && p.angle !== s.angle ? p.angle : null, prevAudience: p && p.angle !== s.angle ? p.audience : null,
+    };
   });
   // the angle of the best-ranked found story matching each answer row (same title-only match as `matched`)
   const withAngle = rows.map((r) => {
@@ -104,31 +130,42 @@ function context(dataDir, id, rows) {
     const s = stories.find((x) => x.angle && x.angle !== 'none' && matches({ id: x.id, data: { hook: x.title } }, l));
     return s ? { ...r, angle: s.angle, angleStory: s.id } : r;
   });
-  return { stories, rows: withAngle, ranks, total: row?.stories ?? null, angleChecks: readAngleChecks(dataDir, id) };
+  return { stories, rows: withAngle, ranks, total: row?.stories ?? null, ...readAngleChecks(dataDir, id) };
 }
 
 const angleFile = (dataDir, id) => path.join(dataDir, 'angle-labels', `${id}.json`);
 
-/** Verdict per story id of a session's angle check, {} when none saved yet. */
+/**
+ * A session's angle check: verdict per story id (`angleChecks`) and the answer to "understood without asking?"
+ * (`understood`, yes / no), {} when none saved yet.
+ */
 function readAngleChecks(dataDir, id) {
-  const j = readJson(angleFile(dataDir, id));
-  return Object.fromEntries(Object.entries(j?.stories ?? {}).filter(([, v]) => v && Object.hasOwn(ANGLE_VERDICTS, v.verdict)).map(([k, v]) => [k, v.verdict]));
+  const entries = Object.entries(readJson(angleFile(dataDir, id))?.stories ?? {}).filter(([, v]) => v && typeof v === 'object');
+  return {
+    angleChecks: Object.fromEntries(entries.filter(([, v]) => Object.hasOwn(ANGLE_VERDICTS, v.verdict)).map(([k, v]) => [k, v.verdict])),
+    understood: Object.fromEntries(entries.filter(([, v]) => Object.hasOwn(UNDERSTOOD, v.understood)).map(([k, v]) => [k, v.understood])),
+  };
 }
 
 /**
- * Saves (or clears, verdict null) the angle-check verdict of one story with an angle in the newest capture. The file
- * keeps the angle text it judged, so a later prompt change can be compared. Private: folder 0700, file 0600.
+ * Saves (or clears, null) one answer about a story with an angle in the newest capture: the verdict, or `understood`
+ * (yes / no). The other answer is kept. The file keeps the angle text it judged, so a later prompt change can be
+ * compared. Private: folder 0700, file 0600.
+ * @param {string} dataDir @param {string} id @param {string} storyId @param {'verdict'|'understood'} field @param {string|null} value
  */
-function saveAngleCheck(dataDir, id, storyId, verdict) {
-  if (verdict !== null && !Object.hasOwn(ANGLE_VERDICTS, verdict)) throw Object.assign(new Error('nhãn góc kể lạ'), { status: 400 });
-  const run = newest(path.join(dataDir, id, 'runs'), (f) => /^\d+$/.test(f));
+function saveAngleCheck(dataDir, id, storyId, field, value) {
+  const allowed = field === 'understood' ? UNDERSTOOD : ANGLE_VERDICTS;
+  if (value !== null && !Object.hasOwn(allowed, value)) throw Object.assign(new Error(field === 'understood' ? 'câu trả lời lạ' : 'nhãn góc kể lạ'), { status: 400 });
+  const run = newestRun(path.join(dataDir, id, 'runs'));
   const s = (run && readJson(path.join(run, 'capture.json')))?.ranked?.find((x) => x.id === storyId);
   if (!s?.angle || s.angle === 'none') throw Object.assign(new Error('chuyện này không có góc kể trong bản chụp mới nhất'), { status: 400 });
   const file = angleFile(dataDir, id);
   const cur = readJson(file) ?? {};
   const stories = cur.stories && typeof cur.stories === 'object' ? cur.stories : {};
-  if (verdict === null) delete stories[storyId];
-  else stories[storyId] = { verdict, angle: s.angle, at: new Date().toISOString() };
+  const { verdict: v0, understood: u0 } = stories[storyId] && typeof stories[storyId] === 'object' ? stories[storyId] : {};
+  const next = { verdict: v0, understood: u0, [field]: value ?? undefined };
+  if (!next.verdict && !next.understood) delete stories[storyId];
+  else stories[storyId] = { ...(next.verdict ? { verdict: next.verdict } : {}), ...(next.understood ? { understood: next.understood } : {}), angle: s.angle, at: new Date().toISOString() };
   fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
   const tmp = `${file}.${process.pid}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify({ session: id, stories }, null, 2) + '\n', { mode: 0o600 });
@@ -180,7 +217,8 @@ export function createReviewServer(o) {
         let j;
         try { j = JSON.parse(body); } catch { return send(res, 400, { error: 'dữ liệu sai' }); }
         if (typeof j?.story !== 'string' || !/^[\w-]+$/.test(j.story)) return send(res, 400, { error: 'id chuyện sai' });
-        return send(res, 200, { angleChecks: saveAngleCheck(o.data, ma[1], j.story, j.verdict ?? null) });
+        const field = Object.hasOwn(j, 'understood') ? 'understood' : 'verdict';
+        return send(res, 200, saveAngleCheck(o.data, ma[1], j.story, field, j[field] ?? null));
       }
       if (m && req.method === 'PUT') {
         let body = '';

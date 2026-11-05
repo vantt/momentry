@@ -12,7 +12,8 @@ const VARS = {
   stakes: { n: 1, stories: 'M1. a\n   b' },
   outsider: { transcript: '[L1] USER: x', clusters: 'K1. a' },
   bip: { bin: '"/usr/bin/node" "/x/bin/momentry.mjs"' },
-  angle: { story: 'hook: a\n\n# b', excerpt: '[L1] USER: x' },
+  angle: { profile: 'Một công cụ ghi chú.', asks: '[L1] USER: tìm cho đúng', story: 'hook: a\n\n# b', excerpt: '[L1] USER: x' },
+  profile: { sources: '### README.md\nmột công cụ' },
 };
 
 test('every prompt file renders, no placeholder left, no leading comment', () => {
