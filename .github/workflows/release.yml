@@ -79,9 +79,9 @@ jobs:
       matrix:
         include:
           - { os: ubuntu-24.04, label: linux }
-          # Windows and macOS are off until we have runners for them:
+          - { os: windows-2025, label: windows }
+          # macOS is off for now:
           # - { os: macos-15, label: macos }
-          # - { os: windows-2025, label: windows }
     steps:
       - name: isolate HOME on a self-hosted runner (Unix)
         if: runner.environment == 'self-hosted' && runner.os != 'Windows'

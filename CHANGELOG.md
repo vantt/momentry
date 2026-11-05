@@ -4,6 +4,29 @@
 
 ## [Unreleased]
 
+### Changed (cần làm khi nâng cấp)
+
+- Bỏ `/bip`. Lệnh mới ở mọi host: `/momentry-bip` (ghi khoảnh khắc) và `/momentry-ui` (mở giao diện); trên Codex gõ `$momentry-bip`, `$momentry-ui`. `momentry update` tự xoá file `/bip` cũ, trừ file bạn đã sửa.
+- Skill của Codex nằm ở `~/.agents/skills` (dùng chung mọi profile Codex; pi cũng đọc ở đây). `update` chuyển bản cũ khỏi `~/.codex*/skills`.
+- `.momentry.json` của repo không còn đặt được `budget.dailyUsd`: repo clone về không nâng được mức chi tiêu của bạn. Đặt trong cấu hình người dùng, hoặc `momentry config set budget.dailyUsd N --project`.
+
+### Added
+
+- **Giao diện web trên máy**: `momentry ui` mở tường chuyện, trang đọc và sửa chuyện, chuỗi chuyện, quyền riêng tư (tên chặn, chuyện bị giữ), chi phí, sức khoẻ, cài đặt và trình hướng dẫn lần đầu. Chạy ở 127.0.0.1 với mã truy cập mỗi lần mở, không gọi ra ngoài.
+- Use / Later / Drop trên từng chuyện; tường tự đẩy lên vài bậc loại chuyện bạn hay dùng (nhãn "Your kind"), chỉ học trên máy.
+- Ngân sách ngày cho lần đọc tự động (`budget.dailyUsd`, mặc định 3 USD) và ngân sách riêng từng dự án; phiên vượt ngân sách chờ sang ngày sau.
+- Chế độ kín theo dự án: chuyện của dự án đó không bao giờ dùng cho bài nháp hay nhãn chia sẻ sau này.
+- Danh sách dự án trên máy (`projects.json`): UI, `init` và hook dùng chung; máy cài cũ tự lấy dự án từ sổ phiên. Thư mục chuyện có thể đặt ngoài repo.
+- Tạm ngừng gom chuyện theo dự án: `momentry pause` / `momentry resume`, hoặc công tắc trong Settings.
+- `momentry config ... --project`: mọi thiết lập theo dự án (`box`, `budget.dailyUsd`, `private`, `paused`) qua một lệnh, cùng hàm ghi với UI.
+- Skill `momentry` cho cả 5 host: hỏi agent "tuần này có chuyện gì hay?" hay "viết chuyện X thành thread", agent gọi `momentry list/show/mark --json`; bài nháp do agent của bạn viết. Lệnh mới `momentry show <id>` và `momentry mark <id> use|later|drop`.
+- Dòng nhắc khi mở phiên agent: số chuyện mới, phiên chờ ngân sách, lỗi cần sửa, kèm đúng tên lệnh của host; im lặng khi không có gì.
+- Số đo trên máy (màn Cost và `status --json`): thời gian từ cài tới chuyện đầu, tỉ lệ chuyện top 5 được Use. Không gửi đi đâu.
+
+### Fixed
+
+- Windows: hook đọc được dữ liệu bắt đầu bằng BOM (PowerShell 5.1 thêm vào khi pipe), trước đây dòng nhắc lúc mở phiên im lặng.
+
 ## [0.2.0] - 2026-11-03
 
 ### Added
