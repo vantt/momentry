@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // One packaging script for local dry runs, CI and releases:
-//   dist/momentry-vX.Y.Z.tar.gz   bin/ lib/ prompts/ LICENSE README.md BUILD under momentry-vX.Y.Z/
+//   dist/momentry-vX.Y.Z.tar.gz   bin/ lib/ prompts/ ui/ LICENSE README.md BUILD under momentry-vX.Y.Z/
 //   dist/install.sh, dist/install.ps1  stamped with the version
 //   dist/checksums.txt            sha256 of every asset, sorted
 // Usage: node scripts/package-release.mjs [--out DIR] [--dry-run]
@@ -14,7 +14,7 @@ import { pack } from '../lib/tar.mjs';
 import { VERSION } from '../lib/version.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DIRS = ['bin', 'lib', 'prompts'];
+export const DIRS = ['bin', 'lib', 'prompts', 'ui'];
 export const FILES = ['LICENSE', 'README.md'];
 const VERSION_RE = /export const VERSION = '[^']*';/;
 
