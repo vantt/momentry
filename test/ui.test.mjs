@@ -35,6 +35,9 @@ test('every config key has a schema entry and values are checked', () => {
   assert.equal(validate('harvest.runs', 0), 'Reads per session must be at least 1');
   assert.equal(validate('harvest.runs', 2), null);
   assert.match(validate('outsider.enabled', 'yes'), /on or off/);
+  assert.match(validate('llm.promptCache', 'forever'), /one of off, 5m, 1h, auto/);
+  assert.equal(validate('llm.promptCache', '5m'), null);
+
   assert.equal(validate('box', null), null);
 });
 

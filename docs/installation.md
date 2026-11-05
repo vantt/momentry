@@ -186,7 +186,8 @@ momentry config unset box --project --dry-run
 | `budget.dailyUsd` | 3 | Ngân sách mỗi ngày (USD) cho phiên gom tự động, chung mọi dự án; 0 là không giới hạn. Chỉ nhận từ cấu hình người dùng |
 | `harvest.runs` / `.model` / `.fillRetries` / `.maxInputTokens` / `.timeoutSec` | 1 / `haiku` / 1 / 150000 / 600 | |
 | `rank.model` | `sonnet` | |
-| `outsider.enabled` / `.model` | true / `sonnet` | |
+| `outsider.enabled` / `.model` | true / `haiku` | `sonnet` đọc kỹ hơn nhưng tốn gấp ~8 lần ở bước này, không thấy hơn trên bộ đo ([số đo](experiments/2026-11-05-cost-cuts/README.md)) |
+| `llm.promptCache` | `off` | `off`: mỗi prompt tính một lần như input thường (prompt không bao giờ được đọc lại); `5m` / `1h`: trả thêm để cache; `auto`: để Claude Code tự chọn (1 giờ với gói thuê bao) |
 | `scan.quietMinutes` | 30 | Bỏ qua phiên vừa ghi trong N phút |
 | `scan.maxSessions` | 3 | Số phiên tối đa mỗi lần quét tự động |
 | `scan.maxFailures` | 3 | Hỏng liền chừng ấy lần, file chưa đổi thì ngừng thử |

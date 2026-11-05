@@ -19,8 +19,8 @@ import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS }
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const DEFAULT_OUT = path.join(ROOT, 'docs', '_private', 'eval');
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
-/** Real spend / dry-run estimate seen on the first real run (docs/experiments/2026-11-04-dm-real-run); used by --budget. */
-const ESTIMATE_FACTOR = 2;
+/** Margin over the dry-run estimate for --budget (estimate is within about 0.65–1.16 of real spend; docs/experiments/2026-11-05-cost-cuts). */
+const ESTIMATE_FACTOR = 1.3;
 
 /**
  * @typedef {object} Session
