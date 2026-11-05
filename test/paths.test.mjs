@@ -10,7 +10,7 @@ import { VERSION, fingerprint, compareVersions } from '../lib/version.mjs';
 test('linux: XDG when absolute, defaults otherwise, MOMENTRY_* overrides win', () => {
   const p = paths({ HOME: '/h' }, { platform: 'linux' });
   assert.deepEqual(p, {
-    config: '/h/.config/momentry', configFile: '/h/.config/momentry/config.json', cache: '/h/.cache/momentry',
+    config: '/h/.config/momentry', configFile: '/h/.config/momentry/config.json', projects: '/h/.config/momentry/projects.json', cache: '/h/.cache/momentry',
     home: '/h/.local/share/momentry', bin: '/h/.local/bin', claude: '/h/.claude', codex: '/h/.codex',
   });
   const x = paths({ HOME: '/h', XDG_CONFIG_HOME: '/x/c', XDG_CACHE_HOME: 'rel', XDG_DATA_HOME: '/x/d' }, { platform: 'linux' });
