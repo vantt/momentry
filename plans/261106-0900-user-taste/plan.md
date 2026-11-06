@@ -59,5 +59,5 @@ Gửi nhãn về máy chủ (E19). Đo thời gian đọc hay theo dõi hành vi
 
 ## Câu hỏi còn mở
 
-1. Gu tính chung cho mọi dự án hay riêng từng dự án? Đề xuất: chung, mỗi dự án lệch thêm khi đủ phán quyết riêng.
+1. ~~Gu tính chung cho mọi dự án hay riêng từng dự án?~~ **Anh quyết 2026-11-06: học xuyên mọi dự án của người dùng** (càng dùng càng ra chuyện hay, ở mọi repo). Gu chung là gốc; mỗi dự án chỉ lệch thêm khi đủ phán quyết riêng. `taste.json` đã ở cache chung của máy, mỗi sự kiện có `project`, nên T.4 học trên toàn bộ sự kiện (trừ dự án riêng tư nếu sau này chia sẻ số).
 2. Có chừa chỗ khám phá trong top 5 không? Đề xuất: có, một chỗ.

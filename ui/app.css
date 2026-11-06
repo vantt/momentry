@@ -341,6 +341,14 @@ p { margin: 0; }
 .sheet-aud { margin-bottom: var(--s-5); }
 .angle-ask { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: var(--s-3) 0 var(--s-4); }
 .angle-ask p { flex-basis: 100%; margin: 0; }
+.outline { margin: var(--s-3) 0 var(--s-4); border: 1px solid var(--rule); border-radius: var(--r-card); padding: var(--s-2) var(--s-3); }
+.outline summary { cursor: pointer; font-weight: 600; }
+.outline summary .hint { display: inline; font-weight: 400; margin-left: var(--s-2); }
+.outline dl { display: grid; grid-template-columns: minmax(7rem, max-content) 1fr; gap: var(--s-2) var(--s-3); margin: var(--s-3) 0 var(--s-1); }
+.outline dt { color: var(--muted); font-size: var(--text-sm); }
+.outline dd { margin: 0; overflow-wrap: anywhere; }
+.outline .ln { color: var(--muted); font-family: var(--font-mono); font-size: var(--text-xs); }
+@media (max-width: 540px) { .outline dl { grid-template-columns: 1fr; } .outline dd { margin-bottom: var(--s-2); } }
 .title-row.is-sub .sheet-title { font-size: var(--text-lg); font-weight: 700; color: var(--ink-2); letter-spacing: 0; margin: 0 0 var(--s-8); }
 .side { display: flex; flex-direction: column; gap: var(--s-4); position: sticky; top: 88px; }
 @media (max-width: 1000px) { .side { position: static; } }

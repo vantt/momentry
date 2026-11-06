@@ -315,6 +315,24 @@ test('UI: cards and the story page carry the angle and audience; none or absent 
   const page = getStory(ctx, cards['2026-01-10-co-goc'].key, { markSeen: false });
   assert.equal(page.angle, 'Tưởng A, hoá ra B.');
   assert.equal(page.sections.what, 'x', 'the angle line is not a section');
+  assert.deepEqual(page.outline, [], 'no spine, no outline');
+});
+
+test('UI: the story page carries the outline the angle was built on, filled slots only, in reading order', () => {
+  const base = tmp('angle-outline-');
+  const repo = path.join(base, 'repo');
+  fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
+  fs.writeFileSync(path.join(repo, '.momentry.json'), '{}');
+  const box = path.join(repo, 'docs', 'storytelling-material');
+  writeNew(box, { id: '2026-01-10-a', data: { date: '2026-01-10', status: 'raw' }, body: '\n# T\n\n**Chuyện gì xảy ra:** x\n' });
+  const spine = { turn: { text: 'Tưởng chậm vì máy,\nhoá ra một bước thừa.', evidence: [3] }, context: { text: 'Một quán cà phê.', evidence: [1] } };
+  mergeInto(box, '2026-01-10-a', anglePatch({ spine, angle: 'Góc.', audience: 'dev', evidence: [3] }, { sid: 'abc' }));
+  const env = { HOME: path.join(base, 'home'), MOMENTRY_CACHE: path.join(base, 'cache'), MOMENTRY_CONFIG: path.join(base, 'none.json'), XDG_CONFIG_HOME: path.join(base, 'xdg'), MOMENTRY_REPOS: repo };
+  const ctx = { env, cwd: repo };
+  const page = getStory(ctx, listStories(ctx)[0].key, { markSeen: false });
+  assert.deepEqual(page.outline.map((o) => [o.slot, o.word]), [['context', 'Setting'], ['turn', 'Thought… turned out']]);
+  assert.equal(page.outline[1].text, 'Tưởng chậm vì máy, hoá ra một bước thừa.');
+  assert.deepEqual(page.outline[1].lines, ['L3']);
 });
 
 test('harness: capture summary has angle and audience; angle line left out of label matching; angle-check counts', () => {
