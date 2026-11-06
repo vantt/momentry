@@ -195,6 +195,38 @@ test('find runs the CLI scan in the background and reports in plain words', asyn
   assert.match(j.message, /Claude did not answer/);
 });
 
+test('write angle runs the CLI for one story, retries a none, and answers in plain words', async () => {
+  const { ctx, story } = setup();
+  story('2026-11-02-a', {}, BODY);
+  story('2026-11-02-b', { angle: 'none' }, BODY);
+  story('2026-11-02-c', { angle: 'Tưởng chậm vì máy, hoá ra vì một bước thừa.' }, BODY);
+  const pid = A.listProjects(ctx)[0].id;
+  let args = null;
+  const child = (stdout, code) => (cmd, a) => {
+    args = a;
+    const on = {};
+    setImmediate(() => { on.data?.(stdout); on.close(code); });
+    return { stdout: { on: (ev, fn) => { on[ev] = fn; } }, on: (ev, fn) => { on[ev] = fn; } };
+  };
+  const report = (status) => JSON.stringify({ data: { stories: [{ id: 'x', status }] } });
+  ctx.spawn = child(report('angle'), 0);
+  const a = await A.writeAngle(ctx, `${pid}/2026-11-02-a`);
+  assert.deepEqual(args.slice(1, 4), ['angle', '--story', '2026-11-02-a']);
+  assert.ok(!args.includes('--force'));
+  assert.equal(a.wrote, true);
+  assert.equal(a.message, 'Wrote the angle.');
+  assert.equal(a.key, `${pid}/2026-11-02-a`);
+  assert.equal(a.angleNone, false);
+  ctx.spawn = child(report('none'), 0);
+  const b = await A.writeAngle(ctx, `${pid}/2026-11-02-b`);
+  assert.ok(args.includes('--force'), 'a story read before with no angle is read again');
+  assert.equal(b.angleNone, true);
+  assert.match(b.message, /found no angle/);
+  ctx.spawn = child('', 4);
+  assert.match((await A.writeAngle(ctx, `${pid}/2026-11-02-a`)).message, /Claude did not answer/);
+  await assert.rejects(() => A.writeAngle(ctx, `${pid}/2026-11-02-c`), /already has an angle/);
+});
+
 function request(port, { method = 'GET', path: p, headers = {}, body } = {}) {
   return new Promise((resolve, reject) => {
     const req = http.request({ host: '127.0.0.1', port, method, path: p, headers: { host: `127.0.0.1:${port}`, ...headers } }, (res) => {
