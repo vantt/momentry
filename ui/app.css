@@ -339,6 +339,8 @@ p { margin: 0; }
 .title-row .sheet-title { flex: 1; }
 .sheet-angle { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem); line-height: 1.2; letter-spacing: -0.01em; margin: var(--s-3) 0 var(--s-2); overflow-wrap: anywhere; }
 .sheet-aud { margin-bottom: var(--s-5); }
+.angle-ask { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: var(--s-3) 0 var(--s-4); }
+.angle-ask p { flex-basis: 100%; margin: 0; }
 .title-row.is-sub .sheet-title { font-size: var(--text-lg); font-weight: 700; color: var(--ink-2); letter-spacing: 0; margin: 0 0 var(--s-8); }
 .side { display: flex; flex-direction: column; gap: var(--s-4); position: sticky; top: 88px; }
 @media (max-width: 1000px) { .side { position: static; } }

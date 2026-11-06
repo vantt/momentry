@@ -185,12 +185,18 @@ function spineHtml(s) {
 function oneAngle(text, audience, cls = '') {
   return `<div class="angle ${cls}">${esc(text)}${audience ? `<span class="aud">cho: ${esc(audience)}</span>` : ''}</div>`;
 }
+// a story with no angle yet (only the top of each session gets one at capture), or looked at with none: write it now
+function writeBtn(s) {
+  if (s.held || (s.angle && s.angle !== 'none')) return '';
+  const busy = writing.has(s.id);
+  return `<div class="verdict"><button type="button" data-write="${esc(s.id)}" ${busy ? 'disabled' : ''} title="Chạy momentry angle --story cho riêng chuyện này, model thật">${busy ? 'Đang viết… (khoảng 20 giây)' : s.angle ? 'Viết lại góc kể' : 'Viết góc kể'}</button><span class="q">~0,003–0,004 USD</span></div>`;
+}
 function angleHtml(s) {
-  if (!s.angle) return '';
+  if (!s.angle) return writeBtn(s);
   const old = s.prevAngle ? (s.prevAngle === 'none' ? '<div class="angle none old">không có góc kể</div>' : oneAngle(s.prevAngle, s.prevAudience, 'old')) : '';
   const now = s.angle === 'none' ? '<div class="angle none">không có góc kể</div>' : oneAngle(s.angle, s.audience);
   const shown = old ? `<div class="versus"><div><span class="tag">góc kể cũ</span>${old}</div><div><span class="tag">góc kể mới</span>${now}</div></div>` : now;
-  if (s.angle === 'none') return shown + spineHtml(s);
+  if (s.angle === 'none') return shown + spineHtml(s) + writeBtn(s);
   const v = cur.angleChecks[s.id];
   const u = (cur.understood || {})[s.id];
   return `${shown}${spineHtml(s)}
@@ -204,6 +210,17 @@ async function saveCheck(story, body, what) {
     cur.angleChecks = r.angleChecks; cur.understood = r.understood; render(); msg(what);
   } catch (err) { msg('Không lưu được: ' + err.message, true); }
 }
+const writing = new Set();
+async function writeAngle(story) {
+  writing.add(story); render(); msg('Đang viết góc kể…');
+  try {
+    const r = await api('/api/sessions/' + cur.id + '/angle-run', { method: 'POST', body: JSON.stringify({ story }) });
+    const s = cur.stories.find((x) => x.id === story);
+    if (s) Object.assign(s, { angle: r.angle, audience: r.audience, spine: r.spine, completeness: r.completeness, prevAngle: null, prevAudience: null });
+    msg(`${r.angle === 'none' ? 'Model xem rồi: không có góc kể.' : 'Đã viết góc kể.'}${r.usd != null ? ` Tốn ${r.usd.toFixed(4)} USD.` : ''}`);
+  } catch (err) { msg('Không viết được góc kể: ' + err.message, true); }
+  writing.delete(story); render();
+}
 const setVerdict = (story, verdict) => saveCheck(story, { verdict }, 'Đã lưu kiểm góc kể.');
 const setUnderstood = (story, understood) => saveCheck(story, { understood }, 'Đã lưu câu trả lời.');
 
@@ -216,6 +233,8 @@ document.addEventListener('input', (e) => {
   setDirty(true);
 });
 document.addEventListener('click', (e) => {
+  const w = e.target.closest('[data-write]');
+  if (w) return writeAngle(w.dataset.write);
   const v = e.target.closest('[data-angle]');
   if (v) return setVerdict(v.dataset.angle, v.getAttribute('aria-pressed') === 'true' ? null : v.dataset.v);
   const q = e.target.closest('[data-understood]');

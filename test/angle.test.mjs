@@ -13,7 +13,7 @@ import { writeNew, mergeInto, readStory, checkShape, ANGLE_LABEL } from '../lib/
 import { checkPatch, checkStory } from '../lib/privacy.mjs';
 import { parse } from '../lib/frontmatter.mjs';
 import { mergePatch } from '../lib/story.mjs';
-import { listStories, getStory } from '../lib/ui-api.mjs';
+import { listStories, getStory, writeAngle } from '../lib/ui-api.mjs';
 import { summary } from '../scripts/eval/run.mjs';
 import { angleCheckCounts, storyText } from '../scripts/eval/labels.mjs';
 
@@ -172,7 +172,7 @@ function setup() {
   };
   const box = path.join(repo, 'docs', 'storytelling-material');
   return {
-    base, repo, tr, box,
+    base, repo, tr, box, env,
     /** fake-llm dir: a copy of a fixture set plus the given angle outputs */
     fake(set, angles = {}) {
       const d = fs.mkdtempSync(path.join(base, 'fake-'));
@@ -275,6 +275,21 @@ test('angle command: flags, dry run, unknown story, a failed call exits 4', () =
   assert.equal(s.stories().find((x) => x.f === `${ids[0]}.md`).data.angle, A('mới').angle);
   const show = s.run(['show', ids[0]]);
   assert.match(show.out, /Góc kể: Góc mới: .+ \(cho: người tối ưu quy trình\)/);
+});
+
+test('UI: Write the angle runs the real command for one story; a none is read again', async () => {
+  const s = setup();
+  assert.equal(s.run(['harvest', '--transcript', s.tr, '--fake-llm', s.fake('llm-ok')]).code, 0);
+  const id = s.stories()[0].f.slice(0, -3);
+  const ctx = (fake) => ({ env: { ...s.env, MOMENTRY_REPOS: s.repo, MOMENTRY_FAKE_LLM: fake }, cwd: s.repo });
+  const key = listStories(ctx()).find((c) => c.id === id).key;
+  const none = await writeAngle(ctx(s.fake('llm-ok', { 'angle-1': { spine: {}, none: true, reason: 'việc vặt' } })), key);
+  assert.equal(none.wrote, false);
+  assert.equal(none.angleNone, true);
+  const r = await writeAngle(ctx(s.fake('llm-ok', { 'angle-1': A(1) })), key);
+  assert.equal(r.message, 'Wrote the angle.');
+  assert.equal(r.angle, A(1).angle);
+  assert.equal(s.stories().find((x) => x.f === `${id}.md`).data.angle, A(1).angle);
 });
 
 // ---------- UI and the harness ----------

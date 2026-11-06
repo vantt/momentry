@@ -323,7 +323,9 @@
       <div>
         <article class="sheet${used ? ' is-picked' : ''}">
           <div class="card-meta">${meta}</div>
-          ${s.angle ? `<p class="sheet-angle">${esc(s.angle)}</p>${s.audience ? `<p class="sheet-aud">For ${esc(s.audience)}</p>` : ''}` : ''}
+          ${s.angle ? `<p class="sheet-angle">${esc(s.angle)}</p>${s.audience ? `<p class="sheet-aud">For ${esc(s.audience)}</p>` : ''}`
+    : `<div class="angle-ask"><p class="hint">${s.angleNone ? 'Claude read this story and found no angle worth telling.' : 'No angle yet: momentry writes one for the top stories of each session only.'}</p>
+            <button class="btn btn-quiet btn-sm" type="button" data-action="write-angle">${s.angleNone ? 'Try again' : 'Write the angle'}</button><span class="hint">about $0.004, 25 seconds</span></div>`}
           <div class="title-row${s.angle ? ' is-sub' : ''}" data-section="title">
             <h1 class="sheet-title">${esc(s.title)}</h1>
             <button class="btn btn-ghost btn-sm edit-btn" type="button" data-action="edit" data-field="title" aria-label="Edit title">${ICON.edit}</button>
@@ -868,6 +870,16 @@
           toast('Copied. Paste it wherever you write.');
           break;
         case 'show-source': await showSource(el); break;
+        case 'write-angle': {
+          busy(el, true, 'Writing…');
+          const [pid, id] = current.key.split('/');
+          const r = await api('POST', `/api/stories/${enc(pid)}/${enc(id)}/angle`);
+          current = { ...current, ...r };
+          drawStory();
+          toast(r.message, { error: !r.wrote });
+          storiesCache = null;
+          break;
+        }
         case 'remove-name': {
           const v = await api('DELETE', '/api/privacy/names', { name: el.dataset.name });
           if (parseHash().path === '/setup') render(); else drawPrivacy(v);
