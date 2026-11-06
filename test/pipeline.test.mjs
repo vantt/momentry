@@ -81,6 +81,8 @@ test('llm-ok: writes the right stories, ledger; second run writes nothing', () =
   const ranked = JSON.parse(s.run(['list', '--rank', '--json']).out).data;
   assert.equal(ranked.length, 3);
   assert.notEqual(ranked[0].tension, 'none');
+  assert.equal(ranked.at(-1).why.tier.id.startsWith('outsider_only'), true, 'list --rank --json says why: the outsider-only story is last');
+  assert.ok(ranked.every((r) => r.why.adjust.length === 2));
 
   const before = snapshot(s.box);
   const again = s.harvest('llm-ok');

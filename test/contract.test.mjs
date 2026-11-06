@@ -25,7 +25,7 @@ const CONTRACT = {
   'outsider.mjs': { outsider: 4, applyOutsider: 2 },
   'story.mjs': { buildStory: 5, mergePatch: 5, renderBody: 1 },
   'ledger.mjs': { load: 1, save: 2, lock: 2, touch: 1, unlock: 1, needsHarvest: 3, record: 4, forget: 2 },
-  'rank.mjs': { rankKey: 1, sortRanked: 1 },
+  'rank.mjs': { sortRanked: 1, explain: 1, compileTable: 1, loadRankTable: 0, rankTable: 1, withOverrides: 1, checkOverrides: 1 },
   'pipeline.mjs': { runSession: 2, rescore: 2, scan: 1, addStory: 1, reduceCommand: 1 },
   'hook.mjs': { handleHook: 3, printHookConfig: 1 },
 };

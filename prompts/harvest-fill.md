@@ -8,12 +8,7 @@ Dưới đây là transcript đã rút gọn của một phiên làm việc gi�
 Một lượt trước đã nhặt chuyện từ phiên này nhưng chưa trả lời các điểm nóng liệt kê ở cuối. Nhiệm vụ của lượt này chỉ là xem kỹ quanh từng điểm nóng đó: điểm nào thành chuyện hoặc góp vào chuyện thì ghi chuyện ấy, kể cả khi lượt trước có thể đã ghi (trùng sẽ được gộp ở bước sau).
 
 Tín hiệu gợi ý (để nhận ra, không phải ngưỡng):
-1. Số trước, số sau: một phép đo đổi rõ (điểm tìm kiếm, thời gian, số note).
-2. Nguyên nhân bất ngờ: lỗi to mà gốc nhỏ, hoặc gốc nằm ở chỗ không ai nghi.
-3. Đảo quyết định có lý do: làm A, đo thấy tệ, bỏ A; điều tưởng đúng hoá sai.
-4. Người duyệt thứ máy soạn: bảng duyệt, hàng chờ, vòng lặp người với máy chạy được thật.
-5. Ràng buộc định hình thiết kế: riêng tư, chạy trên máy, chỉ JS hay Rust... buộc chọn cách khác thường.
-6. Artefact nhìn được: bảng, biểu đồ, màn hình đáng chụp.
+{signals}
 Không khớp tín hiệu nào mà thấy hay, thấy lạ: vẫn ghi, signals: ["khác"].
 Nguyên tắc: ghi thừa còn hơn bỏ sót.
 

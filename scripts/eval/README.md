@@ -101,7 +101,7 @@ Một nhãn có thể khớp nhiều chuyện (hạng của nhãn là hạng t�
 
 ## Chỉ số
 
-Danh sách xếp hạng là toàn bộ chuyện của hộp nháp sau lần chạy (cộng chuyện bị giữ), theo `sortRanked` của `lib/rank.mjs`, như `momentry list --rank`. N là số chuyện.
+Danh sách xếp hạng là toàn bộ chuyện của hộp nháp sau lần chạy (cộng chuyện bị giữ), theo bảng luật [`rules/rank.json`](../../rules/rank.json) (`sortRanked` của `lib/rank.mjs`), như `momentry list --rank`; cấu hình nháp không có `rank.weights`/`rank.disabled` của người dùng. N là số chuyện. `--rank-by completeness` vẫn là thứ tự riêng của bộ đo: đặt số ô xương chuyện lên trước cả tầng, điều mà trọng số và bật/tắt luật không diễn đạt được.
 
 | Chỉ số | Định nghĩa |
 |---|---|

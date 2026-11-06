@@ -132,14 +132,14 @@ verify() {  # exact filename match, exactly one entry
   say "đã kiểm sha256 $ASSET (chưa kiểm chữ ký)"
 }
 
-check_layout() {  # allow-list: everything under momentry-vX/{bin,lib,prompts,ui,BUILD,LICENSE,README.md}, no links
+check_layout() {  # allow-list: everything under momentry-vX/{bin,lib,prompts,rules,ui,BUILD,LICENSE,README.md}, no links
   top="momentry-$VERSION"
   if tar -tzvf "$TMP/$ASSET" | awk '{print substr($1,1,1)}' | grep -q '[lhcbp]'; then die "archive có link hoặc file đặc biệt" "archive không an toàn" "báo lỗi bản phát hành này"; fi
   tar -tzf "$TMP/$ASSET" > "$TMP/list"
   while IFS= read -r m; do
     case "$m" in
       /*|*..*) die "đường dẫn không an toàn trong archive: $m" ;;
-      "$top/"|"$top/bin"|"$top/bin/"*|"$top/lib"|"$top/lib/"*|"$top/prompts"|"$top/prompts/"*|"$top/ui"|"$top/ui/"*|"$top/BUILD"|"$top/LICENSE"|"$top/README.md") ;;
+      "$top/"|"$top/bin"|"$top/bin/"*|"$top/lib"|"$top/lib/"*|"$top/prompts"|"$top/prompts/"*|"$top/rules"|"$top/rules/"*|"$top/ui"|"$top/ui/"*|"$top/BUILD"|"$top/LICENSE"|"$top/README.md") ;;
       *) die "file lạ trong archive: $m" "bố cục khác quy ước" "báo lỗi bản phát hành này" ;;
     esac
   done < "$TMP/list"

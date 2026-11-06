@@ -11,7 +11,7 @@ import { runSession, SOURCE_NAMES } from '../../lib/pipeline.mjs';
 import { loadConfig, ensurePrivateDir } from '../../lib/config.mjs';
 import { paths } from '../../lib/paths.mjs';
 import { readBox } from '../../lib/box.mjs';
-import { sortRanked } from '../../lib/rank.mjs';
+import { sortRanked, rankTable } from '../../lib/rank.mjs';
 import { heldDir } from '../../lib/quarantine.mjs';
 import { loadLabels, angleCheckCounts, ANGLE_VERDICTS } from './labels.mjs';
 import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS, RANK_BY, byCompleteness } from './metrics.mjs';
@@ -98,7 +98,7 @@ export function rankedStories(cfg) {
     const h = readJson(path.join(dir, f));
     if (h?.storyId && !h.patch && h.story) held.push({ id: h.storyId, data: h.story.data || {}, body: h.story.body || '', held: true });
   }
-  return sortRanked([...box, ...held]);
+  return sortRanked([...box, ...held], rankTable(cfg));
 }
 
 const titleOf = (s) => /^#\s+(.+)$/m.exec(s.body || '')?.[1]?.trim() ?? s.id;

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "about": "Tension types and harvest signals, one list for the prompts (lib/prompts.mjs fills {tensions} and {signals}), the validators and the UI. Prompt text is rendered from description, so editing one changes what the model reads: measure with scripts/eval before and after.",
+  "tensions": [
+    { "id": "nho_ma_to", "label": "nhỏ mà to", "label_en": "Tiny cause, big effect", "description": "nguyên nhân bé tí, hậu quả lớn" },
+    { "id": "giup_ma_hai", "label": "giúp mà hại", "label_en": "The help that hurt", "description": "làm để tốt hơn, kết quả tệ hơn" },
+    { "id": "tuong_ma_hoa_ra", "label": "tưởng mà hoá ra", "label_en": "Everyone thought otherwise", "description": "ai cũng nghĩ X, thật ra là Y" },
+    { "id": "hop_ma_tan", "label": "hợp mà tan", "label_en": "Good parts, bad mix", "description": "gộp nhiều thứ tốt, ra kết quả tệ" },
+    { "id": "cam_ma_van_lot", "label": "cấm mà vẫn lọt", "label_en": "Blocked, yet it got through", "description": "đã chặn, vẫn lọt qua chỗ không ai canh" },
+    { "id": "it_ma_nhieu", "label": "ít mà nhiều", "label_en": "Spent little, got a lot", "description": "bỏ ra rất ít, thu về rất nhiều" },
+    { "id": "khac", "label": "khác", "label_en": "An unexpected turn", "description": "giằng xé dạng khác" },
+    { "id": "none", "label": "không có", "label_en": null, "description": "không có giằng xé thật, chỉ là sự kiện, mẹo, hay việc vặt" }
+  ],
+  "signals": [
+    { "id": "so_truoc_so_sau", "label": "Số trước, số sau", "description": "một phép đo đổi rõ (điểm tìm kiếm, thời gian, số note)." },
+    { "id": "nguyen_nhan_bat_ngo", "label": "Nguyên nhân bất ngờ", "description": "lỗi to mà gốc nhỏ, hoặc gốc nằm ở chỗ không ai nghi." },
+    { "id": "dao_quyet_dinh", "label": "Đảo quyết định có lý do", "description": "làm A, đo thấy tệ, bỏ A; điều tưởng đúng hoá sai." },
+    { "id": "nguoi_duyet_may_soan", "label": "Người duyệt thứ máy soạn", "description": "bảng duyệt, hàng chờ, vòng lặp người với máy chạy được thật." },
+    { "id": "rang_buoc_thiet_ke", "label": "Ràng buộc định hình thiết kế", "description": "riêng tư, chạy trên máy, chỉ JS hay Rust... buộc chọn cách khác thường." },
+    { "id": "artefact_nhin_duoc", "label": "Artefact nhìn được", "description": "bảng, biểu đồ, màn hình đáng chụp." }
+  ]
+}

@@ -120,6 +120,21 @@ Bộ đo chất lượng và chi phí ([scripts/eval/](../scripts/eval/README.md
 
 Mọi cài đặt đổi qua `momentry config` (CLI), kể cả cài đặt riêng từng dự án (`--project`). Không thêm cờ lẻ kiểu `init --box`; khoá mới đi vào `lib/config-schema.mjs` (chung) hoặc `PROJECT_KEYS` trong `lib/config-cmd.mjs` (riêng dự án). Giao diện web (`lib/ui-api.mjs`) gọi đúng các hàm ghi của `lib/config-cmd.mjs` (`write`, `setProjectBox`, `setProjectBudget`, `setPrivateProject`) và `Projects.setPaused`, không có bản ghi thứ hai, nên quy tắc như "khoá chỉ của máy không vào file repo" chỉ nằm một chỗ.
 
+## Luật xếp hạng và từ vựng chuyện
+
+Luật chọn nằm trong bảng ở `rules/`, tra lúc chạy, không viết cứng trong code; thư mục này ship cùng `bin/ lib/ prompts/ ui/`.
+
+- [`rules/rank.json`](../rules/rank.json): thứ tự của `list --rank`, tường chuyện và N chuyện đầu được viết góc kể. Khuôn và nghĩa: [PRD 5.9](prd.md#59-xếp-hạng-bước-12).
+- [`rules/story-vocab.json`](../rules/story-vocab.json): loại tension và tín hiệu harvest. `lib/prompts.mjs` điền `{tensions}` (`hook-tension.md`) và `{signals}` (`harvest.md`, `harvest-fill.md`); `validateHookTension` và tường chuyện (`TWISTS`) đọc cùng danh sách. Sửa `description` là sửa chữ model đọc.
+
+Thêm hay đổi một luật xếp hạng:
+
+1. Thêm hoặc sửa một dòng trong `tiers` hay `adjust`: `id` mới (a-z0-9_, không trùng), điều kiện chỉ dùng đặc trưng và phép so có sẵn (thiếu đặc trưng thì thêm vào `FEATURES` trong `lib/rank.mjs`, kèm test), `why` một câu, `evidence` là đường dẫn trong repo tới số đo (thường `docs/experiments/<ngày>-<tên>/README.md`).
+2. Chạy bộ đo trên bản chụp, 0 USD: `node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json --out docs/_private/eval/new-defaults`, so với lần chạy trước khi đổi. **Không được tụt** `t` nửa trên, p@5, hạng-t trung bình; ghi số trước/sau vào bản ghi thí nghiệm mà `evidence` trỏ tới.
+3. Đổi thứ tự mặc định là đổi hành vi: sửa `BUILTIN_TABLE` trong `lib/rank.mjs` cho khớp (test kiểm hai bảng giống nhau), sửa test thứ tự trong `test/rank.test.mjs` (khoá cũ ở đó chỉ là mốc của bảng hiện tại), ghi CHANGELOG.
+
+Người dùng chỉ đổi trọng số (`rank.weights.<id>`) và tắt luật (`rank.disabled`), trong cấu hình người dùng. Đổi tên hay bỏ một `id` thì cấu hình cũ trỏ tới nó bị bỏ qua kèm cảnh báo, không làm hỏng lệnh.
+
 ## Hợp đồng giữa các module
 
 Mỗi module trong `lib/` có JSDoc là hợp đồng. Lỗi mang mã thoát gắn `err.exitCode` (bảng mã ở `EXIT` trong `lib/config.mjs`). Lệnh trong `pipeline.mjs` trả `{exitCode, message?}`; `lib/cli.mjs` in `message` và thoát theo `exitCode`, hoặc gói vào phong bì `--json`.
