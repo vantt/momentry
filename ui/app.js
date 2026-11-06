@@ -326,6 +326,7 @@
           ${s.angle ? `<p class="sheet-angle">${esc(s.angle)}</p>${s.audience ? `<p class="sheet-aud">For ${esc(s.audience)}</p>` : ''}${angleCheckHtml(s)}`
     : `<div class="angle-ask"><p class="hint">${s.angleNone ? 'Claude read this story and found no angle worth telling.' : 'No angle yet: momentry writes one for the top stories of each session only.'}</p>
             <button class="btn btn-quiet btn-sm" type="button" data-action="write-angle">${s.angleNone ? 'Try again' : 'Write the angle'}</button><span class="hint">about $0.004, 25 seconds</span></div>`}
+          ${outlineHtml(s)}
           <div class="title-row${s.angle ? ' is-sub' : ''}" data-section="title">
             <h1 class="sheet-title">${esc(s.title)}</h1>
             <button class="btn btn-ghost btn-sm edit-btn" type="button" data-action="edit" data-field="title" aria-label="Edit title">${ICON.edit}</button>
@@ -377,8 +378,17 @@
     </div>`;
   }
 
+  /** The outline the angle was built on: one line per filled slot, folded until opened. */
+  function outlineHtml(s) {
+    if (!s.outline?.length) return '';
+    return `<details class="outline"><summary>Story outline <span class="hint">${s.outline.length} of 7 parts</span></summary>
+      <dl>${s.outline.map((o) => `<dt>${esc(o.word)}</dt><dd>${esc(o.text)}${o.lines.length ? ` <span class="ln">${esc(o.lines.join(', '))}</span>` : ''}</dd>`).join('')}</dl>
+    </details>`;
+  }
+
   function storyText(s) {
     const parts = [s.title, ''];
+    if (s.outline?.length) parts.push(...s.outline.map((o) => `${o.word}: ${o.text}`), '');
     for (const k of ['context', 'what', 'lesson', 'artefact', 'outsider']) if (s.sections[k]) parts.push(`${s.sectionLabels[k]}: ${s.sections[k]}`, '');
     return parts.join('\n').trim();
   }
