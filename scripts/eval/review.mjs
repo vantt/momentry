@@ -10,6 +10,7 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { makeLabel, slugAll, idSlug, matches, ANGLE_VERDICTS, UNDERSTOOD } from './labels.mjs';
 import { tailnetAddrs, hostAllowed, magicDnsName } from '../../lib/ui-server.mjs';
+import { assignCodes, normalizeCode } from '../../lib/story-code.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
@@ -101,6 +102,21 @@ function previousAngles(runs, run, cap) {
   return out;
 }
 
+/** Story code of each story in a capture (stored `code`, else computed as in the box). @returns {Map<string, string>} */
+const captureCodes = (cap) => assignCodes((cap?.ranked ?? []).map((s) => ({ id: s.id, data: { code: s.code } })));
+
+/**
+ * Story id in the newest capture of a session for an id or a story code (any case, `M-` optional); the input itself
+ * when nothing matches (the caller reports it).
+ */
+function captureStoryId(dataDir, id, ref) {
+  const code = normalizeCode(ref);
+  if (!code) return ref;
+  const run = newestRun(path.join(dataDir, id, 'runs'));
+  const codes = captureCodes(run && readJson(path.join(run, 'capture.json')));
+  return [...codes].find(([, c]) => c === code)?.[0] ?? ref;
+}
+
 /**
  * Stories momentry found in the newest capture of a session, and per-label rank from the newest scored replay.
  * `matched` is judged on the title only (the capture keeps no body), so it is a hint for spotting missing answers.
@@ -114,11 +130,12 @@ function context(dataDir, id, rows) {
   const res = readJson(newest(path.join(dataDir, 'results'), (f) => f.endsWith('.json') && !f.includes('capture')) ?? '');
   const row = res?.rows?.find((r) => r.id === id && r.rank);
   const ranks = Object.fromEntries((row?.rank?.perLabel ?? []).map((p) => [p.name, p.rank]));
+  const codes = captureCodes(cap);
   const stories = (cap?.ranked ?? []).map((s) => {
     const story = { id: s.id, data: { hook: s.title } };
     const p = prev.get(s.id);
     return {
-      id: s.id, slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null,
+      id: s.id, code: codes.get(s.id), slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null,
       spine: s.spine ?? null, completeness: s.completeness ?? null,
       prevAngle: p && p.angle !== s.angle ? p.angle : null, prevAudience: p && p.angle !== s.angle ? p.audience : null,
     };
@@ -218,7 +235,7 @@ export function createReviewServer(o) {
         try { j = JSON.parse(body); } catch { return send(res, 400, { error: 'dữ liệu sai' }); }
         if (typeof j?.story !== 'string' || !/^[\w-]+$/.test(j.story)) return send(res, 400, { error: 'id chuyện sai' });
         const field = Object.hasOwn(j, 'understood') ? 'understood' : 'verdict';
-        return send(res, 200, saveAngleCheck(o.data, ma[1], j.story, field, j[field] ?? null));
+        return send(res, 200, saveAngleCheck(o.data, ma[1], captureStoryId(o.data, ma[1], j.story), field, j[field] ?? null));
       }
       if (m && req.method === 'PUT') {
         let body = '';

@@ -134,7 +134,7 @@ Tiếp theo: momentry list --rank
 
 ### `momentry list`
 
-Bảng chuyện trong hộp: id, date, status, hook, tension, stakes, strength, hits.
+Bảng chuyện trong hộp: code (mã M-XXXX), id, date, status, hook, tension, stakes, strength, hits.
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -173,9 +173,9 @@ momentry ui --no-open --json       # cho agent: in file mở giao diện để �
 
 Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc cờ.
 
-### `momentry show <id>`
+### `momentry show <id|mã>`
 
-In đầy đủ một chuyện trong hộp: tiêu đề, trạng thái, các phần (bối cảnh, chuyện gì xảy ra, bài học…). Chỉ đọc.
+In đầy đủ một chuyện trong hộp: mã, tiêu đề, trạng thái, các phần (bối cảnh, chuyện gì xảy ra, bài học…). Nhận id hoặc mã chuyện (M-XXXX, hoa thường đều được, M- có thể bỏ). Chỉ đọc.
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -183,14 +183,15 @@ In đầy đủ một chuyện trong hộp: tiêu đề, trạng thái, các ph�
 
 ```sh
 momentry show 2026-11-04-cache-lru
-momentry show 2026-11-04-cache-lru --json   # cho agent (skill momentry)
+momentry show M-7K3Q
+momentry show 7k3q --json                  # cho agent (skill momentry)
 ```
 
 Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện sai khuôn; 2 sai cú pháp hoặc id sai khuôn.
 
-### `momentry mark <id> <use|later|drop>`
+### `momentry mark <id|mã> <use|later|drop>`
 
-Đánh dấu một chuyện: use (sẽ dùng, status picked), later (để sau, chỉ ghi trên máy này), drop (bỏ, status dropped).
+Đánh dấu một chuyện (theo id hoặc mã M-XXXX): use (sẽ dùng, status picked), later (để sau, chỉ ghi trên máy này), drop (bỏ, status dropped).
 
 **Thay đổi:** use/drop: dòng status trong <box>/<id>.md; later: <cache>/ui-state.json; quyết định kèm hạng của chuyện lúc đó: <cache>/metrics.json (chỉ nằm trên máy).
 
@@ -200,10 +201,10 @@ Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện
 
 ```sh
 momentry mark 2026-11-04-cache-lru use
-momentry mark 2026-11-04-cache-lru drop --json
+momentry mark M-7K3Q drop --json
 ```
 
-Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện sai khuôn; 2 sai cú pháp, id hoặc nhãn sai.
+Mã thoát: 0 xong; 1 không có chuyện này trong hộp, mã trùng, hoặc file chuyện sai khuôn; 2 sai cú pháp, id hoặc nhãn sai.
 
 ### `momentry add`
 
@@ -227,17 +228,21 @@ Mã thoát: 0 đã ghi; 1 vi phạm riêng tư (chuyện vào quarantine); 2 sai
 
 ### `momentry check`
 
-Kiểm khuôn frontmatter, id khớp tên file, link không gãy, và riêng tư. Dùng được làm git pre-commit hook.
+Kiểm khuôn frontmatter, id khớp tên file, link không gãy, mã chuyện không trùng, và riêng tư. Dùng được làm git pre-commit hook.
+
+**Thay đổi:** không gì; với --fix: thêm code và aliases (mã chuyện M-XXXX) vào chuyện chưa có, đúng mã chúng đang mang.
 
 | Cờ | Ý nghĩa |
 |---|---|
 | `--box DIR` | thư mục hộp |
 | `--staged` | chỉ file đã git add |
+| `--fix` | ghi mã chuyện vào file chưa có (code, aliases) rồi kiểm |
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
 
 ```sh
 momentry check
 momentry check --staged            # trong .git/hooks/pre-commit
+momentry check --fix               # ghi mã M-XXXX vào chuyện cũ
 ```
 
 Mã thoát: 0 sạch; 1 có lỗi khuôn hoặc vi phạm riêng tư; 2 sai cú pháp; 3 khuôn sạch nhưng chưa kiểm được riêng tư (không có nguồn chặn).
@@ -338,14 +343,14 @@ Viết xương chuyện và góc kể cho chuyện đã có trong hộp mà chư
 | Cờ | Ý nghĩa |
 |---|---|
 | `--top N` | xét N chuyện đầu bảng xếp hạng của cả hộp (mặc định: angle.topN) |
-| `--story ID` | chỉ chuyện này |
+| `--story ID` | chỉ chuyện này (id hoặc mã M-XXXX) |
 | `--force` | viết lại cả góc kể đã có (kể cả angle: none) |
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
 
 ```sh
 momentry angle --dry-run             # xem chuyện nào sẽ được viết góc kể, ước tính chi phí
 momentry angle --top 5
-momentry angle --story 2026-11-04-cache-lru --force --json
+momentry angle --story M-7K3Q --force --json
 ```
 
 Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc lỗi; 2 sai cú pháp; 3 có góc kể giữ ngoài repo vì chưa có nguồn chặn; 4 model lỗi ở ít nhất một chuyện (chuyện đó chưa có góc kể); 5 phiên của ít nhất một chuyện đang được gom, chuyện đó bỏ qua (chạy lại sau).

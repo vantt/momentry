@@ -185,7 +185,7 @@
 
   function cardHtml(s, { top = false, showRank = true } = {}) {
     const cls = ['card', s.status === 'picked' || s.status === 'drafted' || s.status === 'published' ? 'is-picked' : '', s.status === 'dropped' ? 'is-dropped' : '', top ? 'is-top' : ''].filter(Boolean).join(' ');
-    const meta = [showRank ? `#${s.rank}` : null, s.projectName, s.twist].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('<span class="sep">·</span>');
+    const meta = [showRank ? `#${s.rank}` : null, s.code, s.projectName, s.twist].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('<span class="sep">·</span>');
     const tags = [
       s.status !== 'raw' ? `<span class="tag ${s.status === 'dropped' ? '' : 'tag-pick'}">${esc(s.statusWord)}</span>` : '',
       s.later && s.status === 'raw' ? '<span class="tag tag-mint">Later</span>' : '',
@@ -317,7 +317,7 @@
   function drawStory() {
     const s = current;
     const used = ['picked', 'drafted', 'published'].includes(s.status);
-    const meta = [`#${s.rank ?? ''}`.replace(/^#$/, ''), s.projectName, s.twist, fmtDate(s.date)].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('<span class="sep">·</span>');
+    const meta = [`#${s.rank ?? ''}`.replace(/^#$/, ''), s.code, s.projectName, s.twist, fmtDate(s.date)].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('<span class="sep">·</span>');
     main.innerHTML = `<a class="back" href="#/">${ICON.back}All stories</a>
     <div class="reader">
       <div>
