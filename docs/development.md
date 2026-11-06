@@ -118,9 +118,9 @@ Bộ đo chất lượng và chi phí ([scripts/eval/](../scripts/eval/README.md
 
 ## Thêm từ vựng điểm nóng
 
-Từ vựng của bộ dò điểm nóng (câu chọn, phản đối, ngắt của chủ phiên bằng tiếng Việt và tiếng Anh; từ nối và từ chỉ khoảng của `metricPair`; lệnh git đảo lịch sử; đường dẫn bài học và cấu hình agent; thông báo bị chặn) nằm ở [`rules/hotspots.json`](../rules/hotspots.json), không trong code. Thuật toán, ngưỡng và nhãn tín hiệu vẫn ở `lib/hotspots.mjs`.
+Từ vựng của bộ dò điểm nóng (câu chọn, phản đối, ngắt của chủ phiên bằng tiếng Việt và tiếng Anh; từ nối và từ chỉ khoảng của `metricPair`; lệnh git đảo lịch sử; đường dẫn bài học và cấu hình agent; thông báo bị chặn) nằm ở [`lib/rules/hotspots.json`](../lib/rules/hotspots.json), không trong code. Thuật toán, ngưỡng và nhãn tín hiệu vẫn ở `lib/hotspots.mjs`.
 
-1. Sửa `rules/hotspots.json`. Mỗi chuỗi là một mảnh regex JavaScript (thoát `. ( ) ? *` khi muốn ký tự thật), không mở nhóm bắt (dùng `(?:…)`), chữ Việt ở dạng NFC. Danh sách chia theo ngôn ngữ (`vi`, `en`); thêm ngôn ngữ thì thêm khoá mới. Cờ regex do code đặt theo từng danh sách, ghi trong `$comment`.
+1. Sửa `lib/rules/hotspots.json`. Mỗi chuỗi là một mảnh regex JavaScript (thoát `. ( ) ? *` khi muốn ký tự thật), không mở nhóm bắt (dùng `(?:…)`), chữ Việt ở dạng NFC. Danh sách chia theo ngôn ngữ (`vi`, `en`); thêm ngôn ngữ thì thêm khoá mới. Cờ regex do code đặt theo từng danh sách, ghi trong `$comment`.
 2. `node --test test/hotspots-rules.test.mjs`: kiểm bảng (mảnh sai thì báo đúng tên mục, ví dụ `ownerVoice.choiceWords.vi[2]`), và so điểm nóng với bản dò cũ đóng băng (`test/fixtures/hotspots-legacy.mjs`) trên các mẫu, transcript fixture và transcript của bộ đo nếu máy có (`path:` trong `docs/_private/eval/labels/*.md`, hoặc `MOMENTRY_EVAL_LABELS=<thư mục nhãn>`). Khi bảng còn giống bảng mặc định thì điểm nóng phải trùng hoàn toàn; khi bạn cố ý thêm từ, test in ra những dòng đổi (`shipped table changes N detector outputs`) thay vì hỏng.
 3. Đo trên bộ đề: `node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json` (chạy lại, 0 USD), hoặc so đầu ra `momentry reduce --transcript … --out DIR` trước và sau. Chỉ số không được tụt.
 
@@ -132,10 +132,10 @@ Mọi cài đặt đổi qua `momentry config` (CLI), kể cả cài đặt riê
 
 ## Luật xếp hạng và từ vựng chuyện
 
-Luật chọn nằm trong bảng ở `rules/`, tra lúc chạy, không viết cứng trong code; thư mục này ship cùng `bin/ lib/ prompts/ ui/`.
+Luật chọn nằm trong bảng ở `lib/rules/`, tra lúc chạy, không viết cứng trong code. Thư mục này nằm trong `lib/` để bản cài cũ (bộ giải nén chỉ nhận `bin/ lib/ prompts/ ui/`) vẫn `momentry update` lên được.
 
-- [`rules/rank.json`](../rules/rank.json): thứ tự của `list --rank`, tường chuyện và N chuyện đầu được viết góc kể. Khuôn và nghĩa: [PRD 5.9](prd.md#59-xếp-hạng-bước-12).
-- [`rules/story-vocab.json`](../rules/story-vocab.json): loại tension và tín hiệu harvest. `lib/prompts.mjs` điền `{tensions}` (`hook-tension.md`) và `{signals}` (`harvest.md`, `harvest-fill.md`); `validateHookTension` và tường chuyện (`TWISTS`) đọc cùng danh sách. Sửa `description` là sửa chữ model đọc.
+- [`lib/rules/rank.json`](../lib/rules/rank.json): thứ tự của `list --rank`, tường chuyện và N chuyện đầu được viết góc kể. Khuôn và nghĩa: [PRD 5.9](prd.md#59-xếp-hạng-bước-12).
+- [`lib/rules/story-vocab.json`](../lib/rules/story-vocab.json): loại tension và tín hiệu harvest. `lib/prompts.mjs` điền `{tensions}` (`hook-tension.md`) và `{signals}` (`harvest.md`, `harvest-fill.md`); `validateHookTension` và tường chuyện (`TWISTS`) đọc cùng danh sách. Sửa `description` là sửa chữ model đọc.
 
 Thêm hay đổi một luật xếp hạng:
 

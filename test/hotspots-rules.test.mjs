@@ -1,4 +1,4 @@
-// Hotspot vocabulary table (rules/hotspots.json): validation, fallback to the built-in table, and equivalence with the
+// Hotspot vocabulary table (lib/rules/hotspots.json): validation, fallback to the built-in table, and equivalence with the
 // detectors as they were before the vocabulary left the code (test/fixtures/hotspots-legacy.mjs, frozen).
 // Real transcripts: the eval sessions named by `path:` in docs/_private/eval/labels/*.md (or MOMENTRY_EVAL_LABELS),
 // read in place when present on this machine; mismatches report line numbers and detector names only.

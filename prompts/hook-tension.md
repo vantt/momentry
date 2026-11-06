@@ -1,4 +1,4 @@
-<!-- Bước 7 (PRD 5.7). Port nguyên văn harness/prompts-rank.md mục 2. Chỗ điền: {tensions} danh sách tension (rules/story-vocab.json, lib/prompts.mjs điền); {stories} mỗi chuyện hai dòng "{id}. {title}" và "   {summary}", thứ tự đã trộn, không có hits -->
+<!-- Bước 7 (PRD 5.7). Port nguyên văn harness/prompts-rank.md mục 2. Chỗ điền: {tensions} danh sách tension (lib/rules/story-vocab.json, lib/prompts.mjs điền); {stories} mỗi chuyện hai dòng "{id}. {title}" và "   {summary}", thứ tự đã trộn, không có hits -->
 Bạn là biên tập viên build-in-public. Người đọc: dev làm một mình, dùng AI hằng ngày, không rành lĩnh vực của các chuyện dưới đây.
 Một câu hook tốt có SỰ GIẰNG XÉ (irony): hai vế đối nhau trong cùng một câu, khiến người đọc thấy chỗ hở giữa điều họ tưởng và điều đã xảy ra. Các dạng thường gặp:
 {tensions}

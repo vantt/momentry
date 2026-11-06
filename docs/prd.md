@@ -120,7 +120,7 @@ Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (m�
 | 9 | Người ngoài | Sonnet, lần gọi riêng (`outsider.md`); chạy ngay sau bước 6 | Văn bản rút gọn + danh sách tiêu đề cụm | `outsider[]`: what, common_practice, gap, lines, already_picked | Đổi góc kể sang "cách làm người khác muốn học". Haiku gộp chung cho gap 0,45; Sonnet gọi riêng cho gap 2,31. **Opus chấm, có thể thiên vị văn phong chi tiết của Sonnet; so sánh đổi cùng lúc model, cách gọi và câu dặn**, nên không quy kết quả cho riêng việc "gọi riêng" | TN 4.2; TN 5 mục 4; TN 7. **Chưa qua phép thử cất kín** |
 | 10 | Kiểm riêng tư | `privacy.mjs` | Mọi trường văn bản của mỗi chuyện sắp ghi, tên file (slug), phần sẽ nối vào file cũ | Qua / vi phạm / bỏ qua (không có nguồn chặn) | Transcript chứa tên note, câu hỏi thật. Mẫu `lo-rieng-tu` rò qua dạng Telex | BG 6.4; DB 4; MẪU |
 | 11 | Dựng file, ghi hộp, sổ | `story.mjs`, `box.mjs`, `ledger.mjs` | Cụm đã chấm và qua kiểm | File chuyện mới hoặc cập nhật file cũ (mục 6.6); sổ ghi dòng cuối đã gom | Chạy lại không ghi trùng; hook gọi nhiều lần vẫn an toàn | BG 6.2; DB 4 |
-| 12 | Xếp hạng | `rank.mjs`, luật ở `rules/rank.json` | Frontmatter các chuyện | Thứ tự: chuyện chỉ outsider thấy xuống cuối → `tension ≠ none` → `stakes + strength` → `hits` (mục 5.9) | Không bỏ chuyện nào, chỉ đẩy chuyện đáng xem lên đầu | TN 6d mục 4 |
+| 12 | Xếp hạng | `rank.mjs`, luật ở `lib/rules/rank.json` | Frontmatter các chuyện | Thứ tự: chuyện chỉ outsider thấy xuống cuối → `tension ≠ none` → `stakes + strength` → `hits` (mục 5.9) | Không bỏ chuyện nào, chỉ đẩy chuyện đáng xem lên đầu | TN 6d mục 4 |
 | 13 | Góc kể | Haiku (`angle.md`), mỗi chuyện một lần gọi; `angle.mjs` chọn chuyện và cắt trích đoạn; `asks.mjs` lấy yêu cầu của chủ phiên; `project-profile.mjs` viết hồ sơ dự án (Haiku, `profile.md`, mỗi dự án một lần) | `angle.topN` chuyện đầu bảng của phiên chưa có `angle` (bỏ chuyện `dropped`); với mỗi chuyện: **hồ sơ dự án** (3–5 câu: dự án là gì, cho ai, ràng buộc chính, mục tiêu hiện tại; viết từ README*, PRD/prd*, vision*, requirement(s)*, AGENTS.md, CLAUDE.md, GEMINI.md, ANTIGRAVITY.md ở gốc repo rồi `docs/`, mỗi loại file đầu tiên khớp, tối đa ~14k ký tự; lưu `<cache>/profiles/<repo>-<id>.md`, viết lại chỉ khi các file đó đổi và người dùng chưa sửa file; không có file thì không có hồ sơ; chứa tên riêng tư thì không dùng), **yêu cầu của chủ phiên** (yêu cầu đầu phiên và tối đa 3 yêu cầu gần nhất trước dòng đầu của chuyện, bỏ câu kiểu "tiếp tục", "ok", "commit push", ~2,4k ký tự, có `[Lnnn]`), hook, tension, sides, stakes, thân bài, cộng các `Entry` rút gọn quanh từng dòng trong `lines` (±2 Entry, thu lại tới khi dưới ~24k ký tự), chỉ của phiên có nhiều dòng nhất | **Xương chuyện** `spine`: bảy ô `context` (ai, dự án gì, đang làm gì), `want`, `obstacle`, `turn` (tưởng là… hoá ra…), `action`, `outcome` (có số thì ghi số), `takeaway`; mỗi ô một câu kèm số dòng, hoặc để trống (`context` được dẫn `profile`); `completeness` = số ô đã điền (0–7). Rồi `angle` (2–4 câu, câu đầu là bối cảnh để người ngoài hiểu không cần hỏi, rồi điều người ta tưởng → điều hoá ra → vì sao người nghe nên quan tâm), `audience`, `evidence`; hoặc `none: true` kèm lý do (vẫn có xương chuyện). Số dòng phải nằm trong trích đoạn hoặc khối yêu cầu | Tiêu đề chỉ gọi tên sự kiện; người đọc phải tự nghĩ ra chuyện đằng sau. Góc kể không có bối cảnh thì người ngoài không biết dự án là gì, người làm đang cố làm gì. Lời gọi hỏng (sau một lần gọi lại) không làm hỏng cửa sổ: chuyện chưa có góc kể, `momentry angle` làm bù. Chi phí của `momentry angle` ghi vào sổ (`spend`), tính vào ngân sách ngày | [TN góc kể](experiments/2026-11-05-angle/README.md): 20 chuyện, haiku 19 góc kể và 1 none, ~0,017 USD mỗi phiên. [TN xương chuyện](experiments/2026-11-05-story-spine/README.md): 20 chuyện, 16 góc kể (đều mở bằng bối cảnh) và 4 none, ~0,031 USD mỗi phiên. **Chưa có nhãn người chấm** (kiểm ở trang duyệt, có câu "Đọc xong hiểu được, không cần hỏi thêm?") |
 
 ### 5.3 Điểm nóng
@@ -143,7 +143,7 @@ Gộp điểm nóng cùng loại cách nhau ≤ 5 dòng thành một điểm. Tr
 
 Lưu ý: `metricPair` có điều kiện "mũi tên/từ nối" nên có ngoại lệ ngôn ngữ nhỏ (`lên`, `xuống`, `thành`, `tới`, `to`). Đây là từ nối số, không phải regex bắt cảm xúc hay quyết định. Bản harness chưa lọc khoảng số; bộ lọc khoảng, số Việt và `ownerVoice`/`lessonWrite`/`blocked` thêm sau, đo trên 4 phiên thật ở [số đo](experiments/2026-11-05-material-signals/README.md). Từ vựng phản đối của `ownerVoice` giữ hẹp có chủ ý: cụm cố định, không có "không" đứng giữa câu. `ownerVoice` và cờ `rejected` chỉ có trên Claude.
 
-Từ vựng và mẫu của các hàm trên (cụm của `ownerVoice` theo ngôn ngữ, từ nối và từ chỉ khoảng của `metricPair`, lệnh và cờ của `gitReversal`, đường dẫn của `lessonWrite`/`metaWrite`, thông báo của `blocked`) là bảng [`rules/hotspots.json`](../rules/hotspots.json), đọc lúc chạy; thêm từ không cần sửa code ([cách thêm](development.md#thêm-từ-vựng-điểm-nóng)).
+Từ vựng và mẫu của các hàm trên (cụm của `ownerVoice` theo ngôn ngữ, từ nối và từ chỉ khoảng của `metricPair`, lệnh và cờ của `gitReversal`, đường dẫn của `lessonWrite`/`metaWrite`, thông báo của `blocked`) là bảng [`lib/rules/hotspots.json`](../lib/rules/hotspots.json), đọc lúc chạy; thêm từ không cần sửa code ([cách thêm](development.md#thêm-từ-vựng-điểm-nóng)).
 
 ### 5.4 Harvest (bước 4)
 
@@ -215,7 +215,7 @@ Vòng gọi bù **chưa được thử** (TN 7).
 
 ### 5.9 Xếp hạng (bước 12)
 
-Nguồn sự thật là bảng luật [`rules/rank.json`](../rules/rank.json), tra lúc chạy (`lib/rank.mjs`), không viết cứng trong code. Bảng có ba phần:
+Nguồn sự thật là bảng luật [`lib/rules/rank.json`](../lib/rules/rank.json), tra lúc chạy (`lib/rank.mjs`), không viết cứng trong code. Bảng có ba phần:
 
 - `tiers`: các tầng theo thứ tự; chuyện vào tầng đầu tiên mà mọi điều kiện đều đúng.
 - `adjust`: điều chỉnh điểm trong một tầng (đặc trưng × trọng số, hoặc hằng số khi có điều kiện); điểm cao đứng trước.
@@ -413,7 +413,7 @@ Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví 
 | `harvest.maxInputTokens` | 150000 | |
 | `harvest.timeoutSec` | 600 | Lần chạy dài từng mất 167 giây (TN 2) |
 | `rank.model` | `sonnet` | Gộp cụm, hook/tension, stakes |
-| `rank.weights` | `{}` | Trọng số theo id luật điều chỉnh của `rules/rank.json` (`rank.weights.stakes` 2). Chỉ cấu hình người dùng |
+| `rank.weights` | `{}` | Trọng số theo id luật điều chỉnh của `lib/rules/rank.json` (`rank.weights.stakes` 2). Chỉ cấu hình người dùng |
 | `rank.disabled` | `[]` | Id luật (tầng hoặc điều chỉnh) bỏ qua. Chỉ cấu hình người dùng |
 | `outsider.enabled` | true | |
 | `outsider.model` | `haiku` | Đổi từ `sonnet` sau khi đo: rẻ hơn ~8 lần ở bước này, chất lượng xếp hạng không giảm ([cost-cuts](experiments/2026-11-05-cost-cuts/README.md)) |
@@ -600,8 +600,8 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
   lib/box.mjs                readBox(dir) -> Story[]; writeNew(story); mergeInto(id, patch); storiesOfSession(sid); findStory(dir, id|mã); backfillCodes(dir)
   lib/story-code.mjs         mã chuyện M-XXXX: candidateCode(id, k), assignCodes(stories), normalizeCode(input)
   lib/ledger.mjs             load(), save(), lock(sid) / touch / unlock (wx + pid + mtime), needsHarvest(sid, stat) -> {fromLine} | null; recordSpend(sid, {step, usd}) chi phí ngoài cửa sổ gom
-  lib/rank.mjs               sortRanked(stories, table?); explain(story, table?); rankTable(cfg); loadRankTable(file?) bảng luật rules/rank.json
-  lib/vocab.mjs              từ vựng chuyện rules/story-vocab.json: TENSION_IDS, promptLists() điền {tensions} {signals} của prompt
+  lib/rank.mjs               sortRanked(stories, table?); explain(story, table?); rankTable(cfg); loadRankTable(file?) bảng luật lib/rules/rank.json
+  lib/vocab.mjs              từ vựng chuyện lib/rules/story-vocab.json: TENSION_IDS, promptLists() điền {tensions} {signals} của prompt
   lib/angle.mjs              bước 13: pickStories, excerpt, angleOne (xương chuyện + góc kể), anglePatch, spineOf
   lib/asks.mjs               bước 13: sessionAsks(entries) yêu cầu của chủ phiên; asksFor(asks, line) khối yêu cầu của một chuyện
   lib/project-profile.mjs    bước 13: findSources(root), ensureProfile(root, cfg) hồ sơ dự án trong <cache>/profiles/

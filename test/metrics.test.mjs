@@ -200,7 +200,7 @@ test('init records the install time on a new machine; an installed copy records 
   const fresh = sandbox();
   const copy = (home) => {
     const dest = path.join(home, 'versions', 'v0.0.0-test');
-    for (const d of ['bin', 'lib', 'prompts', 'rules', 'ui']) fs.cpSync(path.join(SRC, d), path.join(dest, d), { recursive: true });
+    for (const d of ['bin', 'lib', 'prompts', 'ui']) fs.cpSync(path.join(SRC, d), path.join(dest, d), { recursive: true });
     return path.join(dest, 'bin', 'momentry.mjs');
   };
   const activate = (sb, home) => spawnSync(process.execPath, [copy(home), '_activate', '--json'], { env: { ...sb.env, MOMENTRY_HOME: home, MOMENTRY_INSTALL_DIR: path.join(sb.base, 'bin') }, encoding: 'utf8' });

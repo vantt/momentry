@@ -1,4 +1,4 @@
-// Frozen copy of lib/hotspots.mjs from before its vocabulary moved to rules/hotspots.json.
+// Frozen copy of lib/hotspots.mjs from before its vocabulary moved to lib/rules/hotspots.json.
 // Reference for the equivalence test only: do not edit.
 // Hotspots (PRD 5.3). Pure per-Entry detectors ported from harness/reduce.mjs; they look at op/paths, not tool names.
 import path from 'node:path';

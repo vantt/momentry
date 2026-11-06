@@ -1,4 +1,4 @@
-// Story vocabulary (rules/story-vocab.json): one list of tension types and harvest signals for prompts, validators, UI.
+// Story vocabulary (lib/rules/story-vocab.json): one list of tension types and harvest signals for prompts, validators, UI.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
@@ -31,7 +31,7 @@ const OLD_SIGNALS = `1. Số trước, số sau: một phép đo đổi rõ (đi
 
 test('vocab: rendered prompt text is byte-identical to the lists it replaced', () => {
   assert.deepEqual(promptLists(), { tensions: OLD_TENSIONS, signals: OLD_SIGNALS });
-  // whole hook-tension prompt, hashed before the list moved into rules/story-vocab.json
+  // whole hook-tension prompt, hashed before the list moved into lib/rules/story-vocab.json
   assert.equal(sha(render('hook-tension', { stories: 'S' })), '300dc6ed22e77ed26a2f98e568986c3cf6628e875da0b690b76b671537983a65');
   for (const name of ['harvest', 'harvest-fill']) {
     const p = render(name, { transcript: 'T', hotspots: 'H' });

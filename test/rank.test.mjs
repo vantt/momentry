@@ -1,4 +1,4 @@
-// Ranking rule table (rules/rank.json): exact order of the former fixed key, schema checks, fallback, overrides, explain.
+// Ranking rule table (lib/rules/rank.json): exact order of the former fixed key, schema checks, fallback, overrides, explain.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -78,7 +78,7 @@ test('rank table: the shipped rules reproduce the former key on random stories w
   }
 });
 
-test('rank table: rules/rank.json is valid and holds the same rules as the built-in fallback', () => {
+test('rank table: lib/rules/rank.json is valid and holds the same rules as the built-in fallback', () => {
   const { table, errors } = compileTable(raw());
   assert.deepEqual(errors, []);
   const shape = (t) => ({ tiers: t.tiers.map((x) => [x.id, x.when]), adjust: t.adjust.map((x) => [x.id, x.when, x.feature, x.weight]), tiebreak: t.tiebreak });

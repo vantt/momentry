@@ -137,7 +137,7 @@ function Install-Momentry {
             $top = "momentry-$version"
             foreach ($m in $listing) {
                 if ($m -match '(^/|^[A-Za-z]:|\.\.)') { throw "unsafe path in archive: $m" }
-                if ($m -notmatch "^$([Regex]::Escape($top))/(bin|lib|prompts|rules|ui)(/|$)" -and $m -notmatch "^$([Regex]::Escape($top))/(BUILD|LICENSE|README\.md)?$") { throw "unexpected entry in archive: $m" }
+                if ($m -notmatch "^$([Regex]::Escape($top))/(bin|lib|prompts|ui)(/|$)" -and $m -notmatch "^$([Regex]::Escape($top))/(BUILD|LICENSE|README\.md)?$") { throw "unexpected entry in archive: $m" }
             }
             $verbose = & $tarExe -tvzf $archive
             foreach ($v in $verbose) { if ($v -match '^[lhcbp]') { throw 'archive contains links or special files; refused' } }
