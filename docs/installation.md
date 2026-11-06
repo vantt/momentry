@@ -135,7 +135,7 @@ curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh
 
 Bản phát hành có `-` trong tên (ví dụ `v0.2.0-rc.1`) không bao giờ là "latest"; cài bằng `--version`.
 
-Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên trong `checksums.txt`, từ chối archive có link hay file ngoài `bin/ lib/ prompts/`, chạy thử bản mới trước khi đổi `current`, và không ghi đè một `momentry` không do nó cài. Chữ ký (cosign) chưa có; installer nói rõ "chưa kiểm chữ ký".
+Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên trong `checksums.txt`, từ chối archive có link hay file ngoài `bin/ lib/ prompts/ rules/ ui/`, chạy thử bản mới trước khi đổi `current`, và không ghi đè một `momentry` không do nó cài. Chữ ký (cosign) chưa có; installer nói rõ "chưa kiểm chữ ký".
 
 ## Biến môi trường khi chạy
 
