@@ -8,13 +8,13 @@ This board is high-level: one row = one epic = one plan. Step status and evidenc
 
 ## Overview
 
-20 epics:
+21 epics:
 - 2 done: E2, E16.
 - 3 in progress: E1, E3, E8.
 - 1 not started: E10. In progress: E17.
 - 6 in the sales plan, backlog: E11–E15, E18.
 - 5 backlog, no plan: E4, E5, E6, E7, E9.
-- 1 backlog with plan: E19.
+- 2 backlog with plan: E19, E21.
 - 1 in progress with plan: E20 (M.1 done; M.2–M.4 todo).
 
 Main path: E1 and E3 close (record real runs, Antigravity on Windows) → E4 validate the mechanism → E5 real use → E6 story assembly.
@@ -85,6 +85,7 @@ All epics, from idea to done. One plan per epic. The board shows no progress; re
 | E18 | Port to Rust: core crate, CLI that also serves the E16 web UI from one binary; same box, ledger and config formats | [rust-port](261104-rust-port/plan.md) | 📥 Backlog | P2 | E17 | User allows a full Rust rewrite when needed (2026-11-04). ~6.2k lines JS, ~3.3k lines tests. Proposal: after the first sales signal, before A2 (E14/E15). Pulls in S0.19 (readable JS), S1.3 (license check), Q.6 (e5, embedded and run in-process via `candle`, R.7, only if a small model fits: ≤ ~50 MB added, quality not below e5-small), E9 (signing) |
 | E19 | Shared labels: users opt in to send anonymous Use/Later/Drop labels to a momentry server to improve default ranking; explicit consent screen listing every field sent, private projects never send | [shared-labels](261105-shared-labels/plan.md) | 📥 Backlog | P3 | E17 | Split from E16 (U.7b) 2026-11-05. Not now: quality work uses only our own data. Changes the "no momentry server" promise |
 | E20 | Story material signals: owner-voice, lesson-write and blocked hotspot kinds with noise filters (M.1 done); next git as a second source (M.2), subagent and worker transcripts (M.3), cross-session arc and retrospective mode (M.4) | [story-material](261105-story-material/plan.md) | 🔄 Doing | P1 | E17 | Evidence: [material-signals](../docs/experiments/2026-11-05-material-signals/README.md). Ranking and outsider cost stay in E17; proposal M.5 for E17: demote tension `none` only when stakes < 2 (owner decisions with stakes 3 fall to #27 of 34 on the second eval set), replay on the E17 set first |
+| E21 | User taste: record implicit Use/Drop/draft/publish/edit decisions locally, show top-5 use rate, learn a transparent per-user ranking adjustment (never hides stories, falls back to default if worse) | [user-taste](261106-0900-user-taste/plan.md) | 📥 Backlog | P1 | E17 | Opened 2026-11-06. All data stays on the user's machine; first proof on the E17 test set (T.5) |
 | E15 | Hosted product: desktop or web app, more sources (Cursor, Lovable, Bolt, ChatGPT/Claude exports), accounts, subscription billing | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E14 | Privacy gate on the sales page, data policy, onboarding under 2 minutes |
 
 Status: 📥 Backlog, ⬜ Todo, 🔄 Doing, ⏸ Waiting, ✅ Done, ❌ Dropped.
