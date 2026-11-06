@@ -559,6 +559,38 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
 
 `check --staged` dùng được làm git pre-commit hook (user tự cài). Vài tuần đầu user nên lướt các chuyện `captured_by: harvest` trước khi commit (DB 4).
 
+### 6.8 Gu trên máy (`taste.json`)
+
+Mỗi việc người dùng làm với một chuyện được ghi vào `<cache>/taste.json` (`0600`, thư mục `0700`, ghi atomic), kèm đặc trưng của chuyện lúc đó. File chỉ nằm trên máy, không gửi đi đâu; đây là dữ liệu để sau này xếp hạng theo gu của từng người (plan E21). Code: [`lib/taste.mjs`](../lib/taste.mjs).
+
+**Không có chữ của chuyện.** Không tiêu đề, hook, góc kể, thân, id chuyện hay đường dẫn. Dự án là id băm (như giao diện web), chuyện là băm của khoá `<dự án>/<id>`. Đặc trưng tính bằng chính code của bảng xếp hạng (`FEATURES` trong `lib/rank.mjs`), và mọi giá trị dạng chữ được đưa về danh sách cố định: giá trị lạ thành `other`.
+
+```json
+{"version": 1, "events": [{"at": "2026-11-06T09:00:00.000Z", "project": "3f2a9c1b7e", "story": "a1b2c3d4e5f6",
+  "event": "use", "value": null, "rank": 2, "of": 31, "private": false,
+  "features": {"tension": "nho_ma_to", "stakes": 3, "strength": 2, "hits": 4, "completeness": 6,
+    "outsider_only": false, "has_angle": true, "signals": ["so_truoc_so_sau"], "hit_by": ["harvest"],
+    "captured_by": "harvest", "host": "claude", "tier": "harvested_with_tension"}}]}
+```
+
+- `rank`, `of`: hạng của chuyện và số chuyện trên tường mặc định của giao diện web (mọi dự án, ẩn chuyện đã bỏ), ngay trước thay đổi; `null` khi không có (chuyện vừa ghi tay).
+- `private`: dự án đang ở chế độ riêng tư lúc ghi, để một con số có thể chia sẻ sau này bỏ được các dự án đó.
+- Đặc trưng: `tension` (id trong [`story-vocab.json`](../lib/rules/story-vocab.json)), `stakes`, `strength`, `hits`, `completeness`, `outsider_only`, `has_angle`, `signals` (id tín hiệu), `hit_by`, `captured_by`, `host` (agent của phiên đầu tiên), `tier` (id tầng trong bảng xếp hạng).
+- Giữ 2000 sự kiện mới nhất, cũ nhất bỏ trước. File hỏng hoặc khác `version` đọc như rỗng. Ghi lỗi không bao giờ chặn việc người dùng đang làm.
+
+| `event` | Khi nào | `value` |
+|---|---|---|
+| `use`, `later`, `drop`, `open` | Quyết định đổi (nút Use / Later / Drop trên giao diện, `momentry mark`); `open` là quay về chưa quyết (Undo, bỏ để sau) | `null` |
+| `drafted`, `published` | Chuyện chuyển sang giai đoạn này (ô Stage trên trang chuyện); tính là dùng | `null` |
+| `edit` | Người dùng sửa chữ model viết và chữ có đổi (tiêu đề, một phần của thân) | `title`, `context`, `what`, `lesson`, `artefact`, `outsider` (`hook`, `angle` để dành cho khi có chỗ sửa) |
+| `verdict` | Nút kiểm góc kể trên trang chuyện: I can tell this / True, but no story / Made up (kể được / không ra chuyện / bịa); bấm lại để bỏ | `tellable`, `no-story`, `invented`, `null` |
+| `understood` | Câu "Clear without asking more?" (hiểu được không cần hỏi thêm?) | `yes`, `no`, `null` |
+| `missed` | Chuyện người dùng tự ghi (quick note trên giao diện, `momentry add --by human`, `/momentry-bip`), kể cả khi thả từ `quarantine`: momentry đã bỏ sót | `null` |
+
+Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ ở `<cache>/ui-state.json` (khoá `angle`).
+
+**Con số.** Mỗi chuyện tính quyết định cuối cùng; `drafted`, `published` tính là dùng; hạng là hạng lúc quyết định đổi lần cuối (chuyển chuyện đã dùng sang drafted giữ hạng lúc dùng). Top 5: trong các chuyện đã quyết Use, Later hay Drop khi đang ở hạng 1–5, bao nhiêu chuyện được dùng. Chỉ hiện khi đủ 10 chuyện như thế (cùng ngưỡng với tỉ lệ Use trong `metrics.json`); dưới đó hiện còn thiếu bao nhiêu quyết định. Cùng ngưỡng: hạng trung bình của chuyện được dùng. Trang Health của giao diện web có một khung "Your picks" với hai số này. `momentry taste` in hai số đó, bảng đếm dùng / bỏ theo giằng xé và theo tín hiệu, stakes trung bình của chuyện dùng và chuyện bỏ, số chuyện bỏ sót, số lần sửa và kết quả kiểm góc kể; `--repo DIR` chỉ tính một dự án, `--json` cho agent. Cả hai là cách nhìn trên máy, có tính dự án riêng tư; `measures(t, {excludePrivate: true})` bỏ chúng cho con số có thể chia sẻ.
+
 ---
 
 ## 7. Cấu trúc code
@@ -601,6 +633,7 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
   lib/story-code.mjs         mã chuyện M-XXXX: candidateCode(id, k), assignCodes(stories), normalizeCode(input)
   lib/ledger.mjs             load(), save(), lock(sid) / touch / unlock (wx + pid + mtime), needsHarvest(sid, stat) -> {fromLine} | null; recordSpend(sid, {step, usd}) chi phí ngoài cửa sổ gom
   lib/rank.mjs               sortRanked(stories, table?); explain(story, table?); rankTable(cfg); loadRankTable(file?) bảng luật lib/rules/rank.json
+  lib/taste.mjs              gu trên máy (mục 6.8): note(cacheDir, {event, data, …}) ghi <cache>/taste.json; snapshot(data); measures(t, {excludePrivate, project})
   lib/vocab.mjs              từ vựng chuyện lib/rules/story-vocab.json: TENSION_IDS, promptLists() điền {tensions} {signals} của prompt
   lib/angle.mjs              bước 13: pickStories, excerpt, angleOne (xương chuyện + góc kể), anglePatch, spineOf
   lib/asks.mjs               bước 13: sessionAsks(entries) yêu cầu của chủ phiên; asksFor(asks, line) khối yêu cầu của một chuyện
@@ -643,6 +676,7 @@ momentry <lệnh> [cờ]
 | `list` | Bảng mã, id, ngày, status, hook, tension, stakes, strength, hits | `--rank`, `--status S`, `--thread T`, `--session ID`, `--json` |
 | `show <id\|mã>` | In đầy đủ một chuyện, kèm mã | `--json` |
 | `mark <id\|mã> <use\|later\|drop>` | Đánh dấu một chuyện như nút trên giao diện | `--dry-run`, `--json` |
+| `taste` | Gu từ việc bạn làm với chuyện (mục 6.8): top 5 bạn dùng X/Y, hạng trung bình của chuyện dùng, đặc trưng hay dùng hay bỏ, chuyện bỏ sót, lần sửa. Chỉ đọc, 0 USD | `--repo DIR`, `--json` |
 | `check` | Kiểm khuôn frontmatter, `id` (nếu có) khớp tên file, link không gãy, mã chuyện không trùng, riêng tư; `--fix` ghi mã vào file chưa có | `--box DIR`, `--staged`, `--fix` |
 | `reduce` | In văn bản rút gọn và điểm nóng (gỡ lỗi, thí nghiệm) | `--transcript FILE`, `--to-line N`, `--out DIR` |
 | `ledger` | Xem hoặc quên một phiên trong sổ | `--show`, `--forget ID` |
@@ -764,6 +798,7 @@ ID mới thay bảng ở BG 7. Thí nghiệm nhắc "DM.2/DM.3" và "DM.6/DM.7" 
 | Riêng tư | Số vi phạm lọt vào repo (phải là 0); số chặn đúng, chặn nhầm; số chuyện nằm trong `quarantine/` và lý do | Chưa |
 | Chi phí | USD và giây từng bước, ghi trong sổ | Mục 5.10, một phiên |
 | Giá trị cuối | Số chuyện user đổi `picked`; số bài nháp ra từ hộp | Chưa |
+| Hợp gu | Trong chuyện top 5 đã quyết, số chuyện dùng (use, drafted, published); hạng trung bình của chuyện dùng (`<cache>/taste.json`, mục 6.8) | Đo được trên máy (Health, `momentry taste`); chưa có số dùng thật |
 
 ---
 
