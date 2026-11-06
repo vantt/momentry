@@ -14,7 +14,7 @@ import { readBox } from '../../lib/box.mjs';
 import { sortRanked, rankTable } from '../../lib/rank.mjs';
 import { heldDir } from '../../lib/quarantine.mjs';
 import { loadLabels, angleCheckCounts, ANGLE_VERDICTS } from './labels.mjs';
-import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS, RANK_BY, byCompleteness } from './metrics.mjs';
+import { rankMetrics, callUsage, stepCosts, addStepCosts, runDiff, mean, STEPS, RANK_BY, byCompleteness, stepOf } from './metrics.mjs';
 import { spineOf } from '../../lib/angle.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -106,7 +106,8 @@ const titleOf = (s) => /^#\s+(.+)$/m.exec(s.body || '')?.[1]?.trim() ?? s.id;
 /**
  * One pipeline run of a session window in a fresh scratch repo: real model (saveLlm set) or replay (fakeLlm set).
  * The user's real box, ledger, cache and project list are never written.
- * @param {{session: Session, fromLine: number, toLine: number, scratch: string, saveLlm?: string, fakeLlm?: string, dryRun?: boolean, env?: NodeJS.ProcessEnv}} o
+ * `live` (with fakeLlm) picks the keys that still call the model.
+ * @param {{session: Session, fromLine: number, toLine: number, scratch: string, saveLlm?: string, fakeLlm?: string, live?: (key: string) => boolean, dryRun?: boolean, env?: NodeJS.ProcessEnv}} o
  */
 export async function runOnce(o) {
   const env = o.env || process.env;
@@ -115,7 +116,7 @@ export async function runOnce(o) {
   // model calls and `~` in privacy sources use the real environment; every write goes through cfg (scratch)
   const report = await runSession(null, {
     cfg, transcript: o.session.transcript, source: o.session.host, fromLine: o.fromLine, toLine: o.toLine,
-    dryRun: !!o.dryRun, saveLlm: o.saveLlm, env,
+    dryRun: !!o.dryRun, saveLlm: o.saveLlm, live: o.live, env,
   });
   const ranked = o.dryRun ? [] : rankedStories(cfg);
   return { report, ranked, cfg };
@@ -168,6 +169,36 @@ async function capture(session, out, log, env) {
   };
   fs.writeFileSync(path.join(dir, 'capture.json'), JSON.stringify(rec, null, 2) + '\n', { mode: 0o600 });
   log(`${session.id}#${n}: ${r.report.status}, ${r.ranked.length} chuyện, ${r.report.usd?.toFixed(3) ?? '?'} USD, ${r.report.secs} s`);
+  return rec;
+}
+
+/**
+ * New capture from the newest one: model outputs of every step outside `steps` are copied and replayed, the steps in
+ * `steps` call the model again. Measures a prompt change of those steps on the same stories, for the price of those
+ * steps only. Steps after a refreshed one whose input depends on it (the angle step after hook-tension or stakes,
+ * since the top N changes) must be refreshed too, or their replay fails or keeps stale outputs.
+ */
+async function refreshCapture(session, out, steps, log, env) {
+  const from = captures(out, session.id).at(-1);
+  if (!from) throw new Error('chưa có lần chụp nào để làm mới');
+  const { n, dir } = nextRunDir(path.join(out, session.id, 'runs'));
+  const llm = ensurePrivateDir(path.join(dir, 'llm'));
+  const src = path.join(from.dir, 'llm');
+  for (const f of fs.existsSync(src) ? fs.readdirSync(src) : []) {
+    if (f.endsWith('.json') && !steps.includes(stepOf(f.slice(0, -5)))) fs.copyFileSync(path.join(src, f), path.join(llm, f));
+  }
+  const { fromLine, toLine } = from.rec;
+  log(`${session.id}#${n}: từ #${from.n}, gọi lại model cho ${steps.join(', ')}…`);
+  const live = (key) => steps.includes(stepOf(key));
+  const r = await runOnce({ session, fromLine, toLine, scratch: path.join(dir, 'scratch'), fakeLlm: llm, saveLlm: llm, live, env });
+  const freshUsd = readCalls(llm).filter((c) => steps.includes(c.step)).reduce((a, c) => a + c.usd, 0);
+  const rec = {
+    id: session.id, run: n, host: session.host, transcript: session.transcript, fromLine, toLine,
+    windowSha: windowSha(session.transcript, fromLine, toLine), at: new Date().toISOString(), refreshedFrom: from.n, refreshed: steps, freshUsd,
+    dryRun: from.rec.dryRun ?? null, report: r.report, ranked: r.ranked.map(summary),
+  };
+  fs.writeFileSync(path.join(dir, 'capture.json'), JSON.stringify(rec, null, 2) + '\n', { mode: 0o600 });
+  log(`${session.id}#${n}: ${r.report.status}, ${r.ranked.length} chuyện, ${freshUsd.toFixed(3)} USD cho bước gọi lại`);
   return rec;
 }
 
@@ -276,9 +307,10 @@ function labelsOf(session, log) {
   return loadLabels(session.labels);
 }
 
-const USAGE = `node scripts/eval/run.mjs --manifest FILE [--capture] [--out DIR] [--only ID,ID] [--jobs N] [--budget USD] [--keep] [--rank-by default|completeness]
+const USAGE = `node scripts/eval/run.mjs --manifest FILE [--capture [--refresh STEP,STEP]] [--out DIR] [--only ID,ID] [--jobs N] [--budget USD] [--keep] [--rank-by default|completeness]
   mặc định: chạy lại mọi lần chụp bằng --fake-llm (không tốn tiền) rồi đo
   --capture  gọi model thật, mỗi phiên một lần chụp mới (<out>/<id>/runs/<n>/)
+  --refresh  với --capture: lần chụp mới lấy từ lần chụp mới nhất, chỉ gọi model cho các bước này (${STEPS.join(', ')})
   --out      thư mục dữ liệu (mặc định ${path.relative(process.cwd(), DEFAULT_OUT) || DEFAULT_OUT})
   --only     chỉ các phiên này   --jobs  số phiên chạy song song (mặc định 1)
   --budget   với --capture: không chụp phiên tiếp khi đã tiêu + ${ESTIMATE_FACTOR}×ước tính vượt mức này
@@ -291,7 +323,7 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   try {
     a = parseArgs({ args: argv, options: {
       manifest: { type: 'string' }, capture: { type: 'boolean' }, out: { type: 'string' }, only: { type: 'string' },
-      jobs: { type: 'string' }, budget: { type: 'string' }, keep: { type: 'boolean' }, 'rank-by': { type: 'string' }, help: { type: 'boolean', short: 'h' },
+      jobs: { type: 'string' }, budget: { type: 'string' }, refresh: { type: 'string' }, keep: { type: 'boolean' }, 'rank-by': { type: 'string' }, help: { type: 'boolean', short: 'h' },
     } }).values;
   } catch (e) { io.err(`${e.message}\n${USAGE}`); return 2; }
   if (a.help) { io.out(USAGE); return 0; }
@@ -302,6 +334,9 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   if (budget !== null && !(budget > 0)) { io.err('--budget phải là số > 0'); return 2; }
   const rankBy = a['rank-by'] ?? 'default';
   if (!RANK_BY.includes(rankBy)) { io.err(`--rank-by phải là một trong ${RANK_BY.join(', ')}`); return 2; }
+  const refresh = a.refresh === undefined ? null : a.refresh.split(',').map((x) => x.trim()).filter(Boolean);
+  if (refresh && !a.capture) { io.err('--refresh chỉ dùng với --capture'); return 2; }
+  if (refresh && (!refresh.length || refresh.some((x) => !STEPS.includes(x)))) { io.err(`--refresh nhận các bước: ${STEPS.join(', ')}`); return 2; }
   let sessions;
   try { sessions = loadManifest(a.manifest); } catch (e) { io.err(e.message); return 2; }
   if (a.only) {
@@ -314,7 +349,14 @@ export async function main(argv = process.argv.slice(2), io = { out: (s) => proc
   ensurePrivateDir(out);
   let failed = 0;
 
-  if (a.capture) {
+  if (refresh) {
+    await pool(sessions, jobs, async (s) => {
+      try {
+        const rec = await refreshCapture(s, out, refresh, io.err, env);
+        if (rec.report.status === 'failed') failed++;
+      } catch (e) { io.err(`${s.id}: ${e.message}`); failed++; }
+    });
+  } else if (a.capture) {
     let spent = 0;
     await pool(sessions, jobs, async (s) => {
       if (!fs.existsSync(s.transcript)) { io.err(`${s.id}: không có transcript ${s.transcript}`); failed++; return; }

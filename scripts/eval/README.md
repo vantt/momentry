@@ -16,6 +16,7 @@ node scripts/eval/review.mjs                                                    
 |---|---|
 | `--manifest FILE` | danh sách phiên (bắt buộc) |
 | `--capture` | mỗi phiên một lần chụp mới bằng model thật, rồi đo như chạy lại. Chụp hai lần một phiên để đo độ lệch giữa hai lần chạy |
+| `--refresh STEP,STEP` | với `--capture`: lần chụp mới lấy đầu ra model của lần chụp mới nhất cho mọi bước khác, chỉ gọi model thật cho các bước này (`harvest`, `fill`, `cluster`, `outsider`, `hook-tension`, `stakes`, `profile`, `angle`), cùng cửa sổ dòng. Dùng để đo đổi prompt của một bước trên đúng bộ chuyện cũ, không bị độ lệch của harvest và chỉ trả tiền cho bước đó. Bước sau phụ thuộc vào bước được gọi lại cũng phải gọi lại: đổi `hook-tension` hay `stakes` thì thêm `angle`, vì top N đổi. `capture.json` ghi `refreshedFrom`, `refreshed` và `freshUsd` (tiền của các bước gọi lại) |
 | `--out DIR` | thư mục dữ liệu, mặc định `docs/_private/eval/` của repo chứa script |
 | `--only ID,ID` | chỉ các phiên này |
 | `--jobs N` | số phiên chạy song song (mặc định 1) |
