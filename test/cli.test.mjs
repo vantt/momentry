@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { candidateCode } from '../lib/story-code.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BIN = path.resolve(HERE, '../bin/momentry.mjs');
@@ -98,9 +99,11 @@ test('list: table, filters, json', () => {
   assert.equal(r.code, 0, r.err);
   const lines = r.out.trim().split('\n');
   assert.equal(lines.length, 9);
-  assert.match(lines[0], /^id\s+date\s+status\s+hook\s+tension\s+stakes\s+strength\s+hits$/);
+  assert.match(lines[0], /^code\s+id\s+date\s+status\s+hook\s+tension\s+stakes\s+strength\s+hits$/);
+  for (const l of lines.slice(1)) assert.match(l, /^M-[0-9A-HJKMNP-TV-Z]{4}\s+\d{4}-\d{2}-\d{2}-/);
   r = run(['list', '--box', box, '--status', 'picked', '--json'], { cwd: base, env });
   assert.deepEqual(JSON.parse(r.out).data.map((x) => x.id), ['2026-01-10-bang-tra-lam-cham-hon']);
+  assert.equal(JSON.parse(r.out).data[0].code, candidateCode('2026-01-10-bang-tra-lam-cham-hon'), 'sample story without a stored code shows its computed code');
   r = run(['list', '--box', box, '--thread', 'nguoi-va-may', '--json'], { cwd: base, env });
   assert.equal(JSON.parse(r.out).data.length, 3);
 });

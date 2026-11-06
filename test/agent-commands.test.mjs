@@ -140,7 +140,7 @@ test('the momentry skill: same text on every host, model-invocable, short descri
   assert.ok(d.description.length <= 400, 'only the description sits in every session\'s context');
   assert.match(d.description, /tuần này có chuyện gì hay/);
   assert.ok(texts[0].includes(`Call momentry exactly as \`${PREFIX}\``), 'the installed command, once');
-  for (const c of ['list --rank --json', 'show <id> --json', 'mark <id> use|later|drop --json']) assert.ok(texts[0].includes(`\`momentry ${c}\``), c);
+  for (const c of ['list --rank --json', 'show <code|id> --json', 'mark <code|id> use|later|drop --json']) assert.ok(texts[0].includes(`\`momentry ${c}\``), c);
   assert.doesNotMatch(texts[0], /mcp/i);
 });
 

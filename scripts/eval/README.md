@@ -52,7 +52,7 @@ Lời gọi model chạy với môi trường thật (đăng nhập `claude`), c
 
 ```
 <out>/<id>/runs/<n>/capture.json   cửa sổ thật đã chạy, sha của cửa sổ, ước tính dry-run, báo cáo --json, danh sách xếp hạng
-                                 (mỗi chuyện: id, title, tension, stakes, strength, hits, held, angle, audience,
+                                 (mỗi chuyện: id, code (mã M-XXXX, null ở bản chụp cũ), title, tension, stakes, strength, hits, held, angle, audience,
                                  spine, completeness; angle là chữ, `none`, hoặc null khi bước góc kể chưa xét
                                  chuyện; spine là các ô đã điền {text, lines}, completeness là số ô hoặc null)
 <out>/angle-labels/<id>.json     kiểm góc kể từ trang duyệt: {session, stories: {<id chuyện>: {verdict?, understood?, angle, at}}}

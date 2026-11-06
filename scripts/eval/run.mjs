@@ -136,7 +136,7 @@ function parseDry(message) {
  * `spine` the filled spine slots ({text, lines}) and `completeness` their count, null before the angle step.
  */
 export const summary = (s) => ({
-  id: s.id, title: titleOf(s), tension: s.data.tension ?? null, stakes: s.data.stakes ?? null, strength: s.data.strength ?? null,
+  id: s.id, code: typeof s.data.code === 'string' ? s.data.code : null, title: titleOf(s), tension: s.data.tension ?? null, stakes: s.data.stakes ?? null, strength: s.data.strength ?? null,
   hits: s.data.hits ?? null, held: !!s.held, angle: typeof s.data.angle === 'string' ? s.data.angle : null,
   audience: typeof s.data.audience === 'string' ? s.data.audience : null, ...spineOf(s.data),
 });
