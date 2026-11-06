@@ -156,7 +156,7 @@ Mã thoát: 0 xong; 1 không có hộp (chạy momentry init); 2 sai cú pháp.
 
 Mở giao diện web trên máy (đọc chuyện, chọn chuyện, riêng tư, chi phí, sức khoẻ, thiết lập). Một tiến trình, nghe 127.0.0.1 và địa chỉ Tailscale của máy (tắt bằng momentry config set ui.tailscale false), tự tắt khi không còn tab nào mở.
 
-**Thay đổi:** <cache>/ui.json (cổng, mã truy cập, pid của tiến trình đang chạy), <cache>/ui-open.html (trang mở có mã truy cập, chỉ bạn đọc được), <cache>/ui-state.json (chuyện đã đọc, để sau). Mọi thay đổi khác do bạn bấm trên giao diện.
+**Thay đổi:** <cache>/ui.json (cổng, mã truy cập, pid của tiến trình đang chạy), <cache>/ui-open.html (trang mở có mã truy cập, chỉ bạn đọc được), <cache>/ui-state.json (chuyện đã đọc, để sau, kiểm góc kể), <cache>/taste.json (việc bạn làm với chuyện kèm đặc trưng của chuyện, chỉ nằm trên máy). Mọi thay đổi khác do bạn bấm trên giao diện.
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -193,7 +193,7 @@ Mã thoát: 0 xong; 1 không có chuyện này trong hộp, hoặc file chuyện
 
 Đánh dấu một chuyện (theo id hoặc mã M-XXXX): use (sẽ dùng, status picked), later (để sau, chỉ ghi trên máy này), drop (bỏ, status dropped).
 
-**Thay đổi:** use/drop: dòng status trong <box>/<id>.md; later: <cache>/ui-state.json; quyết định kèm hạng của chuyện lúc đó: <cache>/metrics.json (chỉ nằm trên máy).
+**Thay đổi:** use/drop: dòng status trong <box>/<id>.md; later: <cache>/ui-state.json; quyết định kèm hạng của chuyện lúc đó: <cache>/metrics.json, và kèm đặc trưng của chuyện (không có chữ của chuyện): <cache>/taste.json (cả hai chỉ nằm trên máy).
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -206,11 +206,29 @@ momentry mark M-7K3Q drop --json
 
 Mã thoát: 0 xong; 1 không có chuyện này trong hộp, mã trùng, hoặc file chuyện sai khuôn; 2 sai cú pháp, id hoặc nhãn sai.
 
+### `momentry taste`
+
+Xem gu của bạn từ những gì bạn đã làm với chuyện: trong các chuyện top 5 đã quyết, bao nhiêu chuyện bạn dùng (use, drafted, published), chuyện bạn dùng nằm hạng trung bình mấy, và đặc trưng bạn hay dùng hay bỏ (giằng xé, tín hiệu, stakes), số chuyện bạn tự ghi (momentry bỏ sót) và số lần bạn sửa chữ model viết. Chỉ đọc <cache>/taste.json trên máy, không gọi model (0 USD).
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--repo DIR` | chỉ tính dự án ở repo này (mặc định: mọi dự án trên máy) |
+
+```sh
+momentry taste
+momentry taste --repo ~/code/du-an
+momentry taste --json             # cho agent
+```
+
+Mã thoát: 0 xong; 1 lỗi (xem dòng "sửa"); 2 sai cú pháp lệnh hoặc cờ.
+
+Tiếp theo: momentry list --rank
+
 ### `momentry add`
 
 Ghi một chuyện tay (lệnh momentry-bip của agent gọi lệnh này). Qua kiểm riêng tư.
 
-**Thay đổi:** <box>/<date>-<slug>.md, hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn; với --by live: <cache>/metrics.json (lúc có chuyện đầu tiên).
+**Thay đổi:** <box>/<date>-<slug>.md, hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn; với --by live: <cache>/metrics.json (lúc có chuyện đầu tiên); với --by human: <cache>/taste.json (chuyện momentry bỏ sót, chỉ đặc trưng, chỉ nằm trên máy).
 
 | Cờ | Ý nghĩa |
 |---|---|

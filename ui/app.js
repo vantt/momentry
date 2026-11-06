@@ -323,7 +323,7 @@
       <div>
         <article class="sheet${used ? ' is-picked' : ''}">
           <div class="card-meta">${meta}</div>
-          ${s.angle ? `<p class="sheet-angle">${esc(s.angle)}</p>${s.audience ? `<p class="sheet-aud">For ${esc(s.audience)}</p>` : ''}`
+          ${s.angle ? `<p class="sheet-angle">${esc(s.angle)}</p>${s.audience ? `<p class="sheet-aud">For ${esc(s.audience)}</p>` : ''}${angleCheckHtml(s)}`
     : `<div class="angle-ask"><p class="hint">${s.angleNone ? 'Claude read this story and found no angle worth telling.' : 'No angle yet: momentry writes one for the top stories of each session only.'}</p>
             <button class="btn btn-quiet btn-sm" type="button" data-action="write-angle">${s.angleNone ? 'Try again' : 'Write the angle'}</button><span class="hint">about $0.004, 25 seconds</span></div>`}
           <div class="title-row${s.angle ? ' is-sub' : ''}" data-section="title">
@@ -363,6 +363,17 @@
           <div><div class="label">File</div><div class="path">${esc(s.file)}</div></div>
         </div>
       </aside>
+    </div>`;
+  }
+
+  /** The angle check: is it a story you can tell, and is it clear without asking more. Clicking a pressed answer takes it back. */
+  const VERDICT_WORDS = [['tellable', 'I can tell this'], ['no-story', 'True, but no story'], ['invented', 'Made up']];
+  const ANSWER_WORDS = [['yes', 'Yes'], ['no', 'No']];
+  function angleCheckHtml(s) {
+    const btn = (field, [v, w], cur) => `<button class="btn btn-quiet btn-sm" type="button" data-action="angle-check" data-field="${field}" data-value="${v}" aria-pressed="${cur === v}">${w}</button>`;
+    return `<div class="angle-check">
+      <div class="decide" role="group" aria-label="Is this angle a story you can tell?">${VERDICT_WORDS.map((x) => btn('verdict', x, s.verdict)).join('')}</div>
+      <div class="decide" role="group" aria-label="Clear after reading, no need to ask more?"><span class="hint">Clear without asking more?</span>${ANSWER_WORDS.map((x) => btn('understood', x, s.understood)).join('')}</div>
     </div>`;
   }
 
@@ -559,7 +570,17 @@
       <section class="panel"><div class="panel-head"><div><h2>Agents</h2><p>Where momentry listens for finished sessions.</p></div></div>
         ${h.agents.length ? `<ul class="list">${h.agents.map((a) => `<li><div class="grow"><div class="title">${esc(a.label)}</div><div class="sub">${esc(a.words)}</div></div>${a.ok ? `<span class="ok-text">${ICON.check}Connected</span>` : `<button class="btn btn-quiet btn-sm" type="button" data-action="connect" data-name="${esc(a.name)}">Connect</button>`}</li>`).join('')}</ul>` : '<p class="hint">No supported agent found on this machine. momentry works with Claude Code, Codex, pi, omp and Antigravity.</p>'}
       </section>
-    </div>`;
+    </div>
+    ${tasteHtml(h.taste)}`;
+  }
+
+  /** How well the wall's top 5 matches what you use, from your own decisions on this machine. */
+  function tasteHtml(t) {
+    if (!t) return '';
+    const line = t.enough
+      ? `Top 5: you used ${t.used} of ${t.decided} stories you decided on.${t.meanUsedRank !== null ? ` Stories you use sit at rank ${t.meanUsedRank.toFixed(1)} on average.` : ''}`
+      : `Needs ${plural(t.missing, 'more decision', 'more decisions')} on top-5 stories (Use, Later or Drop) before this is shown.`;
+    return `<section class="panel taste"><div class="panel-head"><div><h2>Your picks</h2><p>Counted on this machine only. Nothing is sent anywhere.</p></div></div><p data-taste>${esc(line)}</p></section>`;
   }
 
   // ---------- Settings ----------
@@ -859,6 +880,15 @@
           await mark(card.dataset.key, el.dataset.mark);
           drawWall();
           getOverview(true).catch(() => {});
+          break;
+        }
+        case 'angle-check': {
+          el.disabled = true;
+          const [pid, id] = current.key.split('/');
+          const field = el.dataset.field;
+          const value = current[field] === el.dataset.value ? null : el.dataset.value;
+          current = { ...current, ...(await api('PUT', `/api/stories/${enc(pid)}/${enc(id)}/angle-check`, { [field]: value })) };
+          drawStory();
           break;
         }
         case 'mark-one': { el.disabled = true; current = { ...current, ...(await mark(current.key, el.dataset.mark)) }; drawStory(); break; }
