@@ -216,6 +216,47 @@ test('harness: replays a stored capture, measures it against labels, writes resu
   assert.ok(!fs.existsSync(path.join(run1, 'replay')), 'replay scratch removed without --keep');
 });
 
+test('harness --refresh: a new capture replays the other steps and calls the model only for the named ones', async () => {
+  const { d, tr, env, session } = fixtureCapture();
+  const out = path.join(d, 'out');
+  const run1 = path.join(out, session.id, 'runs', '1');
+  fs.mkdirSync(run1, { recursive: true });
+  fs.cpSync(path.join(FIX, 'llm-ok'), path.join(run1, 'llm'), { recursive: true });
+  const first = await runOnce({ session, fromLine: 1, toLine: 8, scratch: path.join(d, 'cap'), fakeLlm: path.join(run1, 'llm'), env });
+  const { windowSha } = await import('../scripts/eval/run.mjs');
+  fs.writeFileSync(path.join(run1, 'capture.json'), JSON.stringify({
+    id: session.id, run: 1, fromLine: 1, toLine: 8, windowSha: windowSha(tr, 1, 8), report: first.report, dryRun: { usd: 0.2 }, ranked: [],
+  }));
+  const m = path.join(d, 'manifest.json');
+  fs.writeFileSync(m, JSON.stringify({ sessions: [session] }));
+  const lines = [];
+  const io = { out: (s) => lines.push(s), err: (s) => lines.push(s) };
+  assert.equal(await main(['--manifest', m, '--out', out, '--refresh', 'stakes'], io, env), 2, 'refresh needs --capture');
+  assert.equal(await main(['--manifest', m, '--out', out, '--capture', '--refresh', 'nope'], io, env), 2);
+
+  const state = path.join(d, 'state');
+  fs.mkdirSync(state);
+  fs.chmodSync(path.join(HERE, 'fixtures', 'fake-claude', 'claude'), 0o755);
+  const zero = { main_goal: 'x', stakes: ['M1', 'M2', 'M3'].map((id) => ({ id, stakes: 0, reason: 'r' })) };
+  const live = { ...env, PATH: `${path.join(HERE, 'fixtures', 'fake-claude')}${path.delimiter}${env.PATH}`,
+    FAKE_CLAUDE_PLAN: 'ok', FAKE_CLAUDE_STATE: state, FAKE_CLAUDE_RESULT: JSON.stringify(zero) };
+  lines.length = 0;
+  assert.equal(await main(['--manifest', m, '--out', out, '--capture', '--refresh', 'stakes'], io, live), 0, lines.join('\n'));
+  const calls = fs.readFileSync(path.join(state, 'calls.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.equal(calls.length, 1, 'only the stakes step called the model');
+  assert.match(calls[0].prompt, /stakes 0-3/);
+  const run2 = path.join(out, session.id, 'runs', '2');
+  const rec = JSON.parse(fs.readFileSync(path.join(run2, 'capture.json'), 'utf8'));
+  assert.equal(rec.refreshedFrom, 1);
+  assert.deepEqual(rec.refreshed, ['stakes']);
+  assert.equal(rec.freshUsd, 0.01);
+  assert.ok(rec.ranked.length >= 2 && rec.ranked.every((s) => s.stakes === 0));
+  for (const f of ['harvest-c1-r1.json', 'hook-tension-1.json', 'outsider-1.json']) {
+    assert.equal(fs.readFileSync(path.join(run2, 'llm', f), 'utf8'), fs.readFileSync(path.join(run1, 'llm', f), 'utf8'));
+  }
+  assert.equal(JSON.parse(JSON.parse(fs.readFileSync(path.join(run2, 'llm', 'stakes-1.json'), 'utf8')).result).stakes[0].stakes, 0);
+});
+
 test('review page: a label file read and written back keeps every label the harness sees', async () => {
   const { readLabelFile, writeLabelFile } = await import('../scripts/eval/review.mjs');
   const text = `---\nsession: abc12345\nhost: claude\nstatus: draft\n---\n| # | slug | tiêu đề | dòng | keywords | t | lý do |\n|---|---|---|---|---|---|---|\n| 1 | tmp-quota | /tmp hết hạn mức | 487-740 | EDQUOT, worktree | x | Sự cố. |\n| 2 | | Tìm kiếm tiếng Việt | 1363-1364, 2344 | tiếng Việt, dấu | | |\n`;
