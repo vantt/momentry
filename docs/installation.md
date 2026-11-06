@@ -135,7 +135,7 @@ curl -fsSL https://github.com/vantt/momentry/releases/latest/download/install.sh
 
 Bản phát hành có `-` trong tên (ví dụ `v0.2.0-rc.1`) không bao giờ là "latest"; cài bằng `--version`.
 
-Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên trong `checksums.txt`, từ chối archive có link hay file ngoài `bin/ lib/ prompts/`, chạy thử bản mới trước khi đổi `current`, và không ghi đè một `momentry` không do nó cài. Chữ ký (cosign) chưa có; installer nói rõ "chưa kiểm chữ ký".
+Installer chỉ tải qua HTTPS, kiểm sha256 của archive theo đúng tên trong `checksums.txt`, từ chối archive có link hay file ngoài `bin/ lib/ prompts/ rules/ ui/`, chạy thử bản mới trước khi đổi `current`, và không ghi đè một `momentry` không do nó cài. Chữ ký (cosign) chưa có; installer nói rõ "chưa kiểm chữ ký".
 
 ## Biến môi trường khi chạy
 
@@ -186,6 +186,7 @@ momentry config unset box --project --dry-run
 | `budget.dailyUsd` | 3 | Ngân sách mỗi ngày (USD) cho phiên gom tự động, chung mọi dự án; 0 là không giới hạn. Chỉ nhận từ cấu hình người dùng |
 | `harvest.runs` / `.model` / `.fillRetries` / `.maxInputTokens` / `.timeoutSec` | 1 / `haiku` / 1 / 150000 / 600 | |
 | `rank.model` | `sonnet` | |
+| `rank.weights.<id>` / `rank.disabled` | không / `[]` | Đổi trọng số hoặc tắt một luật xếp hạng theo id trong [`rules/rank.json`](../rules/rank.json), ví dụ `momentry config set rank.weights.stakes 2`, `momentry config set rank.disabled '["outsider_only_unscored"]'`. Chỉ đổi thứ tự, không ẩn chuyện; không thêm điều kiện mới được. Chỉ đặt trong cấu hình người dùng |
 | `outsider.enabled` / `.model` | true / `haiku` | `sonnet` đọc kỹ hơn nhưng tốn gấp ~8 lần ở bước này, không thấy hơn trên bộ đo ([số đo](experiments/2026-11-05-cost-cuts/README.md)) |
 | `angle.enabled` / `.model` / `.topN` | true / `haiku` / 10 | Xương chuyện và góc kể cho N chuyện đầu bảng của mỗi phiên sau khi xếp hạng, mỗi chuyện một lần gọi (~0,003 USD với `haiku`). `sonnet` tốn ~13 lần, chưa thấy hơn ([số đo](experiments/2026-11-05-angle/README.md), [xương chuyện](experiments/2026-11-05-story-spine/README.md)). `momentry angle` làm bù cho chuyện cũ |
 | `angle.profileModel` | `haiku` | Viết hồ sơ dự án 3–5 câu từ README và `docs/` (mỗi dự án một lần, ~0,002 USD), để góc kể mở bằng bối cảnh. File ở `<cache>/profiles/`, sửa tay được: momentry giữ bản bạn sửa. Xoá file để viết lại |

@@ -9,7 +9,7 @@ import { cluster, checkPartition, resolveBoxTarget, countHits } from '../lib/clu
 import { hookTension, stakes, shuffle } from '../lib/score.mjs';
 import { applyOutsider } from '../lib/outsider.mjs';
 import { buildStory, mergePatch, renderBody } from '../lib/story.mjs';
-import { rankKey, sortRanked } from '../lib/rank.mjs';
+import { explain, sortRanked } from '../lib/rank.mjs';
 import { writeNew, mergeInto, readStory } from '../lib/box.mjs';
 import { chunk } from '../lib/reduce.mjs';
 
@@ -240,7 +240,7 @@ test('rank: tension != none first, then stakes + strength, hits, newer date; mis
     s('t-nostakes', { tension: 'khac', strength: 3, hits: 9 }),
   ];
   assert.deepEqual(sortRanked(stories).map((x) => x.id), ['t-high-hits', 't-high-newer', 't-high', 't-low', 't-nostakes', 'none-high', 'old-sample']);
-  assert.equal(rankKey(stories[0])[1], 2);
+  assert.equal(explain(stories[0]).tier.id, 'harvested_unscored');
   assert.equal(sortRanked(stories).length, stories.length);
 });
 
@@ -267,8 +267,8 @@ test('rank: stories found only by the outsider step go after every other story',
   ];
   assert.deepEqual(sortRanked(stories).map((x) => x.id),
     ['harvest-outsider', 'bip-outsider', 'harvest-none', 'manual', 'outsider-hotspot', 'outsider-only']);
-  assert.equal(rankKey(stories[0])[0], 1);
-  assert.equal(rankKey(stories[5])[0], 0);
+  assert.equal(explain(stories[0]).tier.id, 'outsider_only_with_tension');
+  assert.equal(explain(stories[5]).tier.id, 'harvested_unscored');
 });
 
 test('chunked hits: same run in two chunks counts once', async () => {

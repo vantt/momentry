@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "about": "Ranking of `momentry list --rank`, the web UI wall and the angle step's top N. A story goes to the first tier whose conditions all hold; inside a tier the higher score (sum of the adjustments that fire) comes first; equal scores fall to the tie-breakers. How to change a rule: docs/development.md.",
+  "tiers": [
+    {
+      "id": "harvested_with_tension",
+      "when": [
+        { "feature": "outsider_only", "op": "=", "value": false },
+        { "feature": "tension", "op": "!=", "value": "none" }
+      ],
+      "why": "A harvest run caught it and it has a real tension: the stories most often worth telling.",
+      "evidence": "docs/experiments/2026-11-05-ranking/README.md"
+    },
+    {
+      "id": "harvested_no_tension",
+      "when": [
+        { "feature": "outsider_only", "op": "=", "value": false },
+        { "feature": "tension", "op": "=", "value": "none" }
+      ],
+      "why": "Tension none: an event, a tip or a chore; t less often than stories with a tension.",
+      "evidence": "docs/experiments/2026-11-05-ranking/README.md"
+    },
+    {
+      "id": "harvested_unscored",
+      "when": [
+        { "feature": "outsider_only", "op": "=", "value": false }
+      ],
+      "why": "The tension step never scored it (missing tension): nothing to rank it by yet.",
+      "evidence": "docs/prd.md"
+    },
+    {
+      "id": "outsider_only_with_tension",
+      "when": [
+        { "feature": "tension", "op": "!=", "value": "none" }
+      ],
+      "why": "Found only by the outsider step: it retells a practice from the outside angle and is rarely t (2/20).",
+      "evidence": "docs/experiments/2026-11-05-ranking/README.md"
+    },
+    {
+      "id": "outsider_only_no_tension",
+      "when": [
+        { "feature": "tension", "op": "=", "value": "none" }
+      ],
+      "why": "Found only by the outsider step and tension none.",
+      "evidence": "docs/experiments/2026-11-05-ranking/README.md"
+    },
+    {
+      "id": "outsider_only_unscored",
+      "when": [],
+      "why": "Found only by the outsider step and never scored.",
+      "evidence": "docs/prd.md"
+    }
+  ],
+  "adjust": [
+    {
+      "id": "stakes",
+      "feature": "stakes",
+      "weight": 1,
+      "why": "Stakes 0-3: how much the story changed the outcome of the session's main work. Added, not multiplied, so strength 0 (every tension none) does not erase it.",
+      "evidence": "docs/experiments/2026-11-05-ranking/README.md"
+    },
+    {
+      "id": "strength",
+      "feature": "strength",
+      "weight": 1,
+      "why": "Strength 0-3 of the tension: how hard the hook pulls a reader on.",
+      "evidence": "docs/experiments/2026-11-05-ranking/README.md"
+    }
+  ],
+  "tiebreak": ["hits desc", "date desc", "id asc"]
+}
