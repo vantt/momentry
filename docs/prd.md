@@ -422,10 +422,21 @@ Cài đặt: `install.sh` (Linux, macOS, WSL) hoặc `install.ps1` (Windows) đ�
 
 Mỗi chuyện một file `<box>/YYYY-MM-DD-ten-ngan.md`. Tên file (bỏ `.md`) là id của chuyện, không đổi sau khi tạo. Trường `id` trong frontmatter là **tuỳ chọn**: máy luôn ghi cho file mới; file thiếu `id` (như 8 chuyện mẫu) lấy id từ tên file; có `id` mà khác tên file thì `check` báo lỗi khuôn. `ten-ngan` sinh từ tiêu đề: bỏ dấu, chữ thường, gạch nối, tối đa 6 chữ; trùng thì thêm `-2`. Slug cũng qua bộ kiểm riêng tư (mục 6.7). Khuôn theo bản B ([sample/README.md][mau]), thêm các trường máy.
 
+**Mã chuyện** (`lib/story-code.mjs`): mỗi chuyện có thêm một mã ngắn dạng `M-XXXX` (4 ký tự Crockford base32: `0-9 A-Z` bỏ `I L O U`) để gọi nhanh trong CLI, giao diện web, chat và link `[[M-XXXX]]` của Obsidian. Id và tên file giữ nguyên; mã chỉ là tên gọi thêm.
+
+- Ứng viên thứ k của một id: 20 bit đầu của `sha256(id)` (k = 0) hoặc `sha256("<id>#<k>")` (k ≥ 1), viết thành 4 ký tự.
+- Mã đã ghi trong file (`code: M-XXXX`) là chuẩn, kể cả khi khác ứng viên 0. Chuyện chưa có `code` (file cũ, 8 chuyện mẫu) lấy mã bằng cách tính: theo thứ tự id (cũ trước), mỗi chuyện lấy ứng viên đầu tiên chưa bị mã đã ghi hay chuyện đứng trước trong cùng hộp giữ. Không cần chuyển đổi dữ liệu.
+- Chuyện mới được ghi `code` và `aliases: [M-XXXX]` ngay sau `id`, lấy ứng viên đầu tiên chưa chuyện nào trong hộp giữ, nên không bao giờ làm mã của chuyện cũ đổi. `momentry check --fix` ghi mã đang tính vào các file chưa có (không mã nào đổi). Xoá một chuyện chưa ghi mã có thể làm mã tính của chuyện khác dời; ghi mã bằng `check --fix` để chốt.
+- Hai file ghi cùng một mã (hiếm: hai tiến trình tạo chuyện cùng lúc, hoặc sửa tay) thì `check` báo lỗi khuôn ở cả hai; tra theo mã đó báo trùng, tra theo id vẫn được.
+- Mọi chỗ nhận id chuyện cũng nhận mã, hoa thường đều được, có hoặc không `M-`: `show`, `mark`, `angle --story`, API của giao diện web (`/api/stories/<dự án>/<id hoặc mã>`), trang duyệt nhãn của bộ đo. `list` in cột `code`; `list --json` và `show --json` có trường `code`. Thẻ chuyện và trang chuyện trên giao diện web, thẻ trên trang duyệt nhãn hiện mã.
+- Bộ kiểm riêng tư bỏ qua `code` và các mục mã trong `aliases` (alias tự viết vẫn bị kiểm); đối chiếu nhãn của bộ đo chỉ đọc `hook` và thân, không đọc frontmatter.
+
 ```yaml
 # giá trị minh hoạ, không phải kết quả chạy thật
 ---
 id: 2026-11-02-mot-ky-tu-unicode
+code: M-7K3Q                        # mã chuyện; máy ghi cho file mới, file cũ tính ra (xem trên)
+aliases: [M-7K3Q]                   # để [[M-7K3Q]] trong Obsidian trỏ tới file này
 date: 2026-11-02                    # ngày chuyện xảy ra (timestamp của dòng đầu trong lines)
 repo: obsidian-pkm-automation
 status: raw                         # raw | picked | drafted | published | dropped
@@ -570,7 +581,8 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
   lib/quarantine.mjs         put(repo, story, reason); list(repo); release(repo, id, blocklist)
   lib/viet.mjs               nfc, stripDiacritics, toTelex, slugify
   lib/frontmatter.mjs        parse(md) -> {data, body}; stringify(data, body) (ngữ pháp mục 6.6)
-  lib/box.mjs                readBox(dir) -> Story[]; writeNew(story); mergeInto(id, patch); storiesOfSession(sid)
+  lib/box.mjs                readBox(dir) -> Story[]; writeNew(story); mergeInto(id, patch); storiesOfSession(sid); findStory(dir, id|mã); backfillCodes(dir)
+  lib/story-code.mjs         mã chuyện M-XXXX: candidateCode(id, k), assignCodes(stories), normalizeCode(input)
   lib/ledger.mjs             load(), save(), lock(sid) / touch / unlock (wx + pid + mtime), needsHarvest(sid, stat) -> {fromLine} | null; recordSpend(sid, {step, usd}) chi phí ngoài cửa sổ gom
   lib/rank.mjs               rankKey(story); sortRanked(stories)
   lib/angle.mjs              bước 13: pickStories, excerpt, angleOne (xương chuyện + góc kể), anglePatch, spineOf
@@ -610,9 +622,11 @@ momentry <lệnh> [cờ]
 | `add` | Ghi một chuyện tay (dùng cho `/bip`); qua kiểm riêng tư | `--title`, `--note`, `--by human`, `--session ID` |
 | `rescore` | Chấm lại (bước 9 tuỳ chọn, 7, 8) mọi chuyện `status: raw` của một phiên; xoá `needsRescore` | `--session ID`, `--no-outsider`, `--fake-llm DIR` |
 | `quarantine` | Liệt kê chuyện bị giữ ngoài repo; thả vào hộp nếu qua kiểm | `--release ID`, `--repo DIR` |
-| `angle` | Bước 13 cho chuyện đã có trong hộp (mặc định top `angle.topN` của cả hộp, chưa có góc kể) | `--top N`, `--story ID`, `--force`, `--dry-run`, `--json` |
-| `list` | Bảng id, ngày, status, hook, tension, stakes, strength, hits | `--rank`, `--status S`, `--thread T`, `--session ID`, `--json` |
-| `check` | Kiểm khuôn frontmatter, `id` (nếu có) khớp tên file, link không gãy, riêng tư | `--box DIR`, `--staged` |
+| `angle` | Bước 13 cho chuyện đã có trong hộp (mặc định top `angle.topN` của cả hộp, chưa có góc kể) | `--top N`, `--story ID` (id hoặc mã), `--force`, `--dry-run`, `--json` |
+| `list` | Bảng mã, id, ngày, status, hook, tension, stakes, strength, hits | `--rank`, `--status S`, `--thread T`, `--session ID`, `--json` |
+| `show <id\|mã>` | In đầy đủ một chuyện, kèm mã | `--json` |
+| `mark <id\|mã> <use\|later\|drop>` | Đánh dấu một chuyện như nút trên giao diện | `--dry-run`, `--json` |
+| `check` | Kiểm khuôn frontmatter, `id` (nếu có) khớp tên file, link không gãy, mã chuyện không trùng, riêng tư; `--fix` ghi mã vào file chưa có | `--box DIR`, `--staged`, `--fix` |
 | `reduce` | In văn bản rút gọn và điểm nóng (gỡ lỗi, thí nghiệm) | `--transcript FILE`, `--to-line N`, `--out DIR` |
 | `ledger` | Xem hoặc quên một phiên trong sổ | `--show`, `--forget ID` |
 | `init` | Tạo `.momentry.json` và hộp, cài hook và `/bip` (khi được đồng ý), chạy doctor | `--repo DIR`, `--no-connect`, `--yes`, `--dry-run`, `--json` |
