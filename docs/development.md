@@ -116,6 +116,16 @@ Bộ đo chất lượng và chi phí ([scripts/eval/](../scripts/eval/README.md
 
 `--save-prompts DIR` giữ prompt (`<key>.prompt.txt`) và đầu ra thô của model (`<key>.json`) ở DIR thay cho `<cache>/runs/<phiên>/<ts>/`; với `--dry-run` không kèm `--fake-llm` chỉ ghi prompt harvest.
 
+## Thêm từ vựng điểm nóng
+
+Từ vựng của bộ dò điểm nóng (câu chọn, phản đối, ngắt của chủ phiên bằng tiếng Việt và tiếng Anh; từ nối và từ chỉ khoảng của `metricPair`; lệnh git đảo lịch sử; đường dẫn bài học và cấu hình agent; thông báo bị chặn) nằm ở [`rules/hotspots.json`](../rules/hotspots.json), không trong code. Thuật toán, ngưỡng và nhãn tín hiệu vẫn ở `lib/hotspots.mjs`.
+
+1. Sửa `rules/hotspots.json`. Mỗi chuỗi là một mảnh regex JavaScript (thoát `. ( ) ? *` khi muốn ký tự thật), không mở nhóm bắt (dùng `(?:…)`), chữ Việt ở dạng NFC. Danh sách chia theo ngôn ngữ (`vi`, `en`); thêm ngôn ngữ thì thêm khoá mới. Cờ regex do code đặt theo từng danh sách, ghi trong `$comment`.
+2. `node --test test/hotspots-rules.test.mjs`: kiểm bảng (mảnh sai thì báo đúng tên mục, ví dụ `ownerVoice.choiceWords.vi[2]`), và so điểm nóng với bản dò cũ đóng băng (`test/fixtures/hotspots-legacy.mjs`) trên các mẫu, transcript fixture và transcript của bộ đo nếu máy có (`path:` trong `docs/_private/eval/labels/*.md`, hoặc `MOMENTRY_EVAL_LABELS=<thư mục nhãn>`). Khi bảng còn giống bảng mặc định thì điểm nóng phải trùng hoàn toàn; khi bạn cố ý thêm từ, test in ra những dòng đổi (`shipped table changes N detector outputs`) thay vì hỏng.
+3. Đo trên bộ đề: `node scripts/eval/run.mjs --manifest docs/_private/eval/manifest.json` (chạy lại, 0 USD), hoặc so đầu ra `momentry reduce --transcript … --out DIR` trước và sau. Chỉ số không được tụt.
+
+Bảng hỏng hay thiếu lúc chạy thì momentry báo một lần trên stderr và dùng bảng mặc định trong `lib/hotspots-default.mjs` (lưới an toàn, không cần chép theo mỗi lần thêm từ).
+
 ## Cài đặt
 
 Mọi cài đặt đổi qua `momentry config` (CLI), kể cả cài đặt riêng từng dự án (`--project`). Không thêm cờ lẻ kiểu `init --box`; khoá mới đi vào `lib/config-schema.mjs` (chung) hoặc `PROJECT_KEYS` trong `lib/config-cmd.mjs` (riêng dự án). Giao diện web (`lib/ui-api.mjs`) gọi đúng các hàm ghi của `lib/config-cmd.mjs` (`write`, `setProjectBox`, `setProjectBudget`, `setPrivateProject`) và `Projects.setPaused`, không có bản ghi thứ hai, nên quy tắc như "khoá chỉ của máy không vào file repo" chỉ nằm một chỗ.
