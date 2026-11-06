@@ -11,6 +11,10 @@ import { fileURLToPath } from 'node:url';
 import { makeLabel, slugAll, idSlug, matches, ANGLE_VERDICTS, UNDERSTOOD } from './labels.mjs';
 import { tailnetAddrs, hostAllowed, magicDnsName } from '../../lib/ui-server.mjs';
 import { assignCodes, normalizeCode } from '../../lib/story-code.mjs';
+import { loadConfig } from '../../lib/config.mjs';
+import { readBox } from '../../lib/box.mjs';
+import { angleCommand } from '../../lib/pipeline.mjs';
+import { scratchEnv, summary } from './run.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
@@ -135,7 +139,7 @@ function context(dataDir, id, rows) {
     const story = { id: s.id, data: { hook: s.title } };
     const p = prev.get(s.id);
     return {
-      id: s.id, code: codes.get(s.id), slug: idSlug(s.id), title: s.title, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null,
+      id: s.id, code: codes.get(s.id), slug: idSlug(s.id), title: s.title, held: !!s.held, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null,
       spine: s.spine ?? null, completeness: s.completeness ?? null,
       prevAngle: p && p.angle !== s.angle ? p.angle : null, prevAudience: p && p.angle !== s.angle ? p.audience : null,
     };
@@ -190,10 +194,50 @@ function saveAngleCheck(dataDir, id, storyId, field, value) {
   return readAngleChecks(dataDir, id);
 }
 
+const ANGLE_ROW = {
+  held: 'góc kể có tên riêng tư, bị giữ ngoài hộp nháp', failed: 'model không trả lời được',
+  locked: 'phiên đang bị khoá (một lần viết góc kể khác đang chạy)', 'no-lines': 'chuyện không có dòng transcript để kể',
+};
+
+/**
+ * Writes the angle of one story of the newest capture now (`momentry angle --story`, real model, ~0.003 USD), in that
+ * capture's own scratch repo, then puts the new angle, audience and spine into capture.json so the page shows it.
+ * A story looked at before with no angle (`none`) is tried again. `angleAt` marks an angle added after the capture.
+ * @param {string} dataDir @param {string} id @param {string} storyId @param {{env?: NodeJS.ProcessEnv, fakeLlm?: string}} [o]
+ */
+export async function writeAngle(dataDir, id, storyId, o = {}) {
+  const fail = (m, status = 400) => Object.assign(new Error(m), { status });
+  const run = newestRun(path.join(dataDir, id, 'runs'));
+  const capFile = run && path.join(run, 'capture.json');
+  const cap = capFile && readJson(capFile);
+  const k = cap?.ranked?.findIndex((x) => x.id === storyId) ?? -1;
+  if (k < 0) throw fail('chuyện này không có trong bản chụp mới nhất', 404);
+  const cur = cap.ranked[k];
+  if (cur.held) throw fail('chuyện bị cổng riêng tư giữ lại, không nằm trong hộp nháp');
+  if (typeof cur.angle === 'string' && cur.angle !== 'none') throw fail('chuyện này đã có góc kể');
+  const scratch = path.join(run, 'scratch');
+  if (!fs.existsSync(path.join(scratch, 'repo'))) throw fail('bản chụp không còn repo nháp để chạy', 409);
+  const env = o.env ?? process.env;
+  const cfg = loadConfig({ cwd: path.join(scratch, 'repo'), env: scratchEnv(scratch, env), flags: o.fakeLlm ? { 'fake-llm': o.fakeLlm } : {} });
+  // model calls use the real environment (logged-in claude); every write goes through cfg (scratch)
+  const res = await angleCommand({ cfg, story: storyId, force: cur.angle === 'none', env });
+  const row = res.stories?.[0];
+  if (!row || (row.status !== 'angle' && row.status !== 'none')) throw fail(`không viết được góc kể: ${row?.error ?? ANGLE_ROW[row?.status] ?? res.message}`, 502);
+  const s = readBox(cfg.box).find((x) => x.id === storyId);
+  if (!s || s.error) throw fail('chuyện không còn trong hộp nháp', 409);
+  const { angle, audience, spine, completeness } = summary(s);
+  cap.ranked[k] = { ...cur, angle, audience, spine, completeness, angleAt: new Date().toISOString() };
+  const tmp = `${capFile}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(cap, null, 2) + '\n', { mode: 0o600 });
+  fs.renameSync(tmp, capFile);
+  return { usd: res.usd ?? null, angle, audience, spine, completeness };
+}
+
 const PAGE = fs.readFileSync(path.join(HERE, 'review.html'), 'utf8');
 
-/** @param {{labels: string, data: string, key: string, tailnet?: string[]}} o */
+/** @param {{labels: string, data: string, key: string, tailnet?: string[], env?: NodeJS.ProcessEnv, fakeLlm?: string}} o (env, fakeLlm: tests) */
 export function createReviewServer(o) {
+  let angleQueue = Promise.resolve();
   const file = (id) => {
     if (!/^[\w-]+$/.test(id)) throw Object.assign(new Error('id sai'), { status: 400 });
     const f = path.join(o.labels, `${id}.md`);
@@ -236,6 +280,19 @@ export function createReviewServer(o) {
         if (typeof j?.story !== 'string' || !/^[\w-]+$/.test(j.story)) return send(res, 400, { error: 'id chuyện sai' });
         const field = Object.hasOwn(j, 'understood') ? 'understood' : 'verdict';
         return send(res, 200, saveAngleCheck(o.data, ma[1], captureStoryId(o.data, ma[1], j.story), field, j[field] ?? null));
+      }
+      const mw = /^\/api\/sessions\/([\w-]+)\/angle-run$/.exec(url.pathname);
+      if (mw && req.method === 'POST') {
+        file(mw[1]);
+        let body = '';
+        for await (const c of req) { body += c; if (body.length > 1 << 12) return send(res, 413, { error: 'quá lớn' }); }
+        let j;
+        try { j = JSON.parse(body); } catch { return send(res, 400, { error: 'dữ liệu sai' }); }
+        if (typeof j?.story !== 'string' || !/^[\w-]+$/.test(j.story)) return send(res, 400, { error: 'id chuyện sai' });
+        // one model call at a time: each holds its session's lock, a second click would only come back "locked"
+        const job = angleQueue.then(() => writeAngle(o.data, mw[1], captureStoryId(o.data, mw[1], j.story), { env: o.env, fakeLlm: o.fakeLlm }));
+        angleQueue = job.catch(() => {});
+        return send(res, 200, await job);
       }
       if (m && req.method === 'PUT') {
         let body = '';

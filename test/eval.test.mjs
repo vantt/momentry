@@ -233,3 +233,48 @@ test('review page: a label file read and written back keeps every label the harn
   const fromFound = writeLabelFile(f.front, 'draft', [{ slug: 'agent-dong-task', title: 'Agent đóng task', keywords: '', t: 'x' }]);
   assert.equal(parseLabels(fromFound)[0].min, 1, 'a story picked from the found list has a slug and no keywords');
 });
+
+test('review page: writes the angle of one story without one, in the capture scratch repo, into capture.json', async () => {
+  const { createReviewServer } = await import('../scripts/eval/review.mjs');
+  const { summary } = await import('../scripts/eval/run.mjs');
+  const { d, env, session } = fixtureCapture();
+  const data = path.join(d, 'data'); const labels = path.join(d, 'labels');
+  const run1 = path.join(data, session.id, 'runs', '1');
+  fs.mkdirSync(run1, { recursive: true }); fs.mkdirSync(labels);
+  const cap = await runOnce({ session, fromLine: 1, toLine: 8, scratch: path.join(run1, 'scratch'), fakeLlm: path.join(FIX, 'llm-ok'), env });
+  const ranked = cap.ranked.map(summary);
+  assert.ok(ranked.every((s) => s.angle === null), 'the fixture outputs have no angle');
+  ranked[1].held = true;
+  const capFile = path.join(run1, 'capture.json');
+  fs.writeFileSync(capFile, JSON.stringify({ id: session.id, run: 1, ranked }));
+  fs.writeFileSync(path.join(labels, `${session.id}.md`), '| slug | keywords | t |\n|---|---|---|\n| x | a, b | |\n');
+  const fake = path.join(d, 'fake');
+  fs.mkdirSync(fake);
+  const angle = { spine: { turn: { text: 'Tưởng chậm vì máy, hoá ra vì một bước thừa.', evidence: [3] } }, angle: 'Tưởng chậm vì máy, hoá ra vì một bước thừa.', audience: 'dev', evidence: [3] };
+  fs.writeFileSync(path.join(fake, 'angle-1.json'), JSON.stringify({ type: 'result', subtype: 'success', is_error: false, duration_ms: 1000, total_cost_usd: 0.003, result: JSON.stringify(angle) }) + '\n');
+  const key = 'k'.repeat(24);
+  const server = createReviewServer({ labels, data, key, env, fakeLlm: fake });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const run = async (story) => {
+    const r = await fetch(`http://127.0.0.1:${server.address().port}/api/sessions/${session.id}/angle-run`, { method: 'POST', headers: { 'x-key': key }, body: JSON.stringify({ story }) });
+    return { status: r.status, body: await r.json() };
+  };
+  try {
+    const page = await (await fetch(`http://127.0.0.1:${server.address().port}/`)).text();
+    assert.ok(page.includes('Viết góc kể') && page.includes('~0,003–0,004 USD'));
+    const r = await run(ranked[0].id);
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.equal(r.body.angle, angle.angle);
+    assert.equal(r.body.completeness, 1);
+    assert.equal(r.body.usd, 0.003);
+    const saved = JSON.parse(fs.readFileSync(capFile, 'utf8')).ranked;
+    assert.equal(saved[0].angle, angle.angle);
+    assert.equal(saved[0].audience, 'dev');
+    assert.ok(saved[0].angleAt, 'marked as added after the capture');
+    assert.equal(saved[0].title, ranked[0].title, 'the rest of the entry is kept');
+    assert.match((await run(ranked[0].id)).body.error, /đã có góc kể/);
+    assert.match((await run(ranked[1].id)).body.error, /cổng riêng tư/);
+    assert.equal((await run('2026-01-10-khong-co')).status, 404);
+    assert.equal((await run('../x')).status, 400);
+  } finally { server.close(); }
+});

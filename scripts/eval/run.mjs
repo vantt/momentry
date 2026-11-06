@@ -79,11 +79,14 @@ export function makeScratch(dir, env = process.env) {
   const repo = ensurePrivateDir(path.join(dir, 'repo'));
   execFileSync('git', ['init', '-q', repo], { stdio: 'ignore' });
   fs.writeFileSync(path.join(repo, '.momentry.json'), '{}\n');
-  const configFile = path.join(dir, 'config.json');
-  fs.writeFileSync(configFile, JSON.stringify({ privacy: { sources: userPrivacySources(env), allowUnchecked: true } }, null, 2) + '\n', { mode: 0o600 });
+  fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify({ privacy: { sources: userPrivacySources(env), allowUnchecked: true } }, null, 2) + '\n', { mode: 0o600 });
+  return { repo, isoEnv: scratchEnv(dir, env) };
+}
+
+/** Environment that points config, cache and project list at a scratch dir (made by makeScratch). */
+export function scratchEnv(dir, env = process.env) {
   const isoEnv = Object.fromEntries(Object.entries(env).filter(([k]) => !k.startsWith('MOMENTRY_') || k === 'MOMENTRY_PRIVACY_SOURCES'));
-  Object.assign(isoEnv, { MOMENTRY_CACHE: path.join(dir, 'cache'), MOMENTRY_CONFIG: configFile, XDG_CONFIG_HOME: path.join(dir, 'xdg') });
-  return { repo, isoEnv };
+  return Object.assign(isoEnv, { MOMENTRY_CACHE: path.join(dir, 'cache'), MOMENTRY_CONFIG: path.join(dir, 'config.json'), XDG_CONFIG_HOME: path.join(dir, 'xdg') });
 }
 
 /** Box stories plus new stories held by the privacy gate, best first. */
