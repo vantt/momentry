@@ -351,6 +351,9 @@ p { margin: 0; }
 .decide { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); }
 .decide .btn { padding: 0 var(--s-2); }
 .decide .btn[aria-pressed="true"] { background: var(--button); color: var(--on-button); border-color: var(--button); }
+.angle-check { display: grid; gap: var(--s-2); margin: var(--s-2) 0 var(--s-3); max-width: 32rem; }
+.angle-check .hint { align-self: center; }
+.panel.taste { margin-top: var(--s-4); }
 
 .source { margin-top: var(--s-8); max-width: var(--read-max); }
 .convo { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-4); }
