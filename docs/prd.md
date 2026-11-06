@@ -143,6 +143,8 @@ Gộp điểm nóng cùng loại cách nhau ≤ 5 dòng thành một điểm. Tr
 
 Lưu ý: `metricPair` có điều kiện "mũi tên/từ nối" nên có ngoại lệ ngôn ngữ nhỏ (`lên`, `xuống`, `thành`, `tới`, `to`). Đây là từ nối số, không phải regex bắt cảm xúc hay quyết định. Bản harness chưa lọc khoảng số; bộ lọc khoảng, số Việt và `ownerVoice`/`lessonWrite`/`blocked` thêm sau, đo trên 4 phiên thật ở [số đo](experiments/2026-11-05-material-signals/README.md). Từ vựng phản đối của `ownerVoice` giữ hẹp có chủ ý: cụm cố định, không có "không" đứng giữa câu. `ownerVoice` và cờ `rejected` chỉ có trên Claude.
 
+Từ vựng và mẫu của các hàm trên (cụm của `ownerVoice` theo ngôn ngữ, từ nối và từ chỉ khoảng của `metricPair`, lệnh và cờ của `gitReversal`, đường dẫn của `lessonWrite`/`metaWrite`, thông báo của `blocked`) là bảng [`rules/hotspots.json`](../rules/hotspots.json), đọc lúc chạy; thêm từ không cần sửa code ([cách thêm](development.md#thêm-từ-vựng-điểm-nóng)).
+
 ### 5.4 Harvest (bước 4)
 
 Prompt `prompts/harvest.md` gồm, theo thứ tự (lấy từ biến thể e4 trong [harness/prompts.mjs][h-prompts]):

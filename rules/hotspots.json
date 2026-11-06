@@ -1,0 +1,112 @@
+{
+  "$comment": "Hotspot vocabulary (PRD 5.3), read by lib/hotspots.mjs at run time. Every string is a JavaScript regex fragment, not a literal: escape . ( ) [ ] ? * + | \\ when you mean the character. Fragments must not open capturing groups; use (?:...). The code joins each list with | inside a group and fixes the flags, noted per list. Lists split by language (vi, en, ...) are joined in key order. Vietnamese text must be NFC (precomposed), as transcripts are. An entry is a string or {id, pattern, comment}. See docs/development.md before editing.",
+  "version": 1,
+  "harnessText": {
+    "$comment": "User lines the harness injected, not the owner: the text starts (after spaces) with one of these. Flags: none.",
+    "prefixes": [
+      { "id": "tag", "pattern": "<", "comment": "<task-notification>, <command-name>, <local-command-stdout> ..." },
+      { "id": "cross-session", "pattern": "Another Claude session sent" }
+    ]
+  },
+  "blocked": {
+    "$comment": "A tool call the environment refused (hook veto, permission or sandbox refusal, worktree guard), matched in the first 400 chars of a failed result. Flags: i.",
+    "patterns": [
+      { "id": "hook-veto", "pattern": "PreToolUse:\\S+ hook error" },
+      { "id": "tool-use-blocked", "pattern": "^<tool_use_error>Blocked:" },
+      { "id": "permission-denied", "pattern": "Permission (?:for this command|to use [^\\n]{0,60}) (?:was |has been )?denied" },
+      { "id": "worktree-guard", "pattern": "isolated in the worktree" },
+      { "id": "sandbox-blocked", "pattern": "blocked by (?:the )?sandbox" },
+      { "id": "sandbox-denied", "pattern": "sandbox[^\\n]{0,40}(?:denied|blocked)" }
+    ]
+  },
+  "metricPair": {
+    "$comment": "A number pair joined by a connector, as in 4 301 → 1 360 or 0,667 lên 0,72.",
+    "connectors": {
+      "$comment": "Between the two numbers. Flags: g i u.",
+      "symbols": ["→", "->", "=>"],
+      "vi": ["lên", "xuống", "thành", "tới"],
+      "en": ["to"]
+    },
+    "rangeConnectors": {
+      "$comment": "Connectors that also write a range (12 to 40 lines); the pair is skipped when a unitWords entry follows. Whole-connector match. Flags: i.",
+      "vi": ["tới"],
+      "en": ["to"]
+    },
+    "positionWords": {
+      "$comment": "A word right before the pair makes it a position range (rows 0 to 190), not a before/after. Followed by spaces. Flags: i.",
+      "vi": ["dòng", "hàng", "trang", "ký tự"],
+      "en": ["rows?", "lines?", "pages?", "bytes?", "chars?"]
+    },
+    "idPrefixes": {
+      "$comment": "Characters right before the pair make it an id range (mapping-0241 to 0300, #12 to #14). Flags: i.",
+      "any": [
+        { "id": "letter-dash", "pattern": "[A-Za-z]-" },
+        { "id": "hash-underscore-slash", "pattern": "[#_/]" }
+      ]
+    },
+    "unitWords": {
+      "$comment": "A unit right after a range connector's second number (0 to 190 rows). Must end the word. Flags: i u.",
+      "vi": ["dòng", "hàng", "ngày", "tuần", "tháng", "trang"],
+      "en": ["[kmgt]?i?b", "bytes?", "rows?", "lines?", "files?", "days?", "weeks?", "months?", "pages?"]
+    }
+  },
+  "gitReversal": {
+    "$comment": "Shell commands that undo or rewrite history. Heredoc bodies are ignored. Flags: none.",
+    "commands": [
+      { "id": "reset", "pattern": "reset" },
+      { "id": "revert", "pattern": "revert" },
+      { "id": "rebase", "pattern": "rebase", "comment": "the code skips a plain rebase onto an upstream (see rebaseRewriteFlags, upstreams)" },
+      { "id": "restore", "pattern": "restore" },
+      { "id": "checkout-dashdash", "pattern": "checkout\\s+--(?=\\s|$)", "comment": "the code skips a checkout that only restores lockfiles" },
+      { "id": "amend", "pattern": "commit\\s+--amend" },
+      { "id": "force-push", "pattern": "push\\s+(?:-f|--force)" }
+    ],
+    "squashWords": ["squash"],
+    "rebaseRewriteFlags": ["-i", "--interactive", "--abort", "--onto", "--root", "--exec", "--autosquash"],
+    "lockfiles": ["package-lock\\.json", "pnpm-lock\\.yaml", "[^/]*\\.lock"],
+    "upstreams": ["origin\\/\\S+", "upstream\\/\\S+", "@\\{u(?:pstream)?\\}", "main", "master", "develop", "trunk"]
+  },
+  "lessonWrite": {
+    "$comment": "Writes to lesson and decision records. kinds: label goes into the signal (ghi <label> <file>); pattern is tested against the slash-normalised path with its own flags (i, m, s, u allowed). copyCommands: shell commands whose last argument is a write target (besides > >> tee).",
+    "kinds": [
+      { "id": "memory", "label": "bài học", "pattern": "(?:^|\\/)(?:memory\\/|MEMORY\\.md$)", "flags": "", "comment": "agent memory notes" },
+      { "id": "decision", "label": "quyết định", "pattern": "(?:^|\\/)(?:decisions?\\/|adrs?\\/|ADR[-_]?\\d)", "flags": "i", "comment": "decision records" },
+      { "id": "journal", "label": "nhật ký", "pattern": "(?:^|\\/)journals?\\/", "flags": "" },
+      { "id": "changelog", "label": "changelog", "pattern": "(?:^|\\/)CHANGELOG(?:\\.md)?$", "flags": "i" }
+    ],
+    "copyCommands": ["cp", "mv", "install"]
+  },
+  "metaWrite": {
+    "$comment": "Agent configuration paths: a path segment starting with one of these. Lesson records win over this list. Flags: none.",
+    "paths": ["\\.claude\\/", "\\.codex\\/", "\\.agents\\/", "AGENTS\\.md", "CLAUDE\\.md", "skills\\/", "hooks?\\/", "settings(?:\\.local)?\\.json"]
+  },
+  "ownerVoice": {
+    "$comment": "The owner speaking. Word lists must end the word (no letter follows). Flags: i u, except interrupt and choiceIds (none).",
+    "interrupt": [
+      { "id": "interrupted", "pattern": "\\[Request interrupted by user", "comment": "start of the turn" }
+    ],
+    "choiceIds": {
+      "$comment": "A turn that is only an option id, optionally (A), A. or A!: A, b2, 3, 1c.",
+      "any": ["[A-Fa-f]\\d?", "\\d[A-Fa-f]?"]
+    },
+    "address": {
+      "$comment": "Optional address word before a choice word (em chọn B).",
+      "vi": ["em", "anh"]
+    },
+    "choiceWords": {
+      "$comment": "Turn starts with one of these: answering a question with a choice.",
+      "vi": ["chọn", "đồng ý", "duyệt", "phương án", "pa"],
+      "en": ["option", "go with", "pick", "choose", "approve"]
+    },
+    "pushbackStart": {
+      "$comment": "Turn starts with one of these: refusing or objecting.",
+      "vi": ["không", "khong", "ko", "dừng", "đừng", "sai"],
+      "en": ["no", "nope", "stop", "wrong", "why"]
+    },
+    "pushbackAnywhere": {
+      "$comment": "Anywhere in a short turn: pushing back or hurrying the agent.",
+      "vi": ["sao (?:lại|mà|vẫn|chưa)", "thông minh hơn", "lâu quá", "quá lâu", "mãi (?:mà )?chưa", "làm gì mà"],
+      "en": ["too slow", "taking too long", "why (?:did|are|is|do|would)", "that'?s wrong"]
+    }
+  }
+}
