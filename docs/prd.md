@@ -121,7 +121,7 @@ Bước 1–11 chạy một lần cho mỗi cửa sổ transcript chưa gom (m�
 | 10 | Kiểm riêng tư | `privacy.mjs` | Mọi trường văn bản của mỗi chuyện sắp ghi, tên file (slug), phần sẽ nối vào file cũ | Qua / vi phạm / bỏ qua (không có nguồn chặn) | Transcript chứa tên note, câu hỏi thật. Mẫu `lo-rieng-tu` rò qua dạng Telex | BG 6.4; DB 4; MẪU |
 | 11 | Dựng file, ghi hộp, sổ | `story.mjs`, `box.mjs`, `ledger.mjs` | Cụm đã chấm và qua kiểm | File chuyện mới hoặc cập nhật file cũ (mục 6.6); sổ ghi dòng cuối đã gom | Chạy lại không ghi trùng; hook gọi nhiều lần vẫn an toàn | BG 6.2; DB 4 |
 | 12 | Xếp hạng | `rank.mjs`, luật ở `lib/rules/rank.json` | Frontmatter các chuyện | Thứ tự: chuyện chỉ outsider thấy xuống cuối → `tension ≠ none` → `stakes + strength` → `hits` (mục 5.9) | Không bỏ chuyện nào, chỉ đẩy chuyện đáng xem lên đầu | TN 6d mục 4 |
-| 13 | Góc kể | Haiku (`angle.md`), mỗi chuyện một lần gọi; `angle.mjs` chọn chuyện và cắt trích đoạn; `asks.mjs` lấy yêu cầu của chủ phiên; `project-profile.mjs` viết hồ sơ dự án (Haiku, `profile.md`, mỗi dự án một lần) | `angle.topN` chuyện đầu bảng của phiên chưa có `angle` (bỏ chuyện `dropped`); với mỗi chuyện: **hồ sơ dự án** (3–5 câu: dự án là gì, cho ai, ràng buộc chính, mục tiêu hiện tại; viết từ README*, PRD/prd*, vision*, requirement(s)*, AGENTS.md, CLAUDE.md, GEMINI.md, ANTIGRAVITY.md ở gốc repo rồi `docs/`, mỗi loại file đầu tiên khớp, tối đa ~14k ký tự; lưu `<cache>/profiles/<repo>-<id>.md`, viết lại chỉ khi các file đó đổi và người dùng chưa sửa file; không có file thì không có hồ sơ; chứa tên riêng tư thì không dùng), **yêu cầu của chủ phiên** (yêu cầu đầu phiên và tối đa 3 yêu cầu gần nhất trước dòng đầu của chuyện, bỏ câu kiểu "tiếp tục", "ok", "commit push", ~2,4k ký tự, có `[Lnnn]`), hook, tension, sides, stakes, thân bài, cộng các `Entry` rút gọn quanh từng dòng trong `lines` (±2 Entry, thu lại tới khi dưới ~24k ký tự), chỉ của phiên có nhiều dòng nhất | **Xương chuyện** `spine`: bảy ô `context` (ai, dự án gì, đang làm gì), `want`, `obstacle`, `turn` (tưởng là… hoá ra…), `action`, `outcome` (có số thì ghi số), `takeaway`; mỗi ô một câu kèm số dòng, hoặc để trống (`context` được dẫn `profile`); `completeness` = số ô đã điền (0–7). Rồi `angle` (2–4 câu, câu đầu là bối cảnh để người ngoài hiểu không cần hỏi, rồi điều người ta tưởng → điều hoá ra → vì sao người nghe nên quan tâm), `audience`, `evidence`; hoặc `none: true` kèm lý do (vẫn có xương chuyện). Số dòng phải nằm trong trích đoạn hoặc khối yêu cầu | Tiêu đề chỉ gọi tên sự kiện; người đọc phải tự nghĩ ra chuyện đằng sau. Góc kể không có bối cảnh thì người ngoài không biết dự án là gì, người làm đang cố làm gì. Lời gọi hỏng (sau một lần gọi lại) không làm hỏng cửa sổ: chuyện chưa có góc kể, `momentry angle` làm bù. Chi phí của `momentry angle` ghi vào sổ (`spend`), tính vào ngân sách ngày | [TN góc kể](experiments/2026-11-05-angle/README.md): 20 chuyện, haiku 19 góc kể và 1 none, ~0,017 USD mỗi phiên. [TN xương chuyện](experiments/2026-11-05-story-spine/README.md): 20 chuyện, 16 góc kể (đều mở bằng bối cảnh) và 4 none, ~0,031 USD mỗi phiên. **Chưa có nhãn người chấm** (kiểm ở trang duyệt, có câu "Đọc xong hiểu được, không cần hỏi thêm?") |
+| 13 | Góc kể | Haiku (`angle.md`), mỗi chuyện một lần gọi; `angle.mjs` chọn chuyện và cắt trích đoạn; `asks.mjs` lấy yêu cầu của chủ phiên; `project-profile.mjs` viết hồ sơ dự án (Haiku, `profile.md`, mỗi dự án một lần) | `angle.topN` chuyện đầu bảng của phiên chưa có `angle` (bỏ chuyện `dropped`); với mỗi chuyện: **hồ sơ dự án** (3–5 câu: dự án là gì, cho ai, ràng buộc chính, mục tiêu hiện tại; viết từ README*, PRD/prd*, vision*, requirement(s)*, AGENTS.md, CLAUDE.md, GEMINI.md, ANTIGRAVITY.md ở gốc repo rồi `docs/`, mỗi loại file đầu tiên khớp, tối đa ~14k ký tự; lưu `<cache>/profiles/<repo>-<id>.md`, viết lại chỉ khi các file đó đổi và người dùng chưa sửa file; không có file thì không có hồ sơ; chứa tên riêng tư thì không dùng), **yêu cầu của chủ phiên** (yêu cầu đầu phiên và tối đa 3 yêu cầu gần nhất trước dòng đầu của chuyện, bỏ câu kiểu "tiếp tục", "ok", "commit push", ~2,4k ký tự, có `[Lnnn]`), hook, tension, sides, stakes, thân bài, cộng các `Entry` rút gọn quanh từng dòng trong `lines` (±2 Entry, thu lại tới khi dưới ~24k ký tự), chỉ của phiên có nhiều dòng nhất | **Cốt truyện** `spine`: bảy ô `context` (ai, dự án gì, đang làm gì), `want`, `obstacle`, `turn` (tưởng là… hoá ra…), `action`, `outcome` (có số thì ghi số), `takeaway`; mỗi ô một câu kèm số dòng, hoặc để trống (`context` được dẫn `profile`); `completeness` = số ô đã điền (0–7). Rồi `angle` (2–4 câu, câu đầu là bối cảnh để người ngoài hiểu không cần hỏi, rồi điều người ta tưởng → điều hoá ra → vì sao người nghe nên quan tâm), `audience`, `evidence`; hoặc `none: true` kèm lý do (vẫn có cốt truyện). Số dòng phải nằm trong trích đoạn hoặc khối yêu cầu | Tiêu đề chỉ gọi tên sự kiện; người đọc phải tự nghĩ ra chuyện đằng sau. Góc kể không có bối cảnh thì người ngoài không biết dự án là gì, người làm đang cố làm gì. Lời gọi hỏng (sau một lần gọi lại) không làm hỏng cửa sổ: chuyện chưa có góc kể, `momentry angle` làm bù. Chi phí của `momentry angle` ghi vào sổ (`spend`), tính vào ngân sách ngày | [TN góc kể](experiments/2026-11-05-angle/README.md): 20 chuyện, haiku 19 góc kể và 1 none, ~0,017 USD mỗi phiên. [TN cốt truyện](experiments/2026-11-05-story-spine/README.md): 20 chuyện, 16 góc kể (đều mở bằng bối cảnh) và 4 none, ~0,031 USD mỗi phiên. **Chưa có nhãn người chấm** (kiểm ở trang duyệt, có câu "Đọc xong hiểu được, không cần hỏi thêm?") |
 
 ### 5.3 Điểm nóng
 
@@ -420,7 +420,7 @@ Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví 
 | `angle.enabled` | true | Bước 13 trong lúc gom; `momentry angle` chạy được cả khi tắt |
 | `angle.model` | `haiku` | `sonnet` viết gọn chữ hơn đôi chỗ nhưng tốn ~13 lần, hay quá 3 câu và chưa thấy hơn ([TN góc kể](experiments/2026-11-05-angle/README.md)) |
 | `angle.topN` | 10 | Số chuyện đầu bảng của phiên được xét; 0 = không gọi |
-| `angle.profileModel` | `haiku` | Viết hồ sơ dự án mà góc kể mở đầu bằng nó; mỗi dự án một lần (~0,001–0,002 USD), lại khi README/docs đổi ([TN xương chuyện](experiments/2026-11-05-story-spine/README.md)) |
+| `angle.profileModel` | `haiku` | Viết hồ sơ dự án mà góc kể mở đầu bằng nó; mỗi dự án một lần (~0,001–0,002 USD), lại khi README/docs đổi ([TN cốt truyện](experiments/2026-11-05-story-spine/README.md)) |
 | `llm.promptCache` | `off` | Mỗi prompt chỉ gửi một lần nên không cache (`DISABLE_PROMPT_CACHING=1`); `5m`, `1h`, `auto` (Claude Code tự chọn) |
 | `scan.quietMinutes` | 30 | |
 | `privacy.sources` | `[]` | **Chỉ đọc từ cấu hình người dùng hoặc env `MOMENTRY_PRIVACY_SOURCES`**, bỏ qua nếu nằm trong `.momentry.json`, để đường dẫn riêng không vào repo |
@@ -471,11 +471,11 @@ hits: 1                             # số lần chạy harvest có bắt chuy�
 runs: 1                             # tổng số lần chạy harvest thành công đã xét chuyện này
 angle: "Điểm tìm kiếm tụt mà code không đổi: ..." # bước 13; `none` = đã xét, không có góc kể; thiếu = chưa xét
 audience: "dev làm tìm kiếm tiếng Việt" # bước 13; chỉ có khi angle có chữ
-spine_context: "Một app ghi chú chạy trên máy, đang làm tìm kiếm tiếng Việt." # bước 13, xương chuyện; chỉ ô đã điền
+spine_context: "Một app ghi chú chạy trên máy, đang làm tìm kiếm tiếng Việt." # bước 13, cốt truyện; chỉ ô đã điền
 spine_context_lines: [profile, "claude:95ca719b#L12"]   # bằng chứng của ô; `profile` = hồ sơ dự án
 spine_turn: "Tưởng ... ; hoá ra ..."  # các ô: context, want, obstacle, turn, action, outcome, takeaway
 spine_turn_lines: ["claude:95ca719b#L861"]
-completeness: 5                     # bước 13: số ô xương chuyện đã điền, 0-7
+completeness: 5                     # bước 13: số ô cốt truyện đã điền, 0-7
 privacy: checked                    # checked | unchecked (chỉ khi privacy.allowUnchecked)
 links: [2026-11-02-do-tim-kiem-tieng-viet]
 threads: [obsidian-hieu-tieng-viet]
@@ -506,7 +506,7 @@ threads: [obsidian-hieu-tieng-viet]
 | `runs` | số lần chạy harvest thành công của cửa sổ này |
 | `hook`, `tension`, `sides`, `strength`, `stakes` | bước 7–8 |
 | `source` | `chat Claude` hoặc `chat Codex`, kèm id phiên |
-| `angle`, `audience`, `spine_*`, `completeness`, dòng Góc kể | bước 13, ghi sau khi file đã có (một bản vá như lúc gộp); không có góc kể thì `angle: none`, không có `audience` và dòng Góc kể (xương chuyện vẫn ghi) |
+| `angle`, `audience`, `spine_*`, `completeness`, dòng Góc kể | bước 13, ghi sau khi file đã có (một bản vá như lúc gộp); không có góc kể thì `angle: none`, không có `audience` và dòng Góc kể (cốt truyện vẫn ghi) |
 
 Thử với prompt gộp cụm trả đủ 4 đoạn thân bài là tối ưu chưa kiểm; v2 giữ prompt gộp cụm như lúc thử.
 
@@ -515,7 +515,7 @@ Luật ghi:
 - Chuyện mới: tạo file. Chuyện gộp vào file cũ (bước 6): chỉ **nối** vào các trường danh sách (`sessions`, `signals`, `hit_by`, `lines`, khử trùng); `runs += runs của cửa sổ này`; `hits += số lần chạy của cửa sổ này có bắt chuyện đó`. Nhờ vậy `hits ≤ runs` luôn đúng và `hits/runs` giữ nghĩa "tỉ lệ lần chạy bắt được". Không viết lại thân bài; mục "Góc người ngoài" chỉ được thêm nếu chưa có. Mọi phần nối thêm qua bộ kiểm riêng tư trước khi ghi.
 - Trường máy (`hook`, `tension`, `sides`, `strength`, `stakes`, `hits`, `runs`) được máy cập nhật khi `status: raw`. User đã đổi `status` thì máy không đụng nữa.
 - Máy không bao giờ đổi `status`, `links`, `threads` của file đã có. Chuyện mới có thể có `links`/`threads` rỗng.
-- Góc kể (`angle`, `audience`, xương chuyện `spine_*` và `completeness`, dòng `**Góc kể:**` ngay dưới tiêu đề) chỉ được ghi khi chuyện chưa có `angle`, ở mọi `status`; gộp chuyện ở lần gom sau không đổi nó. Chỉ `momentry angle --force` viết lại (thay cả trường lẫn dòng trong thân; xương chuyện cũ bị thay hẳn). `completeness` không vào khoá xếp hạng (mục 5.2 bước 12); bộ đo có `--rank-by completeness` để đo riêng.
+- Góc kể (`angle`, `audience`, cốt truyện `spine_*` và `completeness`, dòng `**Góc kể:**` ngay dưới tiêu đề) chỉ được ghi khi chuyện chưa có `angle`, ở mọi `status`; gộp chuyện ở lần gom sau không đổi nó. Chỉ `momentry angle --force` viết lại (thay cả trường lẫn dòng trong thân; cốt truyện cũ bị thay hẳn). `completeness` không vào khoá xếp hạng (mục 5.2 bước 12); bộ đo có `--rank-by completeness` để đo riêng.
 - `main_goal` của phiên lưu trong sổ, không lưu trong từng chuyện.
 - Chuyện cũ chưa có trường mới (8 chuyện mẫu) vẫn đọc được: trường thiếu coi là rỗng, xếp cuối khi `list --rank`.
 - Frontmatter chỉ dùng tập con YAML. Parser tự viết, không npm. Ngữ pháp:
@@ -635,7 +635,7 @@ Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ �
   lib/rank.mjs               sortRanked(stories, table?); explain(story, table?); rankTable(cfg); loadRankTable(file?) bảng luật lib/rules/rank.json
   lib/taste.mjs              gu trên máy (mục 6.8): note(cacheDir, {event, data, …}) ghi <cache>/taste.json; snapshot(data); measures(t, {excludePrivate, project})
   lib/vocab.mjs              từ vựng chuyện lib/rules/story-vocab.json: TENSION_IDS, promptLists() điền {tensions} {signals} của prompt
-  lib/angle.mjs              bước 13: pickStories, excerpt, angleOne (xương chuyện + góc kể), anglePatch, spineOf
+  lib/angle.mjs              bước 13: pickStories, excerpt, angleOne (cốt truyện + góc kể), anglePatch, spineOf
   lib/asks.mjs               bước 13: sessionAsks(entries) yêu cầu của chủ phiên; asksFor(asks, line) khối yêu cầu của một chuyện
   lib/project-profile.mjs    bước 13: findSources(root), ensureProfile(root, cfg) hồ sơ dự án trong <cache>/profiles/
   lib/pipeline.mjs           runSession(sid, opts) -> Report: nối bước 1-11; rescore(sid)
@@ -647,7 +647,7 @@ Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ �
   prompts/hook-tension.md    bước 7 (mục 2)
   prompts/stakes.md          bước 8 (mục 3, biến thể si)
   prompts/outsider.md        bước 9 (mục 4)
-  prompts/angle.md           bước 13 (xương chuyện, góc kể)
+  prompts/angle.md           bước 13 (cốt truyện, góc kể)
   prompts/profile.md         bước 13 (hồ sơ dự án)
   prompts/bip.md             mẫu lệnh /bip cho Claude và Codex
   test/*.test.mjs            gồm imports.test.mjs: quét mọi .mjs, cấm import không có tiền tố node: hoặc đường dẫn tương đối

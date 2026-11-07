@@ -190,7 +190,7 @@ const SLOTS = [['context', 'Bối cảnh'], ['want', 'Muốn gì'], ['obstacle',
 const short = (refs) => (refs || []).map((r) => String(r).replace(/^.*#/, '')).join(', ');
 function spineHtml(s) {
   if (!s.spine) return '';
-  return `<dl class="spine" aria-label="Xương chuyện"><dt><span class="tag">xương chuyện</span></dt><dd>${s.completeness ?? 0}/7 ô</dd>${SLOTS.map(([k, w]) => {
+  return `<dl class="spine" aria-label="Cốt truyện"><dt><span class="tag">cốt truyện</span></dt><dd>${s.completeness ?? 0}/7 ô</dd>${SLOTS.map(([k, w]) => {
     const v = s.spine[k];
     return `<dt>${w}</dt>${v ? `<dd>${esc(v.text)} <span class="ln">${esc(short(v.lines))}</span></dd>` : '<dd class="empty">trống</dd>'}`;
   }).join('')}</dl>`;
