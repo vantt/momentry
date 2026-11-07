@@ -57,9 +57,9 @@ test('llm-ok: writes the right stories, ledger; second run writes nothing', () =
   const r = s.harvest('llm-ok');
   assert.equal(r.code, 0, r.err + r.out);
   assert.match(r.out, /done; 2 chuyện thô, 3 cụm; ghi 3 mới, gộp 0/);
-  assert.deepEqual(s.stories(), ['2026-01-10-do-thoi-gian-tung-buoc-bang.md', '2026-01-10-may-pha-nhanh-gap-ba-nho.md', '2026-01-10-quay-lui-commit-khi-test-do.md']);
-  const { data, body } = s.read('2026-01-10-may-pha-nhanh-gap-ba-nho.md');
-  assert.equal(data.id, '2026-01-10-may-pha-nhanh-gap-ba-nho');
+  assert.deepEqual(s.stories(), ['2026-01-10-do-thoi-gian-tung-buoc-bang-90e4.md', '2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md', '2026-01-10-quay-lui-commit-khi-test-do-90e4.md']);
+  const { data, body } = s.read('2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md');
+  assert.equal(data.id, '2026-01-10-may-pha-nhanh-gap-ba-nho-90e4');
   assert.equal(data.date, '2026-01-10');
   assert.equal(data.repo, 'repo');
   assert.equal(data.status, 'raw');
@@ -72,7 +72,7 @@ test('llm-ok: writes the right stories, ledger; second run writes nothing', () =
   assert.ok(Number.isInteger(data.stakes) && Number.isInteger(data.strength));
   assert.equal(data.hits, 1); assert.equal(data.runs, 1);
   assert.match(body, /\*\*Góc người ngoài:\*\* cách làm phổ biến là đoán bằng mắt/);
-  const out = s.read('2026-01-10-do-thoi-gian-tung-buoc-bang.md').data;
+  const out = s.read('2026-01-10-do-thoi-gian-tung-buoc-bang-90e4.md').data;
   assert.deepEqual(out.hit_by, ['outsider']);
   const l = s.ledger();
   assert.equal(l.lastLine, 8); assert.equal(l.status, 'done'); assert.equal(l.harvests[0].written, 3);
@@ -101,7 +101,7 @@ test('two windows (PreCompact then SessionEnd): window two merges into the old f
   assert.equal(r.code, 0, r.err + r.out);
   assert.match(r.out, /L9-L12: done; 1 chuyện thô, 3 cụm; ghi 0 mới, gộp 1/);
   assert.equal(s.stories().length, 3);
-  const { data } = s.read('2026-01-10-may-pha-nhanh-gap-ba-nho.md');
+  const { data } = s.read('2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md');
   assert.deepEqual(data.lines, [`${SID}#L1`, `${SID}#L3`, `${SID}#L9`]);
   assert.equal(data.runs, 2); assert.equal(data.hits, 2);
   assert.ok(data.hits <= data.runs);
@@ -178,7 +178,7 @@ test('llm-privacy-leak: the leaking story goes to quarantine, never into the box
   const r = s.harvest('llm-privacy-leak', '--no-outsider');
   assert.equal(r.code, 0, r.err + r.out);
   assert.match(r.out, /1 chuyện vi phạm riêng tư/);
-  assert.deepEqual(s.stories(), ['2026-01-10-may-pha-nhanh-gap-ba-nho.md']);
+  assert.deepEqual(s.stories(), ['2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md']);
   const all = Object.values(snapshot(s.box)).join('\n').toLowerCase();
   assert.doesNotMatch(all, /ho sen|hồ sen/);
   assert.equal(s.held().length, 1);
@@ -257,7 +257,7 @@ test('add: human story through the privacy gate', () => {
   assert.equal(r.code, 0, r.err + r.out);
   const [f] = s.stories();
   const { data, body } = s.read(f);
-  assert.equal(f, `${data.date}-may-pha-tu-tat-giua-chung.md`);
+  assert.equal(f, `${data.date}-may-pha-tu-tat-giua-chung-90e4.md`, "the session id gives the last part of the name");
   assert.equal(data.captured_by, 'human'); assert.deepEqual(data.hit_by, ['bip']);
   assert.deepEqual(data.sessions, [SID]); assert.equal(data.privacy, 'checked');
   assert.match(body, /\*\*Chuyện gì xảy ra:\*\* Máy tắt sau 3 tách/);
@@ -271,6 +271,27 @@ test('add: human story through the privacy gate', () => {
   r = u.run(['add', '--note', 'Một ghi chú thường.']);
   assert.equal(r.code, 3);
   assert.deepEqual(u.stories(), []);
+});
+
+test('two machines, same title the same day: different file names, so a git pull brings both without a clash', () => {
+  // one repo checked out on two machines; each writes a story with the same title in its own session
+  const a = setup(); const b = setup();
+  const title = 'Máy pha tự tắt giữa chừng';
+  assert.equal(a.run(['add', '--title', title, '--session', 'claude:aaaa1111']).code, 0);
+  assert.equal(b.run(['add', '--title', title, '--session', 'claude:bbbb2222']).code, 0);
+  const [fa] = a.stories(); const [fb] = b.stories();
+  assert.match(fa, /^\d{4}-\d{2}-\d{2}-may-pha-tu-tat-giua-chung-[0-9a-f]{4}\.md$/);
+  assert.notEqual(fa, fb);
+  // the pull: machine B gets machine A's file next to its own; nothing is overwritten, codes stay apart
+  fs.copyFileSync(path.join(a.box, fa), path.join(b.box, fa));
+  assert.equal(b.stories().length, 2);
+  assert.equal(b.run(['check']).code, 0, 'both files are valid in one box');
+  // a second story of the same title in one session still gets -2
+  assert.equal(a.run(['add', '--title', title, '--session', 'claude:aaaa1111']).code, 0);
+  assert.deepEqual(a.stories().sort(), [fa, fa.replace(/\.md$/, '-2.md')].sort());
+  // without a session the tag is random, still 4 hex characters
+  assert.equal(a.run(['add', '--title', 'Ghi tay không phiên']).code, 0);
+  assert.ok(a.stories().some((f) => /-ghi-tay-khong-phien-[0-9a-f]{4}\.md$/.test(f)));
 });
 
 test('scan: harvests sessions of the repo found under HOME, skips open and unchanged ones', () => {
@@ -327,8 +348,8 @@ test('runs = 3 with one failed run: the other two are used, runs records 2', () 
   assert.match(r.out, /lần chạy 2\/3/);
   const rec = s.ledger().harvests[0];
   assert.equal(rec.runs, 2); assert.equal(rec.runsFailed, 1); assert.equal(rec.status, 'partial');
-  const a = s.read('2026-01-10-may-pha-nhanh-gap-ba-nho.md').data;
-  const b = s.read('2026-01-10-quay-lui-commit-khi-test-do.md').data;
+  const a = s.read('2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md').data;
+  const b = s.read('2026-01-10-quay-lui-commit-khi-test-do-90e4.md').data;
   assert.deepEqual([a.hits, a.runs, b.hits, b.runs], [2, 2, 1, 2]);
 });
 

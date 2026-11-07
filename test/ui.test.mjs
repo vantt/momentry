@@ -151,7 +151,7 @@ test('quick note goes to the box when names exist, else is held back', async () 
   fs.writeFileSync(env.MOMENTRY_CONFIG, JSON.stringify({ privacy: { sources: [{ type: 'lines', path: names }] } }));
   const r = await A.addNote(ctx, { project: pid, title: 'Ghi tay', note: 'p95 giảm một nửa.' });
   assert.equal(r.saved, true);
-  assert.ok(fs.readdirSync(box).some((f) => f.endsWith('-ghi-tay.md')));
+  assert.ok(fs.readdirSync(box).some((f) => /-ghi-tay-[0-9a-f]{4}\.md$/.test(f)), 'a note with no session ends in a random tag');
   await assert.rejects(() => A.addNote(ctx, { project: pid, title: ' ', note: '' }), /Write a title/);
 });
 

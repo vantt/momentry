@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import * as hosts from '../lib/hosts.mjs';
 import { reminderLine, hookOutput } from '../lib/reminder.mjs';
-import { projectId } from '../lib/ui-api.mjs';
+import { checkoutId } from '../lib/ui-api.mjs';
 import { writeNew } from '../lib/box.mjs';
 import { buildChecks } from '../lib/checks.mjs';
 import { run as runChecks } from '../lib/doctor.mjs';
@@ -65,7 +65,7 @@ test('counts new stories (raw and never opened), budget waits of this repo, and 
   w.story('2026-11-02-moi-hai');
   w.story('2026-11-03-da-xem');
   w.story('2026-11-03-da-chon', { status: 'picked' });
-  fs.writeFileSync(path.join(w.cache, 'ui-state.json'), JSON.stringify({ seen: { [`${projectId(w.repo)}/2026-11-03-da-xem`]: '2026-11-04T00:00:00Z' } }));
+  fs.writeFileSync(path.join(w.cache, 'ui-state.json'), JSON.stringify({ seen: { [`${checkoutId(w.repo)}/2026-11-03-da-xem`]: '2026-11-04T00:00:00Z' } }));
   fs.writeFileSync(path.join(w.cache, 'budget-wait.json'), JSON.stringify({ day: today(), repos: { [w.repo]: 4, '/other/repo': 9 } }));
   assert.equal(line(w), 'momentry: 2 chuyện mới (/momentry-ui) · 4 phiên chờ ngân sách ngày (momentry scan)');
   // a failing check: no privacy source means every story is held out of the repo

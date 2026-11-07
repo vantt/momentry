@@ -439,16 +439,19 @@ Cài đặt: `install.sh` (Linux, macOS, WSL) hoặc `install.ps1` (Windows) đ�
 
 ### 6.6 Định dạng hộp
 
-Mỗi chuyện một file `<box>/YYYY-MM-DD-ten-ngan.md`. Tên file (bỏ `.md`) là id của chuyện, không đổi sau khi tạo. Trường `id` trong frontmatter là **tuỳ chọn**: máy luôn ghi cho file mới; file thiếu `id` (như 8 chuyện mẫu) lấy id từ tên file; có `id` mà khác tên file thì `check` báo lỗi khuôn. `ten-ngan` sinh từ tiêu đề: bỏ dấu, chữ thường, gạch nối, tối đa 6 chữ; trùng thì thêm `-2`. Slug cũng qua bộ kiểm riêng tư (mục 6.7). Khuôn theo bản B ([sample/README.md][mau]), thêm các trường máy.
+Mỗi chuyện một file `<box>/YYYY-MM-DD-ten-ngan-xxxx.md`. Tên file (bỏ `.md`) là id của chuyện, không đổi sau khi tạo. Trường `id` trong frontmatter là **tuỳ chọn**: máy luôn ghi cho file mới; file thiếu `id` (như 8 chuyện mẫu) lấy id từ tên file; có `id` mà khác tên file thì `check` báo lỗi khuôn. `ten-ngan` sinh từ tiêu đề: bỏ dấu, chữ thường, gạch nối, tối đa 6 chữ. `xxxx` là 4 ký tự hex của `sha256(id phiên)`; chuyện ghi tay không có phiên thì `xxxx` ngẫu nhiên. Trùng trong cùng hộp thì thêm `-2`. Cả id (slug và `xxxx`) qua bộ kiểm riêng tư (mục 6.7). Khuôn theo bản B ([sample/README.md][mau]), thêm các trường máy.
+
+**Vì sao luôn có `xxxx`:** một repo làm ở hai máy, mỗi máy gom phiên của mình. Hai máy viết chuyện cùng tiêu đề cùng ngày thì trước đây ra cùng tên file, `git pull` báo xung đột add/add. Máy không thấy file của máy kia trước khi pull, nên không biết lúc nào "cần" hậu tố; vì thế luôn thêm. Lấy từ id phiên chứ không ngẫu nhiên: chạy lại một phiên ra đúng id cũ, mọi chuyện của một phiên chung một hậu tố. Hai máy cùng gom một phiên (thư mục `~/.claude` đồng bộ giữa máy) vẫn ra cùng tên; giữ chỗ phiên là việc của hub (E22). File đã có (kể cả tên không có `xxxx`) giữ nguyên tên.
 
 **Mã chuyện** (`lib/story-code.mjs`): mỗi chuyện có thêm một mã ngắn dạng `M-XXXX` (4 ký tự Crockford base32: `0-9 A-Z` bỏ `I L O U`) để gọi nhanh trong CLI, giao diện web, chat và link `[[M-XXXX]]` của Obsidian. Id và tên file giữ nguyên; mã chỉ là tên gọi thêm.
 
 - Ứng viên thứ k của một id: 20 bit đầu của `sha256(id)` (k = 0) hoặc `sha256("<id>#<k>")` (k ≥ 1), viết thành 4 ký tự.
 - Mã đã ghi trong file (`code: M-XXXX`) là chuẩn, kể cả khi khác ứng viên 0. Chuyện chưa có `code` (file cũ, 8 chuyện mẫu) lấy mã bằng cách tính: theo thứ tự id (cũ trước), mỗi chuyện lấy ứng viên đầu tiên chưa bị mã đã ghi hay chuyện đứng trước trong cùng hộp giữ. Không cần chuyển đổi dữ liệu.
 - Chuyện mới được ghi `code` và `aliases: [M-XXXX]` ngay sau `id`, lấy ứng viên đầu tiên chưa chuyện nào trong hộp giữ, nên không bao giờ làm mã của chuyện cũ đổi. `momentry check --fix` ghi mã đang tính vào các file chưa có (không mã nào đổi). Xoá một chuyện chưa ghi mã có thể làm mã tính của chuyện khác dời; ghi mã bằng `check --fix` để chốt.
-- Hai file ghi cùng một mã (hiếm: hai tiến trình tạo chuyện cùng lúc, hoặc sửa tay) thì `check` báo lỗi khuôn ở cả hai; tra theo mã đó báo trùng, tra theo id vẫn được.
+- Hai file ghi cùng một mã (hai máy mỗi máy gán mã đó cho một chuyện khác, gặp nhau sau `git pull`; hai tiến trình tạo chuyện cùng lúc; sửa tay) thì phân xử theo luật cố định, máy nào tính cũng ra một kết quả: **chuyện có id nhỏ hơn giữ mã** (id bắt đầu bằng ngày, nên thường là chuyện cũ hơn). Chuyện kia lấy ứng viên đầu tiên còn trống, tính sau các chuyện chưa ghi mã (nên mã đang hiện của chúng không dời). `check` báo lỗi khuôn ở chuyện phải đổi, nói ai giữ mã và mã mới; `check --fix` ghi mã mới, bỏ mã cũ khỏi `aliases` (để `[[M-XXXX]]` của Obsidian chỉ trỏ một file) và ghi nó vào `old_codes`. Hai máy cùng chạy `check --fix` ra đúng một thay đổi.
+- Tra theo một mã mà ngoài chuyện giữ mã còn chuyện khác cũng ghi mã đó (chưa `--fix`) hoặc từng mang nó (`old_codes`) thì báo trùng, kể từng chuyện: giữ mã, ghi trùng, hay mã cũ và mã mới. Người dùng ở máy kia có thể đã gọi chuyện của họ bằng mã ấy, nên không mở lặng lẽ một chuyện. Tra theo id hoặc mã mới vẫn được; xoá `old_codes` khỏi chuyện đã đổi khi không cần nữa thì mã lại chỉ trỏ chuyện giữ nó. Chỉ còn một chuyện dính tới mã (chuyện giữ mã đã xoá) thì mở chuyện đó. Mã trong `old_codes` không cấp cho chuyện mới. Link `[[M-XXXX]]` đã viết ở máy kia trước khi đổi vẫn trỏ chuyện giữ mã; momentry không sửa được link trong ghi chú của bạn.
 - Mọi chỗ nhận id chuyện cũng nhận mã, hoa thường đều được, có hoặc không `M-`: `show`, `mark`, `angle --story`, API của giao diện web (`/api/stories/<dự án>/<id hoặc mã>`), trang duyệt nhãn của bộ đo. `list` in cột `code`; `list --json` và `show --json` có trường `code`. Thẻ chuyện và trang chuyện trên giao diện web, thẻ trên trang duyệt nhãn hiện mã.
-- Bộ kiểm riêng tư bỏ qua `code` và các mục mã trong `aliases` (alias tự viết vẫn bị kiểm); đối chiếu nhãn của bộ đo chỉ đọc `hook` và thân, không đọc frontmatter.
+- Bộ kiểm riêng tư bỏ qua `code`, `old_codes` và các mục mã trong `aliases` (alias tự viết vẫn bị kiểm); đối chiếu nhãn của bộ đo chỉ đọc `hook` và thân, không đọc frontmatter.
 
 ```yaml
 # giá trị minh hoạ, không phải kết quả chạy thật
@@ -566,7 +569,7 @@ Lệnh `quarantine` liệt kê chuyện đang chờ; `quarantine --release ID` c
 
 Mỗi việc người dùng làm với một chuyện được ghi vào `<cache>/taste.json` (`0600`, thư mục `0700`, ghi atomic), kèm đặc trưng của chuyện lúc đó. File chỉ nằm trên máy, không gửi đi đâu; đây là dữ liệu để sau này xếp hạng theo gu của từng người (plan E21). Code: [`lib/taste.mjs`](../lib/taste.mjs).
 
-**Không có chữ của chuyện.** Không tiêu đề, hook, góc kể, thân, id chuyện hay đường dẫn. Dự án là id băm (như giao diện web), chuyện là băm của khoá `<dự án>/<id>`. Đặc trưng tính bằng chính code của bảng xếp hạng (`FEATURES` trong `lib/rank.mjs`), và mọi giá trị dạng chữ được đưa về danh sách cố định: giá trị lạ thành `other`.
+**Không có chữ của chuyện.** Không tiêu đề, hook, góc kể, thân, id chuyện hay đường dẫn. Dự án là mã dự án (mục 6.9, giống nhau trên mọi máy), chuyện là băm của khoá `<mã dự án>/<id>`. Đặc trưng tính bằng chính code của bảng xếp hạng (`FEATURES` trong `lib/rank.mjs`), và mọi giá trị dạng chữ được đưa về danh sách cố định: giá trị lạ thành `other`.
 
 ```json
 {"version": 1, "events": [{"at": "2026-11-06T09:00:00.000Z", "project": "3f2a9c1b7e", "story": "a1b2c3d4e5f6",
@@ -604,6 +607,24 @@ Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ �
 - **Lý do:** `list --rank --json` thêm `why.taste`: `from`, `to` (hạng mặc định và hạng theo gu), `points`, `explore`, `reasons` (tối đa hai đặc trưng đẩy mạnh nhất, kèm chữ) và `line` (một dòng, ví dụ "bạn hay dùng chuyện có tín hiệu …"). Thẻ trên tường có nhãn "Your kind" kèm lý do khi gu đẩy chuyện lên. `momentry taste` nói gu đang bật hay không, vì sao chưa (thiếu bao nhiêu phán quyết, hay thua mặc định trên phần giữ lại), kết quả kiểm và các trọng số lớn nhất.
 - Bước góc kể và pipeline vẫn dùng thứ tự mặc định: chúng chọn chuyện để gọi model (tốn tiền), và bộ đo phải chạy lại ra cùng kết quả.
 - **Vì sao tắt:** trên bộ đề (8 phiên, học 7 chấm 1) gu không làm tăng số `t` ở nửa trên (25/33 → 25/33) ([số đo](experiments/2026-11-07-taste-learning/README.md)).
+
+### 6.9 Danh tính dự án (một repo ở nhiều máy)
+
+Một repo có thể checkout ở nhiều máy, mỗi máy một đường dẫn. Code: [`lib/project-id.mjs`](../lib/project-id.mjs). Hai mã, cùng dạng 10 ký tự hex:
+
+- **Mã dự án** = băm của commit gốc (`git rev-list --max-parents=0 HEAD`; nhiều gốc thì lấy sha nhỏ nhất). Không đổi khi clone, đổi tên thư mục, đổi remote hay có commit mới, nên một repo ở hai máy là một dự án, hai repo khác nhau cùng đường dẫn ở hai máy là hai dự án. Repo chưa có commit, clone nông (`--depth`, không có commit gốc thật) hay thư mục git không đọc được thì dùng băm đường dẫn; có commit đầu tiên thì đổi sang mã git và dữ liệu đi theo.
+- **Mã checkout** = băm đường dẫn (mã dự án cũ). Mỗi thư mục trên máy một mã.
+
+| Dữ liệu | Khoá | Vì sao |
+|---|---|---|
+| Gu (`taste.json`), số đo (`metrics.json`: chuyện đầu tiên, quyết định) | Mã dự án; chuyện là `storyRef("<mã dự án>/<id>")` | Sẽ gom từ nhiều máy (hub, E22) |
+| Hồ sơ dự án (`<cache>/profiles/<repo>-<mã>.md`) | Mã dự án | Cùng tài liệu ở mọi máy |
+| URL của giao diện web (`/api/stories/<mã>/…`), `ui-state.json` (đã đọc, để sau, kiểm góc kể) | Mã checkout | Theo máy, theo người xem; hai checkout của một repo trên một máy (worktree) vẫn là hai dòng, link cũ vẫn mở |
+| Danh sách dự án (`projects.json`), sổ gom (`ledger.json`: phiên theo đường transcript, `repos` theo đường dẫn), quarantine (theo tên dự án) | Đường dẫn, tên | Theo máy, không gộp |
+
+**Nhanh cho hook:** mã dự án của mỗi thư mục được giữ trong `<cache>/project-ids.json` (`0600`) cùng thiết bị và inode của `.git`. Lần sau chỉ tốn một lần `stat` và đọc file nhỏ (khoảng 0,1 ms; gọi git khoảng 7 ms). Clone lại hay tạo worktree mới ở cùng đường dẫn thì `.git` mới, tính lại. Hook đầu phiên không cần mã dự án (chỉ dùng mã checkout).
+
+**Chuyển dữ liệu cũ:** bản cũ khoá mọi thứ theo băm đường dẫn. Lần đầu một lệnh ghi gu hay số đo (trang web, `pipeline` khi có chuyện đầu tiên, `taste --repo`) hỏi mã dự án của một thư mục, bản ghi còn dưới băm đường dẫn của thư mục đó được chuyển sang mã mới: mã dự án và `storyRef` của các chuyện đang có trong hộp, trong `taste.json` và `metrics.json` (ghi atomic, giữ `0600`). Chuyện không còn trong hộp giữ `storyRef` cũ (vẫn một ref mỗi chuyện). Hồ sơ dự án tên cũ được đổi sang tên mới ở lần đọc đầu, trừ khi tên mới đã có. Chạy lại không đổi gì. Mã đã từng lấy từ một commit gốc khác thì không chuyển: đó là repo khác từng nằm ở đường dẫn này.
 
 ---
 
@@ -644,7 +665,8 @@ Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ �
   lib/viet.mjs               nfc, stripDiacritics, toTelex, slugify
   lib/frontmatter.mjs        parse(md) -> {data, body}; stringify(data, body) (ngữ pháp mục 6.6)
   lib/box.mjs                readBox(dir) -> Story[]; writeNew(story); mergeInto(id, patch); storiesOfSession(sid); findStory(dir, id|mã); backfillCodes(dir)
-  lib/story-code.mjs         mã chuyện M-XXXX: candidateCode(id, k), assignCodes(stories), normalizeCode(input)
+  lib/story-code.mjs         mã chuyện M-XXXX: candidateCode(id, k), assignCodes(stories), resolveCodes(stories) luật phân xử mã trùng, normalizeCode(input)
+  lib/project-id.mjs         mục 6.9: projectId(root, {cacheDir, box}) mã dự án từ commit gốc; checkoutId(root) mã checkout; chuyển dữ liệu cũ
   lib/ledger.mjs             load(), save(), lock(sid) / touch / unlock (wx + pid + mtime), needsHarvest(sid, stat) -> {fromLine} | null; recordSpend(sid, {step, usd}) chi phí ngoài cửa sổ gom
   lib/rank.mjs               sortRanked(stories, table?); explain(story, table?); rankTable(cfg); loadRankTable(file?) bảng luật lib/rules/rank.json
   lib/taste.mjs              gu trên máy (mục 6.8): note(cacheDir, {event, data, …}) ghi <cache>/taste.json; snapshot(data); measures(t, {excludePrivate, project})

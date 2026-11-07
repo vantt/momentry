@@ -285,6 +285,6 @@ test('pipeline: allowUnchecked merge marks the old file unchecked', () => {
   const env = { MOMENTRY_PRIVACY_SOURCES: '[]', MOMENTRY_ALLOW_UNCHECKED: '1' };
   const r = s.run(['harvest', '--transcript', s.tr, '--fake-llm', path.join(FIX, 'llm-two-windows'), '--no-outsider'], env);
   assert.match(r.out, /gộp [1-9]/, r.out + r.err); // score-only patches carry model text too, so they downgrade as well
-  const f = fs.readFileSync(path.join(s.box, '2026-01-10-may-pha-nhanh-gap-ba-nho.md'), 'utf8');
+  const f = fs.readFileSync(path.join(s.box, '2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md'), 'utf8');
   assert.match(f, /privacy: unchecked/);
 });

@@ -156,6 +156,7 @@ Mỗi module trong `lib/` có JSDoc là hợp đồng. Lỗi mang mã thoát g�
 | `lib/doctor.mjs`, `lib/checks.mjs` | Engine kiểm và sửa; `init` = các check `creates` + `doctor --fix` |
 | `lib/hosts.mjs`, `lib/safe-edit.mjs` | Cài/gỡ hook, lệnh agent và skill; sửa JSON của host có sao lưu và kiểm đổi giữa chừng |
 | `lib/projects.mjs` | Danh sách dự án trên máy (`projects.json`): UI đọc, `init` và lệnh hook thêm vào, hộp ngoài repo theo dự án, dấu tạm dừng gom chuyện |
+| `lib/project-id.mjs` | Mã dự án từ commit gốc của git (giống nhau trên mọi máy, khoá của gu, số đo, hồ sơ) và mã checkout từ đường dẫn (URL và trạng thái của giao diện web); `<cache>/project-ids.json`; chuyển dữ liệu cũ khoá theo đường dẫn |
 | `lib/metrics.mjs` | Số đo trên máy (`metrics.json`): thời gian từ cài tới chuyện đầu, tỉ lệ chuyện top 5 được Use; không gửi đi đâu |
 | `lib/paths.mjs` | Mọi đường dẫn theo OS (nguồn duy nhất cho installer, update, uninstall, doctor) |
 | `lib/install.mjs`, `lib/update.mjs`, `lib/uninstall.mjs`, `lib/tar.mjs` | Bố cục bản cài, shim, tự cập nhật, gỡ, đọc/ghi tarball |

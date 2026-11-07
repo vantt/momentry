@@ -210,6 +210,8 @@ Mã thoát: 0 xong; 1 không có chuyện này trong hộp, mã trùng, hoặc f
 
 Xem gu của bạn từ những gì bạn đã làm với chuyện: trong các chuyện top 5 đã quyết, bao nhiêu chuyện bạn dùng (use, drafted, published), chuyện bạn dùng nằm hạng trung bình mấy, và đặc trưng bạn hay dùng hay bỏ (giằng xé, tín hiệu, stakes), số chuyện bạn tự ghi (momentry bỏ sót) và số lần bạn sửa chữ model viết; xếp theo gu (rank.personal) đang bật hay chưa, còn thiếu bao nhiêu quyết định, và gu học được. Chỉ đọc <cache>/taste.json trên máy, không gọi model (0 USD).
 
+**Thay đổi:** không gì; riêng --repo, lần đầu gặp repo sau khi nâng cấp: ghi mã dự án vào <cache>/project-ids.json và chuyển bản ghi cũ của dự án (khoá theo đường dẫn) sang mã đó trong taste.json, metrics.json.
+
 | Cờ | Ý nghĩa |
 |---|---|
 | `--repo DIR` | chỉ tính dự án ở repo này (mặc định: mọi dự án trên máy) |
@@ -228,7 +230,7 @@ Tiếp theo: momentry list --rank
 
 Ghi một chuyện tay (lệnh momentry-bip của agent gọi lệnh này). Qua kiểm riêng tư.
 
-**Thay đổi:** <box>/<date>-<slug>.md, hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn; với --by live: <cache>/metrics.json (lúc có chuyện đầu tiên); với --by human: <cache>/taste.json (chuyện momentry bỏ sót, chỉ đặc trưng, chỉ nằm trên máy).
+**Thay đổi:** <box>/<date>-<slug>-<xxxx>.md (xxxx: 4 ký tự hex từ id phiên, không có phiên thì ngẫu nhiên), hoặc <cache>/quarantine/ nếu vi phạm hay chưa có nguồn chặn; với --by live: <cache>/metrics.json (lúc có chuyện đầu tiên); với --by human: <cache>/taste.json (chuyện momentry bỏ sót, chỉ đặc trưng, chỉ nằm trên máy).
 
 | Cờ | Ý nghĩa |
 |---|---|
@@ -248,13 +250,13 @@ Mã thoát: 0 đã ghi; 1 vi phạm riêng tư (chuyện vào quarantine); 2 sai
 
 Kiểm khuôn frontmatter, id khớp tên file, link không gãy, mã chuyện không trùng, và riêng tư. Dùng được làm git pre-commit hook.
 
-**Thay đổi:** không gì; với --fix: thêm code và aliases (mã chuyện M-XXXX) vào chuyện chưa có, đúng mã chúng đang mang.
+**Thay đổi:** không gì; với --fix: thêm code và aliases (mã chuyện M-XXXX) vào chuyện chưa có, đúng mã chúng đang mang; hai chuyện ghi cùng một mã (hai máy) thì chuyện id nhỏ hơn giữ, chuyện kia đổi sang mã trống kế tiếp, mã cũ vào old_codes.
 
 | Cờ | Ý nghĩa |
 |---|---|
 | `--box DIR` | thư mục hộp |
 | `--staged` | chỉ file đã git add |
-| `--fix` | ghi mã chuyện vào file chưa có (code, aliases) rồi kiểm |
+| `--fix` | ghi mã chuyện vào file chưa có (code, aliases), đổi mã ghi trùng theo luật, rồi kiểm |
 | `--repo DIR` | repo cần làm (mặc định: git root của thư mục hiện tại) |
 
 ```sh

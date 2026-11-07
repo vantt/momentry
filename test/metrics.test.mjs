@@ -9,7 +9,7 @@ import { stringify } from '../lib/frontmatter.mjs';
 import * as M from '../lib/metrics.mjs';
 import * as A from '../lib/ui-api.mjs';
 import * as Q from '../lib/quarantine.mjs';
-import { projectId } from '../lib/projects.mjs';
+import { projectId, checkoutId } from '../lib/project-id.mjs';
 import { loadConfig } from '../lib/config.mjs';
 import { noteFirstStory } from '../lib/pipeline.mjs';
 
@@ -105,7 +105,7 @@ test('the pipeline and a released held story note the first story of their proje
   const qcfg = loadConfig({ cwd: q.root, env });
   Q.put(qcfg.repo, { id: '2026-11-04-held', data: { date: '2026-11-04', status: 'raw', captured_by: 'harvest' }, body: BODY }, 'unchecked', { cacheDir: qcfg.cacheDir });
   const [held] = Q.list(qcfg.repo, { cacheDir: qcfg.cacheDir });
-  const r = A.releaseHeld(q.ctx, { project: projectId(q.root), id: held.id });
+  const r = A.releaseHeld(q.ctx, { project: checkoutId(q.root), id: held.id });
   assert.equal(r.released, true, r.message);
   assert.ok(M.load(cache).firstStories[projectId(q.root)], 'release counts as the story arriving');
 });

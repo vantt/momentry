@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { candidateCode, normalizeCode, assignCodes, freeCode, withCode, CODE_RE, CODE_ALPHABET } from '../lib/story-code.mjs';
+import { candidateCode, normalizeCode, assignCodes, resolveCodes, freeCode, withCode, withMovedCode, CODE_RE, CODE_ALPHABET } from '../lib/story-code.mjs';
 import { writeNew, readStory, readBox, findStory, backfillCodes, checkBox, codesOf, isStoryRef, AmbiguousCodeError } from '../lib/box.mjs';
 import { stringify, parse } from '../lib/frontmatter.mjs';
 import { checkStory, loadBlocklist } from '../lib/privacy.mjs';
@@ -107,15 +107,15 @@ test('backfill: writes the codes stories already carry, leaves coded and broken 
   assert.deepEqual(backfillCodes(box), []);
 });
 
-test('check: duplicate stored codes and malformed codes are reported', () => {
+test('check: a duplicate stored code is reported on the story that gives it up; malformed codes are reported', () => {
   const box = tmp('dm-code-check-');
   put(box, '2026-01-01-a', { code: 'M-ABCD', aliases: ['M-ABCD'] });
   put(box, '2026-01-02-b', { code: 'M-ABCD', aliases: ['M-ABCD'] });
   put(box, '2026-01-03-c', { code: 'M-ILOU' });
   put(box, '2026-01-04-d', { aliases: 'M-ABCD' });
   const errs = checkBox(readBox(box));
-  assert.deepEqual(errs.filter((e) => e.field === 'code').map((e) => e.file), ['2026-01-01-a.md', '2026-01-02-b.md', '2026-01-03-c.md']);
-  assert.match(errs[0].msg, /trùng với 2026-01-02-b/);
+  assert.deepEqual(errs.filter((e) => e.field === 'code').map((e) => e.file), ['2026-01-02-b.md', '2026-01-03-c.md']);
+  assert.match(errs[0].msg, /mã M-ABCD trùng với 2026-01-01-a; id nhỏ hơn giữ mã, chuyện này chuyển sang M-[0-9A-Z]{4} \(momentry check --fix\)/);
   assert.ok(errs.some((e) => e.file === '2026-01-04-d.md' && e.field === 'aliases'));
   assert.throws(() => findStory(box, 'm-abcd'), (e) => e instanceof AmbiguousCodeError && e.ids.length === 2);
 });
@@ -139,7 +139,7 @@ test('privacy gate ignores code and aliases; label matching never sees frontmatt
   fs.writeFileSync(names, 'M-ABCD\nQuokka Tran\n');
   const bl = loadBlocklist([{ type: 'lines', path: names }]);
   assert.ok(bl);
-  const story = { data: { id: '2026-01-01-a', code: 'M-ABCD', aliases: ['M-ABCD'] }, body: BODY };
+  const story = { data: { id: '2026-01-01-a', code: 'M-ABCD', aliases: ['M-ABCD'], old_codes: ['M-ABCD'] }, body: BODY };
   assert.deepEqual(checkStory(story, '2026-01-01-a', bl), []);
   const leak = checkStory({ ...story, data: { ...story.data, aliases: ['M-ABCD', 'Quokka Tran'], hook: 'gặp M-ABCD' } }, '2026-01-01-a', bl);
   assert.deepEqual(leak.map((v) => v.field).sort(), ['aliases', 'hook'], 'a hand-written alias and other fields are still checked');
@@ -208,6 +208,67 @@ test('CLI: check reports duplicate codes; check --fix writes codes into old file
   const amb = run(['show', before.get('2026-01-01-a'), '--json']);
   assert.equal(amb.code, 1);
   assert.equal(amb.json().error.code, 'ambiguous-code');
+});
+
+test('one code stored by two stories: the smaller id keeps it, the other takes its next free candidate, in any input order', () => {
+  const stories = [
+    { id: '2026-02-01-b', data: { code: 'M-ABCD' } },
+    { id: '2026-01-31-a', data: { code: 'M-ABCD' } },
+    { id: '2026-01-01-old', data: {} },
+  ];
+  const r = resolveCodes(stories);
+  const free = freeCode('2026-02-01-b', new Set(['M-ABCD', r.codes.get('2026-01-01-old')]));
+  assert.deepEqual(r.moved, [{ id: '2026-02-01-b', from: 'M-ABCD', to: free, keeper: '2026-01-31-a' }]);
+  assert.equal(r.codes.get('2026-01-31-a'), 'M-ABCD');
+  assert.equal(r.codes.get('2026-01-01-old'), assignCodes([stories[2]]).get('2026-01-01-old'), 'a story without a code keeps the code it showed');
+  assert.deepEqual([...resolveCodes([...stories].reverse()).codes], [...r.codes], 'every machine works out the same codes');
+  const moved = withMovedCode({ id: 'x', code: 'M-ABCD', aliases: ['M-ABCD', 'Ghi chú'], date: 'd' }, 'M-7K3Q');
+  assert.deepEqual(Object.keys(moved), ['id', 'code', 'aliases', 'old_codes', 'date']);
+  assert.deepEqual([moved.aliases, moved.old_codes], [['Ghi chú', 'M-7K3Q'], ['M-ABCD']], 'the lost code leaves aliases, so Obsidian finds one file');
+});
+
+test('a former code is never given to a new story, and with its holder gone it opens the story that had it', () => {
+  const box = tmp('dm-code-old-');
+  const id = '2026-03-01-new';
+  put(box, '2026-01-01-moved', { code: 'M-7K3Q', aliases: ['M-7K3Q'], old_codes: [candidateCode(id)] });
+  writeNew(box, { id, data: { date: '2026-03-01', status: 'raw' }, body: BODY });
+  assert.equal(readStory(box, id).data.code, candidateCode(id, 1));
+  fs.rmSync(path.join(box, `${id}.md`));
+  assert.equal(findStory(box, candidateCode(id)).story.id, '2026-01-01-moved');
+  put(box, '2026-01-02-bad', { old_codes: ['nope'] });
+  assert.ok(checkBox(readBox(box)).some((e) => e.file === '2026-01-02-bad.md' && e.field === 'old_codes'));
+});
+
+test('CLI: after a pull brings one code on two stories, check explains the rule and check --fix applies it', () => {
+  const { box, run } = repo();
+  // each machine gave M-ABCD to its own story; the pull brings both files
+  put(box, '2026-02-01-tu-may-b', { code: 'M-ABCD', aliases: ['M-ABCD', 'Ghi chú'] });
+  put(box, '2026-01-31-tu-may-a', { code: 'M-ABCD', aliases: ['M-ABCD'] });
+  const to = resolveCodes(readBox(box)).moved[0].to;
+  const dup = run(['check']);
+  assert.equal(dup.code, 1);
+  assert.ok(dup.err.includes(`2026-02-01-tu-may-b.md: code: mã M-ABCD trùng với 2026-01-31-tu-may-a; id nhỏ hơn giữ mã, chuyện này chuyển sang ${to} (momentry check --fix)`), dup.err);
+  assert.ok(!dup.err.includes('2026-01-31-tu-may-a.md: code'), 'the story that keeps the code is not to blame');
+  const before = run(['show', 'M-ABCD', '--json']);
+  assert.equal(before.json().error.code, 'ambiguous-code', 'the user on either machine may mean either story');
+  assert.match(before.json().error.why, /2026-01-31-tu-may-a \(giữ mã\), 2026-02-01-tu-may-b \(ghi trùng, check --fix chuyển sang /);
+
+  const dry = run(['check', '--fix', '--dry-run']);
+  assert.match(dry.out, new RegExp(`sẽ đổi mã M-ABCD → ${to} ở 2026-02-01-tu-may-b \\(2026-01-31-tu-may-a có id nhỏ hơn`));
+  assert.equal(readStory(box, '2026-02-01-tu-may-b').data.code, 'M-ABCD', 'dry run writes nothing');
+  const fix = run(['check', '--fix', '--json']);
+  assert.deepEqual(fix.json().data.codesWritten, [{ id: '2026-02-01-tu-may-b', code: to, from: 'M-ABCD', keeper: '2026-01-31-tu-may-a' }]);
+  assert.equal(fix.json().data.shapeErrors, 0);
+  const b = readStory(box, '2026-02-01-tu-may-b').data;
+  assert.deepEqual([b.code, b.aliases, b.old_codes], [to, ['Ghi chú', to], ['M-ABCD']]);
+  assert.deepEqual(readStory(box, '2026-01-31-tu-may-a').data.aliases, ['M-ABCD'], 'the keeper is untouched');
+  assert.deepEqual(run(['check', '--fix', '--json']).json().data.codesWritten, [], 'nothing left to move');
+
+  const after = run(['show', 'M-ABCD', '--json']);
+  assert.equal(after.json().error.code, 'ambiguous-code', 'the lost code never opens the other story silently');
+  assert.match(after.json().error.why, new RegExp(`2026-02-01-tu-may-b \\(mã cũ, nay là ${to}\\)`));
+  assert.equal(run(['show', to, '--json']).json().data.id, '2026-02-01-tu-may-b');
+  assert.equal(run(['show', '2026-01-31-tu-may-a', '--json']).json().data.code, 'M-ABCD');
 });
 
 // ---------- web UI API and review page ----------

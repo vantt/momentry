@@ -226,13 +226,13 @@ test('harvest: angles for the ranked stories; none and a failed call never fail 
 test('harvest: a merge into a story keeps its angle', () => {
   const s = setup();
   assert.equal(s.run(['harvest', '--transcript', s.tr, '--fake-llm', s.fake('llm-ok', { 'angle-1': A(1), 'angle-2': A(2), 'angle-3': A(3) })]).code, 0);
-  const before = s.stories().find((x) => x.f === '2026-01-10-may-pha-nhanh-gap-ba-nho.md');
+  const before = s.stories().find((x) => x.f === '2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md');
   assert.ok(before.data.angle);
   fs.appendFileSync(s.tr, MINI.slice(8, 12).map((l) => l.replaceAll('__REPO__', JSON.stringify(s.repo).slice(1, -1))).join('\n') + '\n');
   const r = s.run(['harvest', '--transcript', s.tr, '--fake-llm', s.fake('llm-two-windows'), '--no-outsider']);
   assert.equal(r.code, 0, r.err + r.out);
   assert.match(r.out, /gộp 1/);
-  const after = s.stories().find((x) => x.f === '2026-01-10-may-pha-nhanh-gap-ba-nho.md');
+  const after = s.stories().find((x) => x.f === '2026-01-10-may-pha-nhanh-gap-ba-nho-90e4.md');
   assert.equal(after.data.angle, before.data.angle);
   assert.equal(after.data.audience, before.data.audience);
   assert.equal(after.body.split(ANGLE_LABEL).length, 2);
