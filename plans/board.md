@@ -4,16 +4,16 @@ This board is high-level: one row = one epic = one plan. Step status and evidenc
 
 **Context:** momentry is the experimental first slice of CIS (Creator Intelligence System, `vantt/cis`). Current focus: **selling it**. Every sales step (E8, E10–E15) lives in one plan: [sales](261104-sales/plan.md). What sells tells CIS which audience to build for next ([audiences](../website/content/audiences.md)).
 
-**Last updated:** 2026-11-05 (E16 done and released in v0.3.0; E19 shared labels split out as backlog; quality work uses only our own data; E20 story material signals opened, M.1 done) · **Released version:** v0.3.0 (2026-11-05)
+**Last updated:** 2026-11-07 (E22 multi-machine hub added as backlog; E16 done and released in v0.3.0; E19 shared labels split out as backlog; quality work uses only our own data; E20 story material signals opened, M.1 done) · **Released version:** v0.3.0 (2026-11-05)
 
 ## Overview
 
-21 epics:
+22 epics:
 - 2 done: E2, E16.
 - 3 in progress: E1, E3, E8.
 - 1 not started: E10. In progress: E17.
 - 6 in the sales plan, backlog: E11–E15, E18.
-- 5 backlog, no plan: E4, E5, E6, E7, E9.
+- 6 backlog, no plan: E4, E5, E6, E7, E9, E22.
 - 2 backlog with plan: E19, E21.
 - 1 in progress with plan: E20 (M.1 done; M.2–M.4 todo).
 
@@ -86,6 +86,7 @@ All epics, from idea to done. One plan per epic. The board shows no progress; re
 | E19 | Shared labels: users opt in to send anonymous Use/Later/Drop labels to a momentry server to improve default ranking; explicit consent screen listing every field sent, private projects never send | [shared-labels](261105-shared-labels/plan.md) | 📥 Backlog | P3 | E17 | Split from E16 (U.7b) 2026-11-05. Not now: quality work uses only our own data. Changes the "no momentry server" promise |
 | E20 | Story material signals: owner-voice, lesson-write and blocked hotspot kinds with noise filters (M.1 done); next git as a second source (M.2), subagent and worker transcripts (M.3), cross-session arc and retrospective mode (M.4) | [story-material](261105-story-material/plan.md) | 🔄 Doing | P1 | E17 | Evidence: [material-signals](../docs/experiments/2026-11-05-material-signals/README.md). Ranking and outsider cost stay in E17; proposal M.5 for E17: demote tension `none` only when stakes < 2 (owner decisions with stakes 3 fall to #27 of 34 on the second eval set), replay on the E17 set first |
 | E21 | User taste: record implicit Use/Drop/draft/publish/edit decisions locally, show top-5 use rate, learn a transparent per-user ranking adjustment (never hides stories, falls back to default if worse) | [user-taste](261106-0900-user-taste/plan.md) | 📥 Backlog | P1 | E17 | Opened 2026-11-06. All data stays on the user's machine; first proof on the E17 test set (T.5) |
+| E22 | Multi-machine hub (optional, advanced users): one place for taste events, cost ledger, project list and a story index across all machines and projects, and safe work when one repo is checked out on several machines. Core stays local-first Node and runs unchanged without a hub | — | 📥 Backlog | P3 | E21 | Opened 2026-11-07. Owner decision: hub is an add-on for advanced users, not a reason to rewrite the core. Order: (1) make local data sync-friendly inside the core (machine id, append-only per-machine event files for taste and cost, story code pinned at creation, duplicate check after pull); (2) private git repo as the first hub, no server; (3) hub server only if live view or shared search is needed, likely a single Go binary on the tailnet. Open: one person only or teams later; whether transcripts ever go to the hub |
 | E15 | Hosted product: desktop or web app, more sources (Cursor, Lovable, Bolt, ChatGPT/Claude exports), accounts, subscription billing | [sales](261104-sales/plan.md) | 📥 Backlog | P3 | E14 | Privacy gate on the sales page, data policy, onboarding under 2 minutes |
 
 Status: 📥 Backlog, ⬜ Todo, 🔄 Doing, ⏸ Waiting, ✅ Done, ❌ Dropped.
