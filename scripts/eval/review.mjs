@@ -121,9 +121,21 @@ function captureStoryId(dataDir, id, ref) {
   return [...codes].find(([, c]) => c === code)?.[0] ?? ref;
 }
 
+/** Full stories (frontmatter and body) of a capture's scratch box by id; empty when the scratch repo is gone. */
+function scratchStories(run) {
+  const dir = path.join(run, 'scratch');
+  if (!fs.existsSync(path.join(dir, 'repo'))) return new Map();
+  try {
+    const cfg = loadConfig({ cwd: path.join(dir, 'repo'), env: scratchEnv(dir) });
+    return new Map(readBox(cfg.box).filter((s) => !s.error).map((s) => [s.id, s]));
+  } catch { return new Map(); }
+}
+
 /**
  * Stories momentry found in the newest capture of a session, and per-label rank from the newest scored replay.
- * `matched` is judged on the title only (the capture keeps no body), so it is a hint for spotting missing answers.
+ * Matching uses the full story text of the capture's scratch box, as the harness does; the title only when the
+ * scratch box is gone. Each answer row gets `storyId`, the best-ranked found story it matches, and `capRank`,
+ * that story's place in the capture.
  */
 function context(dataDir, id, rows) {
   const labels = rows.flatMap((r) => { try { return [makeLabel(r, '')]; } catch { return []; } });
@@ -135,8 +147,10 @@ function context(dataDir, id, rows) {
   const row = res?.rows?.find((r) => r.id === id && r.rank);
   const ranks = Object.fromEntries((row?.rank?.perLabel ?? []).map((p) => [p.name, p.rank]));
   const codes = captureCodes(cap);
+  const full = run ? scratchStories(run) : new Map();
+  const asStory = (s) => full.get(s.id) ?? { id: s.id, data: { hook: s.title } };
   const stories = (cap?.ranked ?? []).map((s) => {
-    const story = { id: s.id, data: { hook: s.title } };
+    const story = asStory(s);
     const p = prev.get(s.id);
     return {
       id: s.id, code: codes.get(s.id), slug: idSlug(s.id), title: s.title, held: !!s.held, matched: labels.some((l) => matches(story, l)), angle: s.angle ?? null, audience: s.audience ?? null,
@@ -144,14 +158,14 @@ function context(dataDir, id, rows) {
       prevAngle: p && p.angle !== s.angle ? p.angle : null, prevAudience: p && p.angle !== s.angle ? p.audience : null,
     };
   });
-  // the angle of the best-ranked found story matching each answer row (same title-only match as `matched`)
-  const withAngle = rows.map((r) => {
+  const ranked = cap?.ranked ?? [];
+  const withStory = rows.map((r) => {
     let l;
     try { l = makeLabel(r, ''); } catch { return r; }
-    const s = stories.find((x) => x.angle && x.angle !== 'none' && matches({ id: x.id, data: { hook: x.title } }, l));
-    return s ? { ...r, angle: s.angle, angleStory: s.id } : r;
+    const i = ranked.findIndex((s) => matches(asStory(s), l));
+    return i < 0 ? r : { ...r, storyId: ranked[i].id, capRank: i + 1 };
   });
-  return { stories, rows: withAngle, ranks, total: row?.stories ?? null, ...readAngleChecks(dataDir, id) };
+  return { stories, rows: withStory, ranks, total: row?.stories ?? null, ...readAngleChecks(dataDir, id) };
 }
 
 const angleFile = (dataDir, id) => path.join(dataDir, 'angle-labels', `${id}.json`);

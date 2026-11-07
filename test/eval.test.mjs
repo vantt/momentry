@@ -303,6 +303,21 @@ test('review page: writes the angle of one story without one, in the capture scr
   try {
     const page = await (await fetch(`http://127.0.0.1:${server.address().port}/`)).text();
     assert.ok(page.includes('Viết góc kể') && page.includes('~0,003–0,004 USD'));
+    // an answer row whose keyword sits only in a story's body still finds that story
+    const texts = cap.ranked.map((x) => slugAll(`${x.data.hook} ${x.body}`));
+    let i = -1, word;
+    for (const [k, x] of cap.ranked.entries()) {
+      word = slugAll(x.body).split('-').find((w) => w.length >= 6 && !slugAll(x.data.hook || '').includes(w) && texts.every((t, j) => j === k || !t.includes(w)));
+      if (word) { i = k; break; }
+    }
+    assert.ok(word, 'a fixture story has a body-only word');
+    fs.writeFileSync(path.join(labels, `${session.id}.md`), `| slug | keywords | t |\n|---|---|---|\n| x | a, b | |\n| | ${word} | x |\n`);
+    const got = await (await fetch(`http://127.0.0.1:${server.address().port}/api/sessions/${session.id}`, { headers: { 'x-key': key } })).json();
+    assert.equal(got.rows[0].storyId, undefined);
+    assert.equal(got.rows[1].storyId, ranked[i].id);
+    assert.equal(got.rows[1].capRank, i + 1);
+    assert.ok(got.stories[i].matched);
+    fs.writeFileSync(path.join(labels, `${session.id}.md`), '| slug | keywords | t |\n|---|---|---|\n| x | a, b | |\n');
     const r = await run(ranked[0].id);
     assert.equal(r.status, 200, JSON.stringify(r.body));
     assert.equal(r.body.angle, angle.angle);

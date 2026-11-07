@@ -55,12 +55,15 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: v
 .found ul { list-style: none; margin: 0; padding: 0; }
 .found .n { color: var(--muted); font-size: 12px; width: 24px; text-align: right; flex: none; }
 .found .t { flex: 1; }
-.found .code { color: var(--muted); font: 12px ui-monospace, Menlo, Consolas, monospace; flex: none; }
+.found .code, .match .code { color: var(--muted); font: 12px ui-monospace, Menlo, Consolas, monospace; flex: none; }
 .found .m { font-size: 12px; color: var(--ok); flex: none; }
 .angle { font-size: 13px; color: var(--text); border-left: 2px solid var(--accent); padding: 2px 0 2px 8px; margin: 4px 0 2px; }
 .angle .aud { display: block; color: var(--muted); font-size: 12px; }
 .angle.none { color: var(--muted); border-left-color: var(--line); font-style: italic; }
 .fields .angle { margin: 4px 6px; }
+.match { margin: 4px 6px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+.match .tag { display: block; font-size: 11px; color: var(--muted); }
+.match .code { margin-right: 6px; display: inline; }
 .verdict { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
 .verdict button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--panel); color: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer; }
 .verdict button:hover { border-color: var(--accent); }
@@ -134,9 +137,19 @@ async function open(id) {
   render(); loadList();
 }
 
+// the best-ranked story momentry found that matches an answer row: its code, title, angle and spine
+function matchHtml(r) {
+  const s = r.storyId && cur.stories.find((x) => x.id === r.storyId);
+  if (!s) return '';
+  return `<div class="match"><span class="tag">momentry tìm ra (hạng ${r.capRank})</span>${s.code ? `<span class="code">${esc(s.code)}</span>` : ''}<span class="t">${esc(s.title)}</span>${angleHtml(s)}</div>`;
+}
+
 function rankOf(r) {
   const name = r.slug || r.title;
-  if (!(name in cur.ranks)) return '';
+  if (!(name in cur.ranks)) {
+    if (r.capRank) return `<div class="rank"><b>${r.capRank}</b>trên ${cur.stories.length}</div>`;
+    return cur.stories.length ? '<div class="rank miss"><b>không thấy</b>momentry bỏ sót</div>' : '';
+  }
   const n = cur.ranks[name];
   return n == null ? '<div class="rank miss"><b>không thấy</b>momentry bỏ sót</div>' : `<div class="rank"><b>${n}</b>trên ${cur.total}</div>`;
 }
@@ -148,7 +161,7 @@ function render() {
       <label class="tbox" title="Chuyện thật sự đáng kể"><input type="checkbox" data-f="t" ${r.t ? 'checked' : ''}>đáng kể</label>
       <div class="fields">
         <input class="title" data-f="title" value="${esc(r.title)}" aria-label="Tiêu đề">
-        ${r.angle ? `<div class="angle" title="Góc kể của chuyện momentry tìm ra khớp với đáp án này">${esc(r.angle)}</div>` : ''}
+        ${matchHtml(r)}
         ${r.why ? `<div class="why">${esc(r.why)}</div>` : ''}
         <label>từ khoá<input class="small" data-f="keywords" value="${esc(r.keywords)}" placeholder="3–6 từ đặc trưng, cách nhau dấu phẩy"></label>
         <label>dòng<input class="small" data-f="lines" value="${esc(r.lines)}" placeholder="không bắt buộc"></label>

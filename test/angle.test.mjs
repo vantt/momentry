@@ -363,7 +363,8 @@ test('review page: angles in the found list and on matching answer rows; the ang
   try {
     const s = (await call('/api/sessions/s1')).body;
     assert.equal(s.stories[0].angle, 'Tưởng A, hoá ra B.');
-    assert.equal(s.rows[0].angle, 'Tưởng A, hoá ra B.', 'answer row shows the angle of the found story it matches');
+    assert.equal(s.rows[0].storyId, '2026-01-10-may-pha-nhanh', 'answer row points at the found story it matches');
+    assert.equal(s.rows[0].capRank, 1);
     assert.deepEqual(s.angleChecks, {});
     const put = (story, verdict) => call('/api/sessions/s1/angle', { method: 'PUT', body: JSON.stringify({ story, verdict }) });
     assert.deepEqual((await put('2026-01-10-may-pha-nhanh', 'invented')).body.angleChecks, { '2026-01-10-may-pha-nhanh': 'invented' });
