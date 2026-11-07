@@ -11,7 +11,7 @@ import * as P from '../lib/taste-rank.mjs';
 import * as A from '../lib/ui-api.mjs';
 import { sortRanked } from '../lib/rank.mjs';
 import { loadConfig } from '../lib/config.mjs';
-import { projectId } from '../lib/projects.mjs';
+import { projectId } from '../lib/project-id.mjs';
 
 const BIN = path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'bin', 'momentry.mjs');
 /** Words that must never reach the taste output. */

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { slugify } from '../../../lib/viet.mjs';
+import { originTag } from '../../../lib/box.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DATE = '2026-01-10';
@@ -30,7 +31,8 @@ const hooks = (n) => ({ hooks: Array.from({ length: n }, (_, i) => ({ id: `M${i 
 const stakes = (n) => ({ main_goal: 'Làm máy pha giả chạy nhanh hơn.', stakes: Array.from({ length: n }, (_, i) => ({ id: `M${i + 1}`, stakes: 3 - (i % 4), reason: 'ngắn' })) });
 const OUT = { what: 'Đo thời gian từng bước bằng một lệnh shell một dòng', common_practice: 'đoán bằng mắt', gap: 'có số trước sau ngay trong phiên', lines: ['L2'] };
 
-const idOf = (title) => `${DATE}-${slugify(title)}`;
+/** Id the pipeline gives a story of this title harvested from the fixture session (claude-mini.jsonl). */
+const idOf = (title) => `${DATE}-${slugify(title)}-${originTag('claude:5e5510aa')}`;
 
 // window 1: everything works; outsider adds an angle to K1 and one new story
 write('llm-ok', {

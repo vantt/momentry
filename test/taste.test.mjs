@@ -11,7 +11,7 @@ import * as T from '../lib/taste.mjs';
 import * as A from '../lib/ui-api.mjs';
 import * as Q from '../lib/quarantine.mjs';
 import { storyRef } from '../lib/metrics.mjs';
-import { projectId } from '../lib/projects.mjs';
+import { projectId } from '../lib/project-id.mjs';
 import { loadConfig } from '../lib/config.mjs';
 import { createUiServer } from '../lib/ui-server.mjs';
 
@@ -54,6 +54,7 @@ function sandbox() {
       }, BODY));
       ids.push(id);
     }
+    // a .git without commits: the project id is the path hash, the same as the web UI's checkout id
     return { root, box, ids, ctx: { env, cwd: root }, pid: projectId(root), key: (i) => `${projectId(root)}/${ids[i]}` };
   };
   return { base, env, cache, file, names, userConfig, project };
