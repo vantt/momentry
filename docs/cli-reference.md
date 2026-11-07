@@ -352,7 +352,7 @@ Mã thoát: 0 xong; 1 lỗi; 2 sai cú pháp; 3 chưa có nguồn chặn; 4 mode
 
 ### `momentry angle`
 
-Viết xương chuyện và góc kể cho chuyện đã có trong hộp mà chưa có góc kể: mặc định các chuyện đầu bảng xếp hạng. Góc kể mở bằng bối cảnh (dự án gì, người làm đang cố làm gì), rồi điều người ta tưởng, điều hoá ra, vì sao người nghe nên quan tâm. Cùng bước mà harvest chạy sau khi xếp hạng.
+Viết cốt truyện và góc kể cho chuyện đã có trong hộp mà chưa có góc kể: mặc định các chuyện đầu bảng xếp hạng. Góc kể mở bằng bối cảnh (dự án gì, người làm đang cố làm gì), rồi điều người ta tưởng, điều hoá ra, vì sao người nghe nên quan tâm. Cùng bước mà harvest chạy sau khi xếp hạng.
 
 **Thay đổi:** <box>/<id>.md (trường angle, audience, spine_*, completeness và dòng **Góc kể:** trong thân; angle: none khi không có góc kể), hoặc <cache>/quarantine/ nếu vi phạm riêng tư hay chưa có nguồn chặn; <cache>/profiles/ (hồ sơ dự án, sửa tay được); <cache>/ledger.json (chi phí, tính vào ngân sách ngày); <cache>/runs/angle/.
 

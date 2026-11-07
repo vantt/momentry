@@ -315,7 +315,7 @@ const USAGE = `node scripts/eval/run.mjs --manifest FILE [--capture [--refresh S
   --only     chỉ các phiên này   --jobs  số phiên chạy song song (mặc định 1)
   --budget   với --capture: không chụp phiên tiếp khi đã tiêu + ${ESTIMATE_FACTOR}×ước tính vượt mức này
   --keep     giữ repo nháp của lần chạy lại (<out>/<id>/runs/<n>/replay/)
-  --rank-by  thứ tự đo: default (như momentry list --rank) hoặc completeness (số ô xương chuyện đã điền, cao trước)`;
+  --rank-by  thứ tự đo: default (như momentry list --rank) hoặc completeness (số ô cốt truyện đã điền, cao trước)`;
 
 /** CLI entry; returns the exit code. `env` is the real environment (model calls, privacy names). */
 export async function main(argv = process.argv.slice(2), io = { out: (s) => process.stdout.write(s + '\n'), err: (s) => process.stderr.write(s + '\n') }, env = process.env) {
