@@ -86,7 +86,7 @@ test('decisions from the web UI and the CLI are recorded with rank and features,
   A.markStory(p.ctx, p.key(1), 'drafted'); // still used, but a later stage: recorded
   A.markStory(p.ctx, p.key(1), 'drafted'); // same stage again: not recorded
   A.markStory(p.ctx, p.key(2), 'published'); // undecided straight to published
-  A.markStory(p.ctx, p.key(3), 'unlater'); // back to undecided; the wall now follows the user's choices, so it shows first
+  A.markStory(p.ctx, p.key(3), 'unlater'); // back to undecided; taste ranking is off, so the default order
   const r = spawnSync(process.execPath, [BIN, 'mark', p.ids[0], 'use', '--json'], { cwd: p.root, env, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const dry = spawnSync(process.execPath, [BIN, 'mark', p.ids[3], 'drop', '--dry-run', '--json'], { cwd: p.root, env, encoding: 'utf8' });
@@ -94,8 +94,10 @@ test('decisions from the web UI and the CLI are recorded with rank and features,
 
   const ev = events(cache);
   assert.deepEqual(ev.map((x) => [x.event, x.rank, x.of]), [
-    ['use', 2, 4], ['drop', 1, 4], ['later', 3, 3], ['drafted', 1, 3], ['published', 2, 3], ['open', 1, 3], ['use', 1, 4],
+    ['use', 2, 4], ['drop', 1, 4], ['later', 3, 3], ['drafted', 1, 3], ['published', 2, 3], ['open', 3, 3], ['use', 1, 4],
   ]);
+  // without taste ranking the wall is the default order, so the default place is the wall place
+  assert.ok(ev.every((x) => x.base === x.rank));
   assert.equal(ev[0].project, p.pid);
   assert.equal(ev[0].story, storyRef(p.key(1)));
   assert.equal(ev[0].private, false);

@@ -138,7 +138,7 @@ Bảng chuyện trong hộp: code (mã M-XXXX), id, date, status, hook, tension,
 
 | Cờ | Ý nghĩa |
 |---|---|
-| `--rank` | xếp theo độ mạnh |
+| `--rank` | xếp theo độ mạnh (theo gu nếu bật rank.personal); --json có why: vì sao chuyện đứng đó |
 | `--status S` | lọc theo status |
 | `--thread T` | lọc theo thread |
 | `--session ID` | lọc theo phiên |
@@ -208,7 +208,7 @@ Mã thoát: 0 xong; 1 không có chuyện này trong hộp, mã trùng, hoặc f
 
 ### `momentry taste`
 
-Xem gu của bạn từ những gì bạn đã làm với chuyện: trong các chuyện top 5 đã quyết, bao nhiêu chuyện bạn dùng (use, drafted, published), chuyện bạn dùng nằm hạng trung bình mấy, và đặc trưng bạn hay dùng hay bỏ (giằng xé, tín hiệu, stakes), số chuyện bạn tự ghi (momentry bỏ sót) và số lần bạn sửa chữ model viết. Chỉ đọc <cache>/taste.json trên máy, không gọi model (0 USD).
+Xem gu của bạn từ những gì bạn đã làm với chuyện: trong các chuyện top 5 đã quyết, bao nhiêu chuyện bạn dùng (use, drafted, published), chuyện bạn dùng nằm hạng trung bình mấy, và đặc trưng bạn hay dùng hay bỏ (giằng xé, tín hiệu, stakes), số chuyện bạn tự ghi (momentry bỏ sót) và số lần bạn sửa chữ model viết; xếp theo gu (rank.personal) đang bật hay chưa, còn thiếu bao nhiêu quyết định, và gu học được. Chỉ đọc <cache>/taste.json trên máy, không gọi model (0 USD).
 
 | Cờ | Ý nghĩa |
 |---|---|
