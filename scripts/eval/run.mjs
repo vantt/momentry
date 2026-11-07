@@ -203,7 +203,7 @@ async function refreshCapture(session, out, steps, log, env) {
 }
 
 /** Lists captures of a session, oldest first. */
-function captures(out, id) {
+export function captures(out, id) {
   const base = path.join(out, id, 'runs');
   if (!fs.existsSync(base)) return [];
   return fs.readdirSync(base).filter((d) => /^\d+$/.test(d)).map(Number).sort((a, b) => a - b)

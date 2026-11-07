@@ -231,6 +231,8 @@ khoá xếp = (chỉ outsider thấy ? 1 : 0, tension ≠ none ? 0 : 1, -(stakes
 
 Người dùng chỉ đổi trọng số và bật/tắt luật theo id, trong cấu hình người dùng (`rank.weights.<id>`, `rank.disabled`); không thêm điều kiện. Cách thêm hay đổi luật: [development.md](development.md#luật-xếp-hạng-và-từ-vựng-chuyện).
 
+Xếp theo gu của từng người (`rank.personal`, mặc định tắt) đứng trên thứ tự này, không thay nó: mục 6.8.
+
 - **Đổi 2026-11-05** ([thí nghiệm xếp hạng](experiments/2026-11-05-ranking/README.md)): cộng thay vì nhân, vì strength của chuyện tension `none` luôn là 0 nên phép nhân bỏ qua stakes của chúng; chuyện chỉ bước outsider tìm ra (không có harvest) xuống cuối vì hiếm khi là `t`. Trên 8 phiên nhãn nháp: `t` nửa trên 21/30 → 23/30.
 
 - Không có ngưỡng. `list --rank` hiện hết, chỉ đổi thứ tự.
@@ -415,6 +417,7 @@ Lệnh hook gọi **shim đã cài** bằng đường dẫn tuyệt đối, ví 
 | `rank.model` | `sonnet` | Gộp cụm, hook/tension, stakes |
 | `rank.weights` | `{}` | Trọng số theo id luật điều chỉnh của `lib/rules/rank.json` (`rank.weights.stakes` 2). Chỉ cấu hình người dùng |
 | `rank.disabled` | `[]` | Id luật (tầng hoặc điều chỉnh) bỏ qua. Chỉ cấu hình người dùng |
+| `rank.personal` | false | Xếp theo gu học trên máy (mục 6.8). Chỉ cấu hình người dùng |
 | `outsider.enabled` | true | |
 | `outsider.model` | `haiku` | Đổi từ `sonnet` sau khi đo: rẻ hơn ~8 lần ở bước này, chất lượng xếp hạng không giảm ([cost-cuts](experiments/2026-11-05-cost-cuts/README.md)) |
 | `angle.enabled` | true | Bước 13 trong lúc gom; `momentry angle` chạy được cả khi tắt |
@@ -567,13 +570,13 @@ Mỗi việc người dùng làm với một chuyện được ghi vào `<cache>
 
 ```json
 {"version": 1, "events": [{"at": "2026-11-06T09:00:00.000Z", "project": "3f2a9c1b7e", "story": "a1b2c3d4e5f6",
-  "event": "use", "value": null, "rank": 2, "of": 31, "private": false,
+  "event": "use", "value": null, "rank": 2, "of": 31, "base": 2, "private": false,
   "features": {"tension": "nho_ma_to", "stakes": 3, "strength": 2, "hits": 4, "completeness": 6,
     "outsider_only": false, "has_angle": true, "signals": ["so_truoc_so_sau"], "hit_by": ["harvest"],
     "captured_by": "harvest", "host": "claude", "tier": "harvested_with_tension"}}]}
 ```
 
-- `rank`, `of`: hạng của chuyện và số chuyện trên tường mặc định của giao diện web (mọi dự án, ẩn chuyện đã bỏ), ngay trước thay đổi; `null` khi không có (chuyện vừa ghi tay).
+- `rank`, `of`: hạng của chuyện và số chuyện trên tường của giao diện web (mọi dự án, ẩn chuyện đã bỏ), ngay trước thay đổi; `null` khi không có (chuyện vừa ghi tay). `base`: hạng của chuyện trên cùng tường đó nếu xếp theo thứ tự mặc định (không có gu); bằng `rank` khi `rank.personal` tắt. Gu học trên `base`, để không học lại thứ tự do chính nó xếp; sự kiện cũ không có `base` thì dùng `rank`.
 - `private`: dự án đang ở chế độ riêng tư lúc ghi, để một con số có thể chia sẻ sau này bỏ được các dự án đó.
 - Đặc trưng: `tension` (id trong [`story-vocab.json`](../lib/rules/story-vocab.json)), `stakes`, `strength`, `hits`, `completeness`, `outsider_only`, `has_angle`, `signals` (id tín hiệu), `hit_by`, `captured_by`, `host` (agent của phiên đầu tiên), `tier` (id tầng trong bảng xếp hạng).
 - Giữ 2000 sự kiện mới nhất, cũ nhất bỏ trước. File hỏng hoặc khác `version` đọc như rỗng. Ghi lỗi không bao giờ chặn việc người dùng đang làm.
@@ -590,6 +593,17 @@ Mỗi việc người dùng làm với một chuyện được ghi vào `<cache>
 Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ ở `<cache>/ui-state.json` (khoá `angle`).
 
 **Con số.** Mỗi chuyện tính quyết định cuối cùng; `drafted`, `published` tính là dùng; hạng là hạng lúc quyết định đổi lần cuối (chuyển chuyện đã dùng sang drafted giữ hạng lúc dùng). Top 5: trong các chuyện đã quyết Use, Later hay Drop khi đang ở hạng 1–5, bao nhiêu chuyện được dùng. Chỉ hiện khi đủ 10 chuyện như thế (cùng ngưỡng với tỉ lệ Use trong `metrics.json`); dưới đó hiện còn thiếu bao nhiêu quyết định. Cùng ngưỡng: hạng trung bình của chuyện được dùng. Trang Health của giao diện web có một khung "Your picks" với hai số này. `momentry taste` in hai số đó, bảng đếm dùng / bỏ theo giằng xé và theo tín hiệu, stakes trung bình của chuyện dùng và chuyện bỏ, số chuyện bỏ sót, số lần sửa và kết quả kiểm góc kể; `--repo DIR` chỉ tính một dự án, `--json` cho agent. Cả hai là cách nhìn trên máy, có tính dự án riêng tư; `measures(t, {excludePrivate: true})` bỏ chúng cho con số có thể chia sẻ.
+
+**Xếp theo gu** (`rank.personal`, mặc định tắt; code [`lib/taste-rank.mjs`](../lib/taste-rank.mjs)). Bật thì `list --rank` và tường chuyện xếp theo gu học từ file này; tắt thì đúng thứ tự mặc định (mục 5.9). 0 USD, không gọi model, không gửi gì đi.
+
+- **Phán quyết:** quyết định cuối cùng của mỗi chuyện. `use`, `drafted`, `published` là dùng (1), `drop` là bỏ (0). `later`, `open`, sửa chữ, kiểm góc kể và chuyện bỏ sót không học. Cần hạng mặc định lúc quyết (`base`, không có thì `rank`). Học trên mọi dự án của máy, kể cả dự án riêng tư, vì mô hình không rời máy.
+- **Mô hình:** hồi quy logistic `P(dùng) = σ(b + base + Σ wₖ·xₖ)`, với `base = −ln(hạng mặc định)` là phần bù cố định và tiên nghiệm L2 (λ = 1) kéo mọi `wₖ` về 0: ít hay lẫn lộn phán quyết thì gu gần như không đổi gì. Đặc trưng: một cờ cho mỗi giằng xé và mỗi tín hiệu, `outsider_only`, `has_angle`, và stakes, strength, hits, completeness chuẩn hoá trên phán quyết (thiếu giá trị thì trung tính). Trọng số tính theo đơn vị của `base`: +0,69 (ln 2) bằng lên gấp đôi hạng. Thứ tự gu: `base + Σ wₖ·xₖ` cao trước, hoà thì theo thứ tự mặc định. Không chuyện nào bị ẩn.
+- **Ngưỡng:** từ 20 phán quyết, trong đó ít nhất 5 dùng và 5 bỏ; dưới đó là thứ tự mặc định.
+- **Tự về mặc định:** giữ lại 20% phán quyết dùng và 20% phán quyết bỏ mới nhất, học trên phần còn lại; nếu gu xếp đúng ít cặp (dùng, bỏ) hơn thứ tự mặc định trên phần giữ lại thì dùng thứ tự mặc định. Đạt thì học lại trên toàn bộ. Cùng dữ liệu luôn ra cùng kết quả.
+- **Chỗ khám phá:** hạng 5 là chuyện đầu tiên của thứ tự mặc định chưa nằm trong top 4 của gu, để gu không tự khoá vào một kiểu chuyện.
+- **Lý do:** `list --rank --json` thêm `why.taste`: `from`, `to` (hạng mặc định và hạng theo gu), `points`, `explore`, `reasons` (tối đa hai đặc trưng đẩy mạnh nhất, kèm chữ) và `line` (một dòng, ví dụ "bạn hay dùng chuyện có tín hiệu …"). Thẻ trên tường có nhãn "Your kind" kèm lý do khi gu đẩy chuyện lên. `momentry taste` nói gu đang bật hay không, vì sao chưa (thiếu bao nhiêu phán quyết, hay thua mặc định trên phần giữ lại), kết quả kiểm và các trọng số lớn nhất.
+- Bước góc kể và pipeline vẫn dùng thứ tự mặc định: chúng chọn chuyện để gọi model (tốn tiền), và bộ đo phải chạy lại ra cùng kết quả.
+- **Vì sao tắt:** trên bộ đề (8 phiên, học 7 chấm 1) gu không làm tăng số `t` ở nửa trên (25/33 → 25/33) ([số đo](experiments/2026-11-07-taste-learning/README.md)).
 
 ---
 
@@ -634,6 +648,7 @@ Kết quả kiểm góc kể hiện lại trên trang chuyện được giữ �
   lib/ledger.mjs             load(), save(), lock(sid) / touch / unlock (wx + pid + mtime), needsHarvest(sid, stat) -> {fromLine} | null; recordSpend(sid, {step, usd}) chi phí ngoài cửa sổ gom
   lib/rank.mjs               sortRanked(stories, table?); explain(story, table?); rankTable(cfg); loadRankTable(file?) bảng luật lib/rules/rank.json
   lib/taste.mjs              gu trên máy (mục 6.8): note(cacheDir, {event, data, …}) ghi <cache>/taste.json; snapshot(data); measures(t, {excludePrivate, project})
+  lib/taste-rank.mjs         xếp theo gu (mục 6.8): learn(examples); examplesOf(t); personalModel(cfg); personalOrder(ranked, model); tasteWhy(...)
   lib/vocab.mjs              từ vựng chuyện lib/rules/story-vocab.json: TENSION_IDS, promptLists() điền {tensions} {signals} của prompt
   lib/angle.mjs              bước 13: pickStories, excerpt, angleOne (cốt truyện + góc kể), anglePatch, spineOf
   lib/asks.mjs               bước 13: sessionAsks(entries) yêu cầu của chủ phiên; asksFor(asks, line) khối yêu cầu của một chuyện
@@ -676,7 +691,7 @@ momentry <lệnh> [cờ]
 | `list` | Bảng mã, id, ngày, status, hook, tension, stakes, strength, hits | `--rank`, `--status S`, `--thread T`, `--session ID`, `--json` |
 | `show <id\|mã>` | In đầy đủ một chuyện, kèm mã | `--json` |
 | `mark <id\|mã> <use\|later\|drop>` | Đánh dấu một chuyện như nút trên giao diện | `--dry-run`, `--json` |
-| `taste` | Gu từ việc bạn làm với chuyện (mục 6.8): top 5 bạn dùng X/Y, hạng trung bình của chuyện dùng, đặc trưng hay dùng hay bỏ, chuyện bỏ sót, lần sửa. Chỉ đọc, 0 USD | `--repo DIR`, `--json` |
+| `taste` | Gu từ việc bạn làm với chuyện (mục 6.8): top 5 bạn dùng X/Y, hạng trung bình của chuyện dùng, đặc trưng hay dùng hay bỏ, chuyện bỏ sót, lần sửa; xếp theo gu đang bật hay chưa, còn thiếu gì, gu học được. Chỉ đọc, 0 USD | `--repo DIR`, `--json` |
 | `check` | Kiểm khuôn frontmatter, `id` (nếu có) khớp tên file, link không gãy, mã chuyện không trùng, riêng tư; `--fix` ghi mã vào file chưa có | `--box DIR`, `--staged`, `--fix` |
 | `reduce` | In văn bản rút gọn và điểm nóng (gỡ lỗi, thí nghiệm) | `--transcript FILE`, `--to-line N`, `--out DIR` |
 | `ledger` | Xem hoặc quên một phiên trong sổ | `--show`, `--forget ID` |

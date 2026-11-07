@@ -169,7 +169,7 @@ test('rank overrides: weights and disabled change the order; bad ones are named 
 test('rank overrides: from the user config only, validated by config set', () => {
   const d = tmp('dm-rank-cfg-');
   const env = { HOME: d, MOMENTRY_CONFIG: path.join(d, 'c', 'config.json'), XDG_CONFIG_HOME: path.join(d, 'xdg'), MOMENTRY_CACHE: path.join(d, 'cache') };
-  assert.deepEqual(loadConfig({ cwd: d, env }).rank, { model: 'sonnet', weights: {}, disabled: [] });
+  assert.deepEqual(loadConfig({ cwd: d, env }).rank, { model: 'sonnet', weights: {}, disabled: [], personal: false });
   runConfig(['set', 'rank.weights.stakes', '2'], { cwd: d, env });
   runConfig(['set', 'rank.disabled', '["outsider_only_unscored"]'], { cwd: d, env });
   assert.deepEqual(JSON.parse(fs.readFileSync(env.MOMENTRY_CONFIG, 'utf8')), { rank: { weights: { stakes: 2 }, disabled: ['outsider_only_unscored'] } });

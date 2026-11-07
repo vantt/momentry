@@ -190,7 +190,7 @@
       s.status !== 'raw' ? `<span class="tag ${s.status === 'dropped' ? '' : 'tag-pick'}">${esc(s.statusWord)}</span>` : '',
       s.later && s.status === 'raw' ? '<span class="tag tag-mint">Later</span>' : '',
       s.byHand ? '<span class="tag">Your note</span>' : '',
-      s.forYou ? '<span class="tag tag-mint" title="Like stories you chose to use">Your kind</span>' : '',
+      s.forYou ? `<span class="tag tag-mint" title="${esc(s.tasteWhy || 'Like stories you chose to use')}">Your kind</span>` : '',
       ...s.signals.slice(0, 2).map((x) => `<span class="tag" title="${esc(x)}">${esc(x)}</span>`),
     ].filter(Boolean).join('');
     const used = ['picked', 'drafted', 'published'].includes(s.status);

@@ -62,24 +62,6 @@ test('editBody replaces one section, keeps the rest byte for byte, inserts in or
   assert.throws(() => A.editBody(BODY, { title: ' ' }), /title/);
 });
 
-test('the wall follows the user\'s own Use/Drop choices, gently and only after a few labels', () => {
-  const row = (id, data) => ({ id, data: { status: 'raw', ...data }, card: { id } });
-  const base = [
-    row('a', { signals: ['chi phí'] }), row('b', { signals: ['chi phí'] }), row('c', { signals: ['đo đạc'] }),
-    row('d', { signals: ['đo đạc'] }), row('e', { signals: ['đo đạc'] }),
-  ];
-  assert.deepEqual(A.personalize(base).map((r) => r.id), ['a', 'b', 'c', 'd', 'e']);
-  const labelled = [
-    ...base,
-    row('u1', { status: 'picked', signals: ['đo đạc'] }), row('u2', { status: 'published', signals: ['đo đạc'] }),
-    row('x1', { status: 'dropped', signals: ['chi phí'] }),
-  ];
-  const out = A.personalize(labelled).map((r) => r.id);
-  assert.ok(out.indexOf('c') < out.indexOf('a'), out.join(','));
-  assert.ok(out.indexOf('e') > 0, 'moves only a few places');
-  assert.equal(A.personalize(labelled).find((r) => r.id === 'c').card.forYou, true);
-});
-
 test('stars from stakes × strength', () => {
   assert.equal(A.starsOf({}), 1);
   assert.equal(A.starsOf({ stakes: 3, strength: 2 }), 3);
